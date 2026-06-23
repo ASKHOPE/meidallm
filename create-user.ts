@@ -1,9 +1,9 @@
 import { auth } from "./auth";
 
 const args = process.argv.slice(2);
-const email = args[0];
-const password = args[1];
-const name = args[2] || (email ? email.split("@")[0] : "User");
+const email = args[0] as string;
+const password = args[1] as string;
+const name = (args[2] || (email ? email.split("@")[0] : "User")) as string;
 
 if (!email || !password) {
   console.error("❌ Usage: npx tsx --env-file=.env create-user.ts <email> <password> [name]");

@@ -3,6 +3,12 @@ import pg from "pg";
 import { parse } from "pg-connection-string";
 import { dash } from "@better-auth/infra";
 
+// Ensure Node process.env has our API and Secret keys in local Vite/Astro dev
+if (typeof import.meta !== 'undefined' && import.meta.env) {
+  if (!process.env.BETTER_AUTH_API_KEY) process.env.BETTER_AUTH_API_KEY = import.meta.env.BETTER_AUTH_API_KEY;
+  if (!process.env.BETTER_AUTH_SECRET) process.env.BETTER_AUTH_SECRET = import.meta.env.BETTER_AUTH_SECRET;
+}
+
 // Support both Node process.env (production/CLI) and Astro import.meta.env (local Vite dev)
 const databaseUrl = process.env.DATABASE_URL || (typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.DATABASE_URL : undefined);
 
