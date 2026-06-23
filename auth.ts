@@ -31,10 +31,21 @@ const dbPool = new pg.Pool({
   }
 });
 
+const getBaseURL = () => {
+  const envUrl = process.env.BETTER_AUTH_URL || (typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.BETTER_AUTH_URL : undefined);
+  if (envUrl) return envUrl;
+  
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  return "http://localhost:4321";
+};
+
 // Configure Better Auth options
 export const auth = betterAuth({
   database: dbPool,
-  baseURL: process.env.BETTER_AUTH_URL || (typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.BETTER_AUTH_URL : undefined) || "http://localhost:3000",
+  baseURL: getBaseURL(),
   emailAndPassword: {
     enabled: true
   },
