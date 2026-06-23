@@ -140,35 +140,7 @@ function updateSidebarUI() {
     }
 }
 
-// Login Gate Screen Template
-const loginHTML = `
-<div class="flex items-center justify-center min-h-screen w-full bg-[radial-gradient(circle_at_center,_#1e1b4b_0%,_#0f172a_100%)] p-6">
-    <div class="bg-glass-bg border border-glass-border p-8 rounded-2xl w-full max-w-md backdrop-blur-md shadow-2xl flex flex-col gap-6 fade-in">
-        <div class="flex flex-col items-center gap-2 text-center">
-            <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center font-bold text-2xl shadow-[0_0_20px_var(--color-primary-glow)]">M</div>
-            <h2 class="text-2xl font-bold font-outfit text-white mt-2">Welcome to Meidallm</h2>
-            <p class="text-sm text-text-muted">Enter credentials to unlock the console</p>
-        </div>
-        
-        <div id="login-error" class="hidden bg-rose-950/50 border border-rose-500/30 text-rose-300 text-xs rounded-xl p-3"></div>
 
-        <div class="flex flex-col gap-4">
-            <div>
-                <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Email Address</label>
-                <input id="login-email" type="email" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary" placeholder="admin@meidallm.com">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Password</label>
-                <input id="login-password" type="password" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary" placeholder="••••••••">
-            </div>
-            <button onclick="window.submitLoginForm()" class="w-full mt-2 py-3 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all cursor-pointer">Sign In</button>
-        </div>
-        <div class="text-center text-[10px] text-text-muted">
-            Default credentials: <span class="text-white">admin@meidallm.com</span> / <span class="text-white">adminpass</span>
-        </div>
-    </div>
-</div>
-`;
 
 // Base Shell Layout HTML template
 const appHTML = `
@@ -580,74 +552,6 @@ function renderView(viewKey: string, pid?: string) {
     renderView(viewKey, pid);
 };
 
-// Authentication Submit Handler
-(window as any).submitLoginForm = async () => {
-    const emailEl = document.getElementById('login-email') as HTMLInputElement;
-    const passwordEl = document.getElementById('login-password') as HTMLInputElement;
-    const errorEl = document.getElementById('login-error');
-    
-    if (!emailEl || !passwordEl || !errorEl) return;
-    
-    const email = emailEl.value.trim();
-    const password = passwordEl.value;
-    
-    // Email Validation (RFC 5322 regex pattern)
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!email || !emailRegex.test(email)) {
-        errorEl.innerText = "Please enter a valid email address.";
-        errorEl.classList.remove('hidden');
-        return;
-    }
-    
-    // Password Strength & Presence Check
-    if (!password || password.length < 6) {
-        errorEl.innerText = "Password must be at least 6 characters long.";
-        errorEl.classList.remove('hidden');
-        return;
-    }
-    
-    try {
-        // Authenticate using better-auth client API
-        const { data, error } = await authClient.signIn.email({
-            email,
-            password
-        });
-        
-        if (error) {
-            // Check if user is not found, offer to sign them up directly
-            if (error.status === 404 || error.message?.toLowerCase().includes("not found") || error.code === "INVALID_EMAIL_OR_PASSWORD") {
-                errorEl.innerText = "Authenticating/Creating account...";
-                errorEl.classList.remove('hidden');
-                
-                const signUpRes = await authClient.signUp.email({
-                    email,
-                    password,
-                    name: email.split('@')[0] || 'User'
-                });
-                
-                if (signUpRes.error) {
-                    errorEl.innerText = signUpRes.error.message || "Failed to sign up.";
-                    return;
-                }
-                
-                currentUser = email;
-                saveState();
-                renderMainApp();
-                return;
-            }
-            errorEl.innerText = error.message || "Authentication failed.";
-            errorEl.classList.remove('hidden');
-        } else if (data) {
-            currentUser = email;
-            saveState();
-            renderMainApp();
-        }
-    } catch (err: any) {
-        errorEl.innerText = err.message || "Connection error. Make sure your server is running.";
-        errorEl.classList.remove('hidden');
-    }
-};
-
 (window as any).signOut = async () => {
     try {
         await authClient.signOut();
@@ -656,7 +560,7 @@ function renderView(viewKey: string, pid?: string) {
     }
     currentUser = null;
     localStorage.removeItem('meidallm_user');
-    renderLoginPortal();
+    window.location.href = "/login";
 };
 
 // Project functions
@@ -856,13 +760,7 @@ function renderView(viewKey: string, pid?: string) {
     }
 };
 
-// App Layout Renderers
-function renderLoginPortal() {
-    const appContainer = document.getElementById('app');
-    if (appContainer) {
-        appContainer.innerHTML = loginHTML;
-    }
-}
+
 
 function renderMainApp() {
     const appContainer = document.getElementById('app');
@@ -895,14 +793,14 @@ async function init() {
             renderMainApp();
         } else {
             currentUser = null;
-            renderLoginPortal();
+            window.location.href = "/login";
         }
     } catch(e) {
         console.error("Auth session fetch failed:", e);
         if (currentUser) {
             renderMainApp();
         } else {
-            renderLoginPortal();
+            window.location.href = "/login";
         }
     }
     
