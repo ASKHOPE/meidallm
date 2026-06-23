@@ -1,16 +1,25 @@
 import { betterAuth } from "better-auth";
-import { Pool } from "pg";
+import pg from "pg";
+import { parse } from "pg-connection-string";
 import { dash } from "@better-auth/infra";
 
-const databaseUrl = process.env.DATABASE_URL;
+// Support both Node process.env (production/CLI) and Astro import.meta.env (local Vite dev)
+const databaseUrl = process.env.DATABASE_URL || (typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.DATABASE_URL : undefined);
+
 if (!databaseUrl) {
-  console.error("❌ ERROR: DATABASE_URL is not set in your .env file!");
+  console.error("❌ ERROR: DATABASE_URL is not set in your .env or environment!");
   process.exit(1);
 }
 
-// Initialize PG Connection Pool
-const dbPool = new Pool({
-  connectionString: databaseUrl,
+// Parse connection URL to ensure SSL parameters are properly overridden
+const connectionConfig = parse(databaseUrl);
+
+const dbPool = new pg.Pool({
+  host: connectionConfig.host || undefined,
+  port: connectionConfig.port ? parseInt(connectionConfig.port, 10) : undefined,
+  database: connectionConfig.database || undefined,
+  user: connectionConfig.user || undefined,
+  password: connectionConfig.password || undefined,
   ssl: {
     rejectUnauthorized: false // Required for Aiven serverless DB connections
   }
@@ -19,7 +28,7 @@ const dbPool = new Pool({
 // Configure Better Auth options
 export const auth = betterAuth({
   database: dbPool,
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  baseURL: process.env.BETTER_AUTH_URL || (typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.BETTER_AUTH_URL : undefined) || "http://localhost:3000",
   emailAndPassword: {
     enabled: true
   },
