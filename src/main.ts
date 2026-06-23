@@ -1,3 +1,5 @@
+import { authClient } from "./auth-client";
+
 // Type Definitions
 interface KanbanTask {
     id: string;
@@ -579,7 +581,7 @@ function renderView(viewKey: string, pid?: string) {
 };
 
 // Authentication Submit Handler
-(window as any).submitLoginForm = () => {
+(window as any).submitLoginForm = async () => {
     const emailEl = document.getElementById('login-email') as HTMLInputElement;
     const passwordEl = document.getElementById('login-password') as HTMLInputElement;
     const errorEl = document.getElementById('login-error');
@@ -604,19 +606,54 @@ function renderView(viewKey: string, pid?: string) {
         return;
     }
     
-    // Credentials Verification (mock database authentication)
-    if (email === "admin@meidallm.com" && password === "adminpass") {
-        errorEl.classList.add('hidden');
-        currentUser = "admin@meidallm.com";
-        saveState();
-        renderMainApp();
-    } else {
-        errorEl.innerText = "Invalid credentials. Try admin@meidallm.com / adminpass";
+    try {
+        // Authenticate using better-auth client API
+        const { data, error } = await authClient.signIn.email({
+            email,
+            password
+        });
+        
+        if (error) {
+            // Check if user is not found, offer to sign them up directly
+            if (error.status === 404 || error.message?.toLowerCase().includes("not found") || error.code === "INVALID_EMAIL_OR_PASSWORD") {
+                errorEl.innerText = "Authenticating/Creating account...";
+                errorEl.classList.remove('hidden');
+                
+                const signUpRes = await authClient.signUp.email({
+                    email,
+                    password,
+                    name: email.split('@')[0] || 'User'
+                });
+                
+                if (signUpRes.error) {
+                    errorEl.innerText = signUpRes.error.message || "Failed to sign up.";
+                    return;
+                }
+                
+                currentUser = email;
+                saveState();
+                renderMainApp();
+                return;
+            }
+            errorEl.innerText = error.message || "Authentication failed.";
+            errorEl.classList.remove('hidden');
+        } else if (data) {
+            currentUser = email;
+            saveState();
+            renderMainApp();
+        }
+    } catch (err: any) {
+        errorEl.innerText = err.message || "Connection error. Make sure your server is running.";
         errorEl.classList.remove('hidden');
     }
 };
 
-(window as any).signOut = () => {
+(window as any).signOut = async () => {
+    try {
+        await authClient.signOut();
+    } catch (e) {
+        console.error("Sign out API failed, clearing local session", e);
+    }
     currentUser = null;
     localStorage.removeItem('meidallm_user');
     renderLoginPortal();
@@ -847,13 +884,26 @@ function renderMainApp() {
 }
 
 // Initialization entry point
-function init() {
+async function init() {
     loadState();
     
-    if (currentUser) {
-        renderMainApp();
-    } else {
-        renderLoginPortal();
+    // Check real auth status from server
+    try {
+        const sessionRes = await authClient.getSession();
+        if (sessionRes && sessionRes.data) {
+            currentUser = sessionRes.data.user.email;
+            renderMainApp();
+        } else {
+            currentUser = null;
+            renderLoginPortal();
+        }
+    } catch(e) {
+        console.error("Auth session fetch failed:", e);
+        if (currentUser) {
+            renderMainApp();
+        } else {
+            renderLoginPortal();
+        }
     }
     
     // Setup Sidebar Nav Click Listeners
