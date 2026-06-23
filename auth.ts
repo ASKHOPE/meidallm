@@ -46,10 +46,19 @@ const getBaseURL = () => {
 export const auth = betterAuth({
   database: dbPool,
   baseURL: getBaseURL(),
+  appName: "Meidallm Portal",
   emailAndPassword: {
     enabled: true
   },
   plugins: [
     dash()
-  ]
+  ],
+  advanced: {
+    ipAddress: {
+      ipAddressHeaders: ["x-vercel-forwarded-for", "x-forwarded-for", "x-real-ip"]
+    }
+  },
+  experimental: {
+    joins: true
+  }
 });
