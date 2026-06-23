@@ -32,3 +32,31 @@ export interface TaskLog {
     toStatus: string;
     timestamp: number;
 }
+
+export interface ResearchDoc {
+    id: string;
+    projectId: string;
+    title: string;
+    content: string;
+    type: 'pdf' | 'url' | 'text';
+    created: number;
+}
+
+export interface MediaAsset {
+    id: string;
+    projectId: string;
+    title: string;
+    url: string;
+    category: 'banner' | 'social' | 'ad';
+    created: number;
+}
+
+export interface Draft {
+    id: string;
+    projectId: string;
+    title: string;
+    content: string;
+    format: 'blog' | 'tweet' | 'email';
+    created: number;
+    updated: number;
+}

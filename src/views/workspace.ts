@@ -9,6 +9,9 @@ export function renderWorkspaceView(pid: string): string {
     
     const projectTasks = state.kanbanState.filter(t => t.projectId === pid);
     const projectIdeas = state.ideasState.filter(i => i.projectId === pid);
+    const projectDocs = state.researchDocs.filter(d => d.projectId === pid);
+    const projectMedia = state.mediaAssets.filter(m => m.projectId === pid);
+    const projectDrafts = state.drafts.filter(d => d.projectId === pid);
 
     return `
     <div class="fade-in flex flex-col gap-6">
@@ -62,20 +65,20 @@ export function renderWorkspaceView(pid: string): string {
                 <h4 class="font-medium text-white">Idea Canvas</h4>
                 <p class="text-xs text-text-muted mt-1">${projectIdeas.length} notes active</p>
             </div>
-            <div onclick="alert('Research Module is being configured')" class="bg-glass-bg border border-glass-border rounded-2xl p-6 hover:bg-panel-hover hover:border-primary transition-all cursor-pointer flex flex-col items-center text-center">
+            <div onclick="window.navigateTo('research', '${p.id}')" class="bg-glass-bg border border-glass-border rounded-2xl p-6 hover:bg-panel-hover hover:border-primary transition-all cursor-pointer flex flex-col items-center text-center">
                 <span class="text-4xl mb-3">🔍</span>
                 <h4 class="font-medium text-white">Research & RAG</h4>
-                <p class="text-xs text-text-muted mt-1">2 PDFs uploaded</p>
+                <p class="text-xs text-text-muted mt-1">${projectDocs.length} sources indexed</p>
             </div>
-            <div onclick="alert('Media studio holds 12 generic templates')" class="bg-glass-bg border border-glass-border rounded-2xl p-6 hover:bg-panel-hover hover:border-primary transition-all cursor-pointer flex flex-col items-center text-center">
+            <div onclick="window.navigateTo('media', '${p.id}')" class="bg-glass-bg border border-glass-border rounded-2xl p-6 hover:bg-panel-hover hover:border-primary transition-all cursor-pointer flex flex-col items-center text-center">
                 <span class="text-4xl mb-3">🖼️</span>
                 <h4 class="font-medium text-white">Media Assets</h4>
-                <p class="text-xs text-text-muted mt-1">12 images</p>
+                <p class="text-xs text-text-muted mt-1">${projectMedia.length} images</p>
             </div>
-            <div onclick="alert('Drafting panel available')" class="bg-glass-bg border border-glass-border rounded-2xl p-6 hover:bg-panel-hover hover:border-primary transition-all cursor-pointer flex flex-col items-center text-center">
+            <div onclick="window.navigateTo('drafts', '${p.id}')" class="bg-glass-bg border border-glass-border rounded-2xl p-6 hover:bg-panel-hover hover:border-primary transition-all cursor-pointer flex flex-col items-center text-center">
                 <span class="text-4xl mb-3">📝</span>
                 <h4 class="font-medium text-white">Drafts & Compose</h4>
-                <p class="text-xs text-text-muted mt-1">1 active draft</p>
+                <p class="text-xs text-text-muted mt-1">${projectDrafts.length} active drafts</p>
             </div>
         </div>
     </div>
