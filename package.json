@@ -1,0 +1,21 @@
+{
+  "name": "meidallm",
+  "private": true,
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.1",
+    "@types/bun": "latest",
+    "tailwindcss": "^4.3.1",
+    "vite": "^8.1.0"
+  },
+  "peerDependencies": {
+    "typescript": "^6.0.3"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@better-auth/infra": "^0.3.2"
+  }
+}
