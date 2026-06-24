@@ -10,6 +10,7 @@ import { renderPublishView } from "./views/publish";
 import { renderAnalyticsView } from "./views/analytics";
 import { renderConnectionsView } from "./views/connections";
 import { renderCRMView } from "./views/crm";
+import { renderERPView } from "./views/erp";
 import { renderTeamView } from "./views/team";
 import { renderDatabaseView } from "./views/database";
 import { renderCyclesView } from "./views/cycles";
@@ -148,6 +149,14 @@ export const views: ViewConfig[] = [
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderCRMView(pid || '')
+    },
+    {
+        key: 'project-erp',
+        title: 'ERP & Budgeting',
+        icon: '📈',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderERPView(pid || '')
     },
     {
         key: 'team',

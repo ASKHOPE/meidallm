@@ -347,3 +347,16 @@ Failed to initialize state tables: error: duplicate key value violates unique co
 {"message":"src/views/layout.ts","label":"watch","level":"info"}
 {"message":"program reload","label":"vite","level":"info"}
 {"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"src/views/layout.ts","label":"watch","level":"info"}
+{"message":"src/views/projects.ts","label":"watch","level":"info"}
+{"message":"src/views/publish.ts","label":"watch","level":"info"}
+{"message":"src/views/crm.ts","label":"watch","level":"info"}
+{"message":"src/router.ts","label":"watch","level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}

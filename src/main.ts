@@ -29,7 +29,8 @@ import {
     updateTask,
     archiveTask,
     binTask,
-    resetAppState
+    resetAppState,
+    toggleProjectStar
 } from "./state";
 import { renderLayoutHTML, renderProjectDropdownOptions } from "./views/layout";
 import { renderPostDetailHTML } from "./views/analytics";
@@ -176,6 +177,10 @@ const w = window as any;
 
 w.navigateTo = (viewKey: string, pid?: string) => {
     renderView(viewKey, pid);
+};
+
+w.toggleProjectStar = (pid: string) => {
+    toggleProjectStar(pid);
 };
 
 w.createProjectPrompt = () => {

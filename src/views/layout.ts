@@ -4,12 +4,14 @@ import { views, sidebarGroups } from "../router";
 
 export function renderProjectDropdownOptions(): string {
     const activeProjects = state.projects.filter(p => !p.isArchived && !p.isBinned);
-    let options = activeProjects.map(p => {
+    const sorted = [...activeProjects].sort((a, b) => (b.isStarred ? 1 : 0) - (a.isStarred ? 1 : 0));
+    let options = sorted.map(p => {
         const isCurrent = state.currentProject === p.id;
         const currentClass = isCurrent ? "text-text-main font-semibold bg-panel-hover" : "text-text-muted hover:text-text-main";
+        const starIcon = p.isStarred ? "⭐" : "📁";
         return `
         <button onclick="window.selectProject('${p.id}')" class="w-full text-left px-4 py-2 text-sm transition-colors flex items-center justify-between group/dropdown-item ${currentClass}">
-            <span class="truncate">📁 ${sanitizeHTML(p.name)}</span>
+            <span class="truncate">${starIcon} ${sanitizeHTML(p.name)}</span>
             <span class="opacity-0 group-hover/dropdown-item:opacity-100 text-xs text-rose-400 hover:text-rose-600 transition-opacity pl-2" onclick="event.stopPropagation(); window.binProjectToggle('${p.id}', true)" title="Move to Bin">🗑️</span>
         </button>
         `;

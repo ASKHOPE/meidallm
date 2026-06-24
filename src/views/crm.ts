@@ -20,17 +20,17 @@ export function renderCRMView(pid: string): string {
     return `
     <div class="fade-in flex flex-col gap-6">
         <!-- CRM Header metrics -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-panel-hover/30 border border-glass-border/30 p-5 rounded-2xl">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-background border border-text-main/20 p-5 rounded-2xl">
             <div>
-                <h2 class="text-2xl font-outfit text-white">${sanitizeHTML(p.name)} CRM Pipeline</h2>
-                <p class="text-xs text-text-muted">Track sponsor deals, creator relations, and advertising prospects.</p>
+                <h2 class="text-2xl font-outfit font-bold text-text-main">${sanitizeHTML(p.name)} CRM Pipeline</h2>
+                <p class="text-xs text-text-muted">Track sponsor deals, creator relations, and advertising prospects. Drag and drop deals between columns to update stages.</p>
             </div>
             <div class="flex items-center gap-4 shrink-0">
-                <div class="bg-glass-bg border border-glass-border px-4 py-2 rounded-xl text-right">
+                <div class="bg-background border border-text-main/20 px-4 py-2 rounded-xl text-right">
                     <span class="text-[10px] text-text-muted uppercase font-semibold block mb-0.5">Pipeline Value</span>
-                    <strong class="text-lg text-emerald-400 font-outfit">$${totalPipelineValue.toLocaleString()}</strong>
+                    <strong class="text-lg text-text-main font-outfit font-bold">$${totalPipelineValue.toLocaleString()}</strong>
                 </div>
-                <button onclick="window.showAddContactModal()" class="px-4 py-2.5 bg-primary text-white font-medium text-xs rounded-xl shadow-[0_0_15px_var(--color-primary-glow)] hover:bg-indigo-600 transition-colors cursor-pointer">+ Add Lead</button>
+                <button onclick="window.showAddContactModal()" class="px-4 py-2.5 bg-text-main text-background hover:bg-text-main/80 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm">+ Add Lead</button>
             </div>
         </div>
 
@@ -41,31 +41,41 @@ export function renderCRMView(pid: string): string {
                 const stageTotal = contacts.reduce((sum, c) => sum + c.dealValue, 0);
 
                 return `
-                <div class="bg-[rgba(15,23,42,0.6)] border border-glass-border rounded-2xl p-4 flex flex-col min-h-[450px]">
-                    <div class="flex justify-between items-center mb-3">
+                <div class="crm-column bg-background border border-text-main/10 rounded-2xl p-4 flex flex-col min-h-[500px] transition-all"
+                     data-stage="${stage.key}"
+                     ondragover="window.handleContactDragOver(event)"
+                     ondragleave="window.handleContactDragLeave(event)"
+                     ondrop="window.handleContactDrop(event, '${stage.key}')">
+                    
+                    <div class="flex justify-between items-center mb-4 pb-2 border-b border-text-main/10">
                         <div>
-                            <h3 class="font-medium text-white text-sm">${stage.label}</h3>
-                            <span class="text-[10px] text-text-muted font-mono">$${stageTotal.toLocaleString()}</span>
+                            <h3 class="font-bold text-text-main text-sm">${stage.label}</h3>
+                            <span class="text-[10px] text-text-muted font-mono block">$${stageTotal.toLocaleString()}</span>
                         </div>
-                        <span class="bg-panel-hover text-text-muted px-2 py-0.5 rounded text-[10px]">${contacts.length}</span>
+                        <span class="bg-text-main text-background px-2 py-0.5 rounded text-[10px] font-bold">${contacts.length}</span>
                     </div>
 
-                    <div class="flex flex-col gap-3 overflow-y-auto">
+                    <div class="flex flex-col gap-3 flex-1 overflow-y-auto max-h-[600px] pr-1">
                         ${contacts.map(c => `
-                            <div class="bg-glass-bg border border-glass-border hover:border-primary p-4 rounded-xl flex flex-col gap-3 group/crm-card transition-all">
+                            <div class="bg-background border border-text-main/20 hover:border-text-main p-4 rounded-xl flex flex-col gap-3 group/crm-card transition-all cursor-grab active:cursor-grabbing"
+                                 id="contact-card-${c.id}"
+                                 draggable="true"
+                                 ondragstart="window.handleContactDragStart(event, '${c.id}')">
+                                
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <h4 class="font-semibold text-white text-xs truncate max-w-[120px]">${sanitizeHTML(c.name)}</h4>
-                                        <span class="text-[10px] text-text-muted">${sanitizeHTML(c.company)}</span>
+                                        <h4 class="font-bold text-text-main text-xs truncate max-w-[125px]">${sanitizeHTML(c.name)}</h4>
+                                        <span class="text-[10px] text-text-muted font-medium">${sanitizeHTML(c.company)}</span>
                                     </div>
-                                    <div class="flex gap-1.5 opacity-0 group-hover/crm-card:opacity-100 transition-opacity">
-                                        <button onclick="window.editContactPrompt('${c.id}')" class="text-[10px] text-text-muted hover:text-white cursor-pointer" title="Edit">✏️</button>
-                                        <button onclick="window.deleteContactPrompt('${c.id}')" class="text-[10px] text-text-muted hover:text-rose-500 cursor-pointer font-bold" title="Delete">✕</button>
+                                    <div class="flex gap-2 opacity-0 group-hover/crm-card:opacity-100 transition-opacity">
+                                        <button onclick="window.editContactPrompt('${c.id}')" class="text-[11px] hover:scale-110 transition-transform cursor-pointer" title="Edit">✏️</button>
+                                        <button onclick="window.deleteContactPrompt('${c.id}')" class="text-[11px] hover:scale-110 transition-transform cursor-pointer text-red-500 font-bold" title="Delete">✕</button>
                                     </div>
                                 </div>
-                                <div class="text-[10px] text-text-muted flex justify-between items-center pt-2 border-t border-glass-border/30">
-                                    <span class="text-emerald-400 font-semibold">$${c.dealValue.toLocaleString()}</span>
-                                    <select onchange="window.updateContactStage('${c.id}', this.value)" class="bg-panel-hover border border-glass-border/50 text-[9px] text-white p-1 rounded cursor-pointer">
+                                
+                                <div class="text-[10px] text-text-muted flex justify-between items-center pt-2 border-t border-text-main/10">
+                                    <span class="text-text-main font-bold">$${c.dealValue.toLocaleString()}</span>
+                                    <select onchange="window.updateContactStage('${c.id}', this.value)" class="bg-background border border-text-main/20 text-[9px] text-text-main p-1 rounded font-medium cursor-pointer focus:outline-none focus:border-text-main">
                                         <option value="lead" ${c.dealStage === 'lead' ? 'selected' : ''}>Lead</option>
                                         <option value="contacted" ${c.dealStage === 'contacted' ? 'selected' : ''}>Discuss</option>
                                         <option value="negotiation" ${c.dealStage === 'negotiation' ? 'selected' : ''}>Negotiate</option>
@@ -75,7 +85,10 @@ export function renderCRMView(pid: string): string {
                             </div>
                         `).join('')}
                         ${contacts.length === 0 ? `
-                            <div class="border border-dashed border-glass-border/40 text-center text-text-muted text-[10px] py-12 rounded-xl">Empty Stage</div>
+                            <div class="border border-dashed border-text-main/10 text-center text-text-muted text-[10px] py-12 rounded-xl flex items-center justify-center flex-col gap-1">
+                                <span>No Deals</span>
+                                <span class="text-[8px] opacity-70">Drag cards here</span>
+                            </div>
                         ` : ''}
                     </div>
                 </div>
@@ -85,28 +98,31 @@ export function renderCRMView(pid: string): string {
     </div>
 
     <!-- CRM Add Lead Modal -->
-    <div id="add-contact-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden z-50 animate-[fadeIn_0.2s_ease-out]">
-        <div class="bg-glass-bg border border-glass-border p-6 rounded-2xl w-full max-w-md flex flex-col gap-4">
-            <h3 class="text-xl font-semibold text-white font-outfit">Add Deal Prospect</h3>
-            <div>
-                <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Contact Name</label>
-                <input id="modal-contact-name" type="text" placeholder="e.g. Sarah Jenkins" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary">
+    <div id="add-contact-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center hidden z-50 animate-[fadeIn_0.2s_ease-out]">
+        <div class="bg-background border border-text-main/30 p-6 rounded-2xl w-full max-w-md flex flex-col gap-4 text-text-main">
+            <div class="flex justify-between items-center pb-2 border-b border-text-main/10">
+                <h3 class="text-xl font-bold font-outfit">Add Deal Prospect</h3>
+                <button onclick="window.hideAddContactModal()" class="text-text-muted hover:text-text-main font-bold text-sm">✕</button>
             </div>
             <div>
-                <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Email</label>
-                <input id="modal-contact-email" type="email" placeholder="e.g. sarah@stripe.com" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary">
+                <label class="block text-xs font-bold text-text-muted uppercase mb-1">Contact Name</label>
+                <input id="modal-contact-name" type="text" placeholder="e.g. Sarah Jenkins" class="w-full bg-background border border-text-main/20 focus:border-text-main p-3 rounded-xl text-text-main text-sm focus:outline-none">
             </div>
             <div>
-                <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Company</label>
-                <input id="modal-contact-company" type="text" placeholder="e.g. Stripe" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary">
+                <label class="block text-xs font-bold text-text-muted uppercase mb-1">Email</label>
+                <input id="modal-contact-email" type="email" placeholder="e.g. sarah@stripe.com" class="w-full bg-background border border-text-main/20 focus:border-text-main p-3 rounded-xl text-text-main text-sm focus:outline-none">
             </div>
             <div>
-                <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Estimated Deal Value ($)</label>
-                <input id="modal-contact-value" type="number" placeholder="e.g. 5000" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary">
+                <label class="block text-xs font-bold text-text-muted uppercase mb-1">Company</label>
+                <input id="modal-contact-company" type="text" placeholder="e.g. Stripe" class="w-full bg-background border border-text-main/20 focus:border-text-main p-3 rounded-xl text-text-main text-sm focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-text-muted uppercase mb-1">Estimated Deal Value ($)</label>
+                <input id="modal-contact-value" type="number" placeholder="e.g. 5000" class="w-full bg-background border border-text-main/20 focus:border-text-main p-3 rounded-xl text-text-main text-sm focus:outline-none">
             </div>
             <div class="flex justify-end gap-2 mt-2">
-                <button onclick="window.hideAddContactModal()" class="px-4 py-2 bg-panel-hover border border-glass-border rounded-xl text-sm font-medium hover:bg-glass-border transition-colors cursor-pointer">Cancel</button>
-                <button onclick="window.submitContactForm('${pid}')" class="px-4 py-2 bg-primary rounded-xl text-sm font-semibold hover:bg-indigo-600 transition-colors cursor-pointer">Add Prospect</button>
+                <button onclick="window.hideAddContactModal()" class="px-4 py-2 bg-background border border-text-main/20 rounded-xl text-sm font-semibold hover:bg-text-main/10 transition-colors cursor-pointer">Cancel</button>
+                <button onclick="window.submitContactForm('${pid}')" class="px-4 py-2 bg-text-main text-background hover:bg-text-main/90 rounded-xl text-sm font-bold transition-colors cursor-pointer">Add Prospect</button>
             </div>
         </div>
     </div>
@@ -182,6 +198,43 @@ if (typeof window !== 'undefined') {
     w.deleteContactPrompt = (cid: string) => {
         if (confirm("Permanently remove this campaign deal prospect?")) {
             deleteContact(cid);
+        }
+    };
+
+    // --- HTML5 Drag & Drop handlers ---
+    w.handleContactDragStart = (e: DragEvent, cid: string) => {
+        e.dataTransfer?.setData("text/plain", cid);
+        if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = "move";
+        }
+        const card = document.getElementById(`contact-card-${cid}`);
+        if (card) {
+            card.classList.add("opacity-50", "border-dashed");
+        }
+    };
+
+    w.handleContactDragOver = (e: DragEvent) => {
+        e.preventDefault();
+        const col = e.currentTarget as HTMLElement;
+        col.classList.add("bg-text-main/5", "border-text-main/30");
+    };
+
+    w.handleContactDragLeave = (e: DragEvent) => {
+        const col = e.currentTarget as HTMLElement;
+        col.classList.remove("bg-text-main/5", "border-text-main/30");
+    };
+
+    w.handleContactDrop = (e: DragEvent, targetStage: string) => {
+        e.preventDefault();
+        const col = e.currentTarget as HTMLElement;
+        col.classList.remove("bg-text-main/5", "border-text-main/30");
+
+        const cid = e.dataTransfer?.getData("text/plain");
+        if (cid) {
+            const contact = state.contacts.find(c => c.id === cid);
+            if (contact && contact.dealStage !== targetStage) {
+                w.updateContactStage(cid, targetStage);
+            }
         }
     };
 }

@@ -76,12 +76,17 @@ export function renderProjectsView(): string {
             <div class="bg-glass-bg border border-glass-border hover:border-primary p-6 rounded-2xl transition-all cursor-pointer flex flex-col justify-between min-h-[180px] group" onclick="window.navigateTo('project-workspace', '${p.id}')">
                 <div>
                     <div class="flex justify-between items-start mb-4">
-                        <span class="text-3xl filter drop-shadow-[0_0_8px_rgba(99,102,241,0.3)]">📂</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-3xl">📂</span>
+                            <button onclick="event.stopPropagation(); window.toggleProjectStar('${p.id}')" class="text-base hover:scale-115 transition-transform cursor-pointer" title="Star Folder">
+                                ${p.isStarred ? '⭐' : '☆'}
+                            </button>
+                        </div>
                         <div class="flex items-center gap-2">
                             ${actionHTML}
                         </div>
                     </div>
-                    <h3 class="text-lg font-semibold text-white mb-2 font-outfit group-hover:text-primary transition-colors">${sanitizeHTML(p.name)}</h3>
+                    <h3 class="text-lg font-semibold text-white mb-2 font-outfit group-hover:text-text-main transition-colors">${sanitizeHTML(p.name)}</h3>
                     <p class="text-text-muted text-xs mb-6 line-clamp-2">${sanitizeHTML(p.description)}</p>
                 </div>
                 <div class="text-[10px] text-text-muted border-t border-glass-border/50 pt-4 flex justify-between">
@@ -95,9 +100,12 @@ export function renderProjectsView(): string {
             return `
             <div class="bg-glass-bg border border-glass-border hover:border-primary px-6 py-4 rounded-xl transition-all cursor-pointer flex items-center justify-between group" onclick="window.navigateTo('project-workspace', '${p.id}')">
                 <div class="flex items-center gap-4 truncate">
-                    <span class="text-2xl filter drop-shadow-[0_0_8px_rgba(99,102,241,0.2)]">📂</span>
+                    <span class="text-2xl">📂</span>
+                    <button onclick="event.stopPropagation(); window.toggleProjectStar('${p.id}')" class="text-sm hover:scale-115 transition-transform cursor-pointer" title="Star Folder">
+                        ${p.isStarred ? '⭐' : '☆'}
+                    </button>
                     <div class="truncate">
-                        <h3 class="font-semibold text-white font-outfit truncate group-hover:text-primary transition-colors text-sm">${sanitizeHTML(p.name)}</h3>
+                        <h3 class="font-semibold text-white font-outfit truncate group-hover:text-text-main transition-colors text-sm">${sanitizeHTML(p.name)}</h3>
                         <p class="text-text-muted text-[11px] truncate max-w-md">${sanitizeHTML(p.description)}</p>
                     </div>
                 </div>
@@ -118,9 +126,9 @@ export function renderProjectsView(): string {
         <!-- Tabs Header Row -->
         <div class="flex justify-between items-center mb-1">
             <div class="flex gap-6 border-b border-glass-border/30 w-full pb-2">
-                <button onclick="window.setWorkspacesFilter('active')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'active' ? 'text-primary border-b-2 border-primary font-bold' : 'text-text-muted hover:text-white'}">Active Workspaces</button>
-                <button onclick="window.setWorkspacesFilter('archived')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'archived' ? 'text-primary border-b-2 border-primary font-bold' : 'text-text-muted hover:text-white'}">Archived</button>
-                <button onclick="window.setWorkspacesFilter('bin')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'bin' ? 'text-primary border-b-2 border-primary font-bold' : 'text-text-muted hover:text-white'}">Bin / Trash</button>
+                <button onclick="window.setWorkspacesFilter('active')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'active' ? 'text-text-main border-b-2 border-text-main font-bold' : 'text-text-muted hover:text-text-main'}">Active Workspaces</button>
+                <button onclick="window.setWorkspacesFilter('archived')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'archived' ? 'text-text-main border-b-2 border-text-main font-bold' : 'text-text-muted hover:text-text-main'}">Archived</button>
+                <button onclick="window.setWorkspacesFilter('bin')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'bin' ? 'text-text-main border-b-2 border-text-main font-bold' : 'text-text-muted hover:text-text-main'}">Bin / Trash</button>
             </div>
         </div>
 

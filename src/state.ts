@@ -41,7 +41,10 @@ export const ProjectSchema = z.object({
     status: z.enum(['active', 'completed']),
     lastActive: z.number(),
     isArchived: z.boolean().optional(),
-    isBinned: z.boolean().optional()
+    isBinned: z.boolean().optional(),
+    isStarred: z.boolean().optional(),
+    budgetLimit: z.number().optional(),
+    spent: z.number().optional()
 });
 
 export const IdeaSchema = z.object({
@@ -86,7 +89,10 @@ export const DraftSchema = z.object({
     content: z.string(),
     format: z.enum(['blog', 'tweet', 'email']),
     created: z.number(),
-    updated: z.number()
+    updated: z.number(),
+    cmsStatus: z.enum(['draft', 'review', 'approved', 'published']).optional(),
+    seoKeywords: z.string().optional(),
+    collaborators: z.string().optional()
 });
 
 export const ConnectionSchema = z.object({
@@ -173,8 +179,15 @@ const DEFAULT_KANBAN: KanbanTask[] = [
 ];
 
 const DEFAULT_PROJECTS: Project[] = [
-    { id: 'p1', name: 'Q3 Marketing Launch', description: 'Major product update campaign.', status: 'active', lastActive: Date.now() },
-    { id: 'p2', name: 'Agentic Workflow Video', description: 'YouTube tutorial series.', status: 'active', lastActive: Date.now() - 86400000*2 }
+    { id: 'p1', name: 'Q3 Product Launch', description: 'Major product updates campaign.', status: 'active', lastActive: Date.now(), isStarred: true, budgetLimit: 50000, spent: 15150 },
+    { id: 'p2', name: 'YouTube Retainer Channel', description: 'Developer video tutorial series.', status: 'active', lastActive: Date.now() - 86400000 * 2, budgetLimit: 12000, spent: 3000 },
+    { id: 'p3', name: 'Pinterest Creative Ads', description: 'Visual banner campaign creative boosts.', status: 'active', lastActive: Date.now() - 86400000 * 4, budgetLimit: 8000, spent: 400 },
+    { id: 'p4', name: 'Facebook Ads A/B Campaign', description: 'Conversion and retargeting ads.', status: 'active', lastActive: Date.now() - 86400000 * 6, isStarred: true, budgetLimit: 25000, spent: 12400 },
+    { id: 'p5', name: 'Threads Community Growth', description: 'Daily engagement drives and AMAs.', status: 'active', lastActive: Date.now() - 86400000 * 8, budgetLimit: 5000, spent: 250 },
+    { id: 'p6', name: 'WhatsApp Customer Operations', description: 'Direct messaging and service updates.', status: 'active', lastActive: Date.now() - 86400000 * 10, budgetLimit: 6000, spent: 0 },
+    { id: 'p7', name: 'X Product Hunt Launch', description: 'Tech community launch day push.', status: 'active', lastActive: Date.now() - 86400000 * 12, isStarred: true, budgetLimit: 15000, spent: 15000 },
+    { id: 'p8', name: 'Content Calendar Pipeline', description: 'Long-form articles and resources.', status: 'active', lastActive: Date.now() - 86400000 * 14, budgetLimit: 10000, spent: 2150 },
+    { id: 'p9', name: 'Influencer Co-branding Hub', description: 'Sponsorship collaborations and codes.', status: 'active', lastActive: Date.now() - 86400000 * 16, budgetLimit: 30000, spent: 12000 }
 ];
 
 const DEFAULT_IDEAS: Idea[] = [
@@ -785,6 +798,33 @@ export function deleteProject(pid: string) {
         state.currentProject = null;
     }
     notifyStateChange();
+}
+
+export function toggleProjectStar(pid: string) {
+    const p = state.projects.find(x => x.id === pid);
+    if (p) {
+        p.isStarred = !p.isStarred;
+        notifyStateChange();
+    }
+}
+
+export function updateCmsMetadata(draftId: string, cmsStatus: Draft['cmsStatus'], seoKeywords: string, collaborators: string) {
+    const d = state.drafts.find(x => x.id === draftId);
+    if (d) {
+        d.cmsStatus = cmsStatus;
+        d.seoKeywords = seoKeywords.trim();
+        d.collaborators = collaborators.trim();
+        notifyStateChange();
+    }
+}
+
+export function updateErpBudget(pid: string, budgetLimit: number, spent: number) {
+    const p = state.projects.find(x => x.id === pid);
+    if (p) {
+        p.budgetLimit = budgetLimit;
+        p.spent = spent;
+        notifyStateChange();
+    }
 }
 
 export function addTask(pid: string, title: string, tag: string, priority?: KanbanTask['priority'], points?: number) {

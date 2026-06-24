@@ -27,6 +27,9 @@ export interface Project {
     lastActive: number;
     isArchived?: boolean;
     isBinned?: boolean;
+    isStarred?: boolean;
+    budgetLimit?: number;
+    spent?: number;
 }
 
 export interface Idea {
@@ -72,6 +75,9 @@ export interface Draft {
     format: 'blog' | 'tweet' | 'email';
     created: number;
     updated: number;
+    cmsStatus?: 'draft' | 'review' | 'approved' | 'published';
+    seoKeywords?: string;
+    collaborators?: string;
 }
 
 export interface Connection {
