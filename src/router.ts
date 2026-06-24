@@ -11,6 +11,8 @@ import { renderAnalyticsView } from "./views/analytics";
 import { renderConnectionsView } from "./views/connections";
 import { renderCRMView } from "./views/crm";
 import { renderTeamView } from "./views/team";
+import { renderDatabaseView } from "./views/database";
+import { renderCyclesView } from "./views/cycles";
 
 export interface NavGroup {
     key: string;
@@ -65,6 +67,22 @@ export const views: ViewConfig[] = [
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderKanbanView(pid || '')
+    },
+    {
+        key: 'project-cycles',
+        title: 'Cycles & Sprints',
+        icon: '⚡',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderCyclesView(pid || '')
+    },
+    {
+        key: 'database-hub',
+        title: 'Collaborative Databases',
+        icon: '📊',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderDatabaseView(pid || '')
     },
     {
         key: 'research',

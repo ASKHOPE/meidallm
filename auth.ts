@@ -20,7 +20,7 @@ if (!databaseUrl) {
 // Parse connection URL to ensure SSL parameters are properly overridden
 const connectionConfig = parse(databaseUrl);
 
-const dbPool = new pg.Pool({
+export const dbPool = new pg.Pool({
   host: connectionConfig.host || undefined,
   port: connectionConfig.port ? parseInt(connectionConfig.port, 10) : undefined,
   database: connectionConfig.database || undefined,

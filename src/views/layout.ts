@@ -19,8 +19,24 @@ export function renderProjectDropdownOptions(): string {
     }
     return options;
 }
-
 export function renderSidebarNavigation(): string {
+    const viewIconColors: Record<string, { bg: string, text: string }> = {
+        'workspaces': { bg: 'bg-amber-500/10 dark:bg-amber-500/20', text: 'text-amber-600 dark:text-amber-400' },
+        'idea-canvas': { bg: 'bg-yellow-500/10 dark:bg-yellow-500/20', text: 'text-yellow-600 dark:text-yellow-400' },
+        'kanban-board': { bg: 'bg-blue-500/10 dark:bg-blue-500/20', text: 'text-blue-600 dark:text-blue-400' },
+        'project-cycles': { bg: 'bg-purple-500/10 dark:bg-purple-500/20', text: 'text-purple-600 dark:text-purple-400' },
+        'database-hub': { bg: 'bg-emerald-500/10 dark:bg-emerald-500/20', text: 'text-emerald-600 dark:text-emerald-400' },
+        'research': { bg: 'bg-cyan-500/10 dark:bg-cyan-500/20', text: 'text-cyan-600 dark:text-cyan-400' },
+        'media': { bg: 'bg-pink-500/10 dark:bg-pink-500/20', text: 'text-pink-600 dark:text-pink-400' },
+        'drafts': { bg: 'bg-indigo-500/10 dark:bg-indigo-500/20', text: 'text-indigo-600 dark:text-indigo-400' },
+        'publish': { bg: 'bg-orange-500/10 dark:bg-orange-500/20', text: 'text-orange-600 dark:text-orange-400' },
+        'analytics': { bg: 'bg-teal-500/10 dark:bg-teal-500/20', text: 'text-teal-600 dark:text-teal-400' },
+        'connections': { bg: 'bg-sky-500/10 dark:bg-sky-500/20', text: 'text-sky-600 dark:text-sky-400' },
+        'crm': { bg: 'bg-rose-500/10 dark:bg-rose-500/20', text: 'text-rose-600 dark:text-rose-400' },
+        'team': { bg: 'bg-green-500/10 dark:bg-green-500/20', text: 'text-green-600 dark:text-green-400' },
+        'settings': { bg: 'bg-slate-500/10 dark:bg-slate-500/20', text: 'text-slate-600 dark:text-slate-400' }
+    };
+
     return sidebarGroups.map(group => {
         let groupContent = "";
         
@@ -29,27 +45,33 @@ export function renderSidebarNavigation(): string {
             groupContent = workflowTools.map(item => {
                 const isProjectScoped = item.scope === 'project';
                 const pidAttr = isProjectScoped && state.currentProject ? `data-pid="${state.currentProject}"` : '';
+                const colors = viewIconColors[item.key] || { bg: 'bg-zinc-500/10 dark:bg-zinc-500/20', text: 'text-zinc-600 dark:text-zinc-400' };
                 return `
-                <button class="nav-btn w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-text-muted hover:bg-panel-hover hover:text-white flex items-center gap-2.5" 
+                <button class="nav-btn w-full text-left px-4 py-2.5 rounded-xl transition-all font-medium text-text-muted hover:bg-panel-hover hover:text-text-main flex items-center gap-3 border border-transparent" 
                         data-view="${item.key}" ${pidAttr}>
-                    <span>${item.icon}</span> ${item.title}
+                    <span class="w-8 h-8 rounded-lg flex items-center justify-center ${colors.bg} ${colors.text} text-base shrink-0">${item.icon}</span> 
+                    <span class="truncate">${item.title}</span>
                 </button>
                 `;
             }).join('');
         } else {
             const groupTools = views.filter(v => v.group === group.key && v.icon && v.scope !== 'project');
-            groupContent = groupTools.map(item => `
-                <button class="nav-btn w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-text-muted hover:bg-panel-hover hover:text-white flex items-center gap-2.5" data-view="${item.key}">
-                    <span>${item.icon}</span> ${item.title}
+            groupContent = groupTools.map(item => {
+                const colors = viewIconColors[item.key] || { bg: 'bg-zinc-500/10 dark:bg-zinc-500/20', text: 'text-zinc-600 dark:text-zinc-400' };
+                return `
+                <button class="nav-btn w-full text-left px-4 py-2.5 rounded-xl transition-all font-medium text-text-muted hover:bg-panel-hover hover:text-text-main flex items-center gap-3 border border-transparent" data-view="${item.key}">
+                    <span class="w-8 h-8 rounded-lg flex items-center justify-center ${colors.bg} ${colors.text} text-base shrink-0">${item.icon}</span> 
+                    <span class="truncate">${item.title}</span>
                 </button>
-            `).join('');
+                `;
+            }).join('');
         }
 
         const openAttr = group.open ? 'open' : '';
         
         return `
         <details class="group ${group.key === 'workflow' ? '' : 'mt-4'}" ${openAttr}>
-            <summary class="flex justify-between items-center text-xs uppercase tracking-wide text-text-muted font-semibold cursor-pointer select-none py-2 hover:text-white transition-colors list-none [&::-webkit-details-marker]:hidden">
+            <summary class="flex justify-between items-center text-xs uppercase tracking-wide text-text-muted font-semibold cursor-pointer select-none py-2 hover:text-text-main transition-colors list-none [&::-webkit-details-marker]:hidden">
                 ${group.label}
                 <span class="transition-transform group-open:-rotate-180 text-sm">▾</span>
             </summary>
@@ -132,12 +154,26 @@ export function renderLayoutHTML(): string {
         <header class="flex justify-between items-center pb-6 border-b border-glass-border mb-8">
             <h1 id="page-title" class="text-3xl font-semibold font-outfit">Overview</h1>
             <div class="flex gap-3">
-                <button class="w-11 h-11 bg-glass-bg border border-glass-border rounded-xl flex items-center justify-center hover:bg-panel-hover hover:-translate-y-0.5 transition-all" onclick="alert('Search capabilities loaded')">🔍</button>
-                <button class="w-11 h-11 bg-glass-bg border border-glass-border rounded-xl flex items-center justify-center hover:bg-panel-hover hover:-translate-y-0.5 transition-all" onclick="alert('No new notifications')">🔔</button>
+                <button class="w-11 h-11 bg-glass-bg border border-glass-border rounded-xl flex items-center justify-center hover:bg-panel-hover hover:-translate-y-0.5 transition-all cursor-pointer" onclick="window.toggleCommandMenu(true)" title="Command Menu (⌘K)">🔍</button>
+                <button class="w-11 h-11 bg-glass-bg border border-glass-border rounded-xl flex items-center justify-center hover:bg-panel-hover hover:-translate-y-0.5 transition-all cursor-pointer" onclick="alert('No new notifications')">🔔</button>
             </div>
         </header>
         <div id="app-content" class="flex-grow flex flex-col"></div>
     </main>
+</div>
+
+<!-- Command Menu Modal -->
+<div id="command-menu-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center hidden z-50 pt-24 animate-[fadeIn_0.15s_ease-out]" onclick="window.toggleCommandMenu(false)">
+    <div class="bg-glass-bg border border-glass-border rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[400px]" onclick="event.stopPropagation()">
+        <div class="flex items-center gap-3 border-b border-glass-border/40 p-4">
+            <span class="text-text-muted text-sm">🔍</span>
+            <input type="text" id="command-menu-search" oninput="window.filterCommandMenu(this.value)" placeholder="Type a command or search..." class="w-full bg-transparent text-white text-sm focus:outline-none placeholder-text-muted" autofocus>
+            <span class="text-[10px] text-text-muted bg-panel-hover px-1.5 py-0.5 rounded font-mono font-semibold select-none">ESC</span>
+        </div>
+        <div class="flex-grow overflow-y-auto p-2.5 flex flex-col gap-1.5" id="command-menu-items">
+            <!-- Command categories & items will be rendered dynamically by JS -->
+        </div>
+    </div>
 </div>
 `;
 }

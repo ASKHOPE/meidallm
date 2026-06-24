@@ -106,7 +106,7 @@ function renderView(viewKey: string, pid?: string) {
     
     // Update active navigation state styling
     document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('bg-[rgba(99,102,241,0.1)]', 'border-[rgba(99,102,241,0.2)]', 'text-primary');
+        btn.classList.remove('bg-panel-hover', 'border-glass-border', 'text-text-main');
         btn.classList.add('text-text-muted');
     });
     
@@ -114,7 +114,7 @@ function renderView(viewKey: string, pid?: string) {
     const activeBtn = document.querySelector(`.nav-btn[data-view="${viewKey}"]${searchPid ? `[data-pid="${searchPid}"]` : ''}`);
     if (activeBtn) {
         activeBtn.classList.remove('text-text-muted');
-        activeBtn.classList.add('bg-[rgba(99,102,241,0.1)]', 'border-[rgba(99,102,241,0.2)]', 'text-primary');
+        activeBtn.classList.add('bg-panel-hover', 'border-glass-border', 'text-text-main');
     }
 
     let viewHTML = '';
@@ -807,6 +807,125 @@ async function init() {
         }
     });
 }
+
+// Command Menu (CMD+K / Ctrl+K) Logic & Actions
+const COMMANDS = [
+    { name: "Go to Workspaces", category: "Navigation", action: () => w.navigateTo('workspaces') },
+    { name: "Go to Task Kanban Board", category: "Navigation", action: () => w.navigateTo('kanban-board') },
+    { name: "Go to Cycles & Sprints", category: "Navigation", action: () => w.navigateTo('project-cycles') },
+    { name: "Go to Collaborative Databases", category: "Navigation", action: () => w.navigateTo('database-hub') },
+    { name: "Go to Idea Canvas", category: "Navigation", action: () => w.navigateTo('idea-canvas') },
+    { name: "Go to Research & RAG Engine", category: "Navigation", action: () => w.navigateTo('research') },
+    { name: "Go to Media Assets Studio", category: "Navigation", action: () => w.navigateTo('media') },
+    { name: "Go to Drafts & Compose", category: "Navigation", action: () => w.navigateTo('drafts') },
+    { name: "Go to Campaign Analytics", category: "Navigation", action: () => w.navigateTo('analytics') },
+    { name: "Go to CRM Hub", category: "Navigation", action: () => w.navigateTo('crm') },
+    { name: "Go to Team Office", category: "Navigation", action: () => w.navigateTo('team') },
+    { name: "Go to Settings", category: "Navigation", action: () => w.navigateTo('settings') },
+    { name: "Create New Pipeline Task", category: "Actions", action: () => { w.toggleCommandMenu(false); w.showAddTaskModal(); } },
+    { name: "Create New Project/Campaign", category: "Actions", action: () => { w.toggleCommandMenu(false); w.createProjectPrompt(); } },
+    { name: "Create Collaborative Database Table", category: "Actions", action: () => { w.toggleCommandMenu(false); w.showCreateTableModal(); } },
+    { name: "Create New Sprint Cycle", category: "Actions", action: () => { w.toggleCommandMenu(false); w.showAddCycleModal(); } },
+    { name: "Switch Theme to Night Mode", category: "Settings", action: () => { w.setTheme('night'); w.toggleCommandMenu(false); } },
+    { name: "Switch Theme to Day Mode", category: "Settings", action: () => { w.setTheme('day'); w.toggleCommandMenu(false); } },
+    { name: "Switch Theme to Auto (System) Mode", category: "Settings", action: () => { w.setTheme('auto'); w.toggleCommandMenu(false); } }
+];
+
+w.toggleCommandMenu = (show: boolean) => {
+    state.activeCommandMenu = show;
+    const modal = document.getElementById('command-menu-modal');
+    const searchInput = document.getElementById('command-menu-search') as HTMLInputElement;
+    if (modal) {
+        if (show) {
+            modal.classList.remove('hidden');
+            if (searchInput) {
+                searchInput.value = "";
+                setTimeout(() => searchInput.focus(), 50);
+            }
+            w.filterCommandMenu("");
+        } else {
+            modal.classList.add('hidden');
+        }
+    }
+};
+
+w.filterCommandMenu = (query: string) => {
+    const container = document.getElementById('command-menu-items');
+    if (!container) return;
+    
+    const cleanQuery = query.toLowerCase().trim();
+    const currentList = [...COMMANDS];
+    
+    state.projects.forEach(p => {
+        if (!currentList.some(item => item.name.includes(p.name))) {
+            currentList.push({
+                name: `Switch Project to: ${p.name}`,
+                category: "Workspaces",
+                action: () => { w.selectProject(p.id); w.toggleCommandMenu(false); }
+            });
+        }
+    });
+    
+    const filtered = cleanQuery ? currentList.filter(item => item.name.toLowerCase().includes(cleanQuery)) : currentList;
+    
+    const categories: Record<string, typeof filtered> = {};
+    filtered.forEach(item => {
+        if (!categories[item.category]) categories[item.category] = [];
+        categories[item.category].push(item);
+    });
+    
+    let html = '';
+    for (const [catName, items] of Object.entries(categories)) {
+        html += `
+        <div class="mb-3">
+            <span class="text-[9px] uppercase tracking-wider font-semibold text-text-muted px-2.5 mb-1.5 block">${catName}</span>
+            <div class="flex flex-col gap-0.5">
+                ${items.map((item, idx) => `
+                <button onclick="window.runCommandAction(${currentList.indexOf(item)})" 
+                        class="w-full text-left px-2.5 py-2 hover:bg-panel-hover/50 text-xs text-white rounded-xl transition-colors cursor-pointer flex items-center justify-between group">
+                    <span>${sanitizeHTML(item.name)}</span>
+                    <span class="text-[9px] text-text-muted opacity-0 group-hover:opacity-100 transition-opacity">↵</span>
+                </button>
+                `).join('')}
+            </div>
+        </div>
+        `;
+    }
+    
+    if (filtered.length === 0) {
+        html = `<div class="text-center text-xs text-text-muted py-8">No commands or matches found.</div>`;
+    }
+    
+    container.innerHTML = html;
+};
+
+w.runCommandAction = (index: number) => {
+    const list = [...COMMANDS];
+    state.projects.forEach(p => {
+        if (!list.some(item => item.name.includes(p.name))) {
+            list.push({
+                name: `Switch Project to: ${p.name}`,
+                category: "Workspaces",
+                action: () => { w.selectProject(p.id); w.toggleCommandMenu(false); }
+            });
+        }
+    });
+    const cmd = list[index];
+    if (cmd) {
+        cmd.action();
+    }
+};
+
+// Keyboard listener for command menu shortcuts
+document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        w.toggleCommandMenu(!state.activeCommandMenu);
+    }
+    if (e.key === 'Escape' && state.activeCommandMenu) {
+        w.toggleCommandMenu(false);
+    }
+});
 
 // Startup Hooks
 document.addEventListener('DOMContentLoaded', init);

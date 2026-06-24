@@ -222,3 +222,63 @@ See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode de
 {"message":"src/main.ts","label":"watch","level":"info"}
 {"message":"program reload","label":"vite","level":"info"}
 {"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"[200] / 715ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 44ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 401ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 41ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 454ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 40ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 41ms","label":null,"level":"info"}
+{"message":"Internal server error: Transform failed with 1 error:\n\n[PARSE_ERROR] Unexpected token\n     ╭─[ src/state.ts:613:5 ]\n     │\n 613 │     } catch (e) {\n     │     ┬  \n     │     ╰── \n─────╯\n\n  Plugin: vite:oxc\n  File: /Users/hosanna/Documents/GitHub/meidallm/src/state.ts\n      at transformWithOxc (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:3657:19)\n      at TransformPluginContext.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:3728:26)\n      at EnvironmentPluginContainer.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29699:51)\n      at async loadAndTransform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:19725:26)\n      at async viteTransformMiddleware (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:24149:20)","label":"vite","level":"error"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 49ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 38ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 403ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 47ms","label":null,"level":"info"}
+{"message":"src/router.ts","label":"watch","level":"info"}
+{"message":"[200] / 407ms","label":null,"level":"info"}
+{"message":"Internal server error: Failed to resolve import \"./views/database\" from \"src/router.ts\". Does the file exist?\n  Plugin: vite:import-analysis\n  File: /Users/hosanna/Documents/GitHub/meidallm/src/router.ts:14:35\n  12 |  import { renderCRMView } from \"./views/crm\";\n  13 |  import { renderTeamView } from \"./views/team\";\n  14 |  import { renderDatabaseView } from \"./views/database\";\n     |                                      ^\n  15 |  import { renderCyclesView } from \"./views/cycles\";\n  16 |  // Configurable accordion categories for sidebar layout\n      at TransformPluginContext._formatLog (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29914:39)\n      at TransformPluginContext.error (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29911:14)\n      at normalizeUrl (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:26975:18)\n      at async file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:27038:30\n      at async Promise.all (index 13)\n      at async TransformPluginContext.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:27006:4)\n      at async EnvironmentPluginContainer.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29699:14)\n      at async loadAndTransform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:19725:26)\n      at async viteTransformMiddleware (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:24149:20)","label":"vite","level":"error"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 383ms","label":null,"level":"info"}
+{"message":"Internal server error: Failed to resolve import \"./views/database\" from \"src/router.ts\". Does the file exist?\n  Plugin: vite:import-analysis\n  File: /Users/hosanna/Documents/GitHub/meidallm/src/router.ts:14:35\n  12 |  import { renderCRMView } from \"./views/crm\";\n  13 |  import { renderTeamView } from \"./views/team\";\n  14 |  import { renderDatabaseView } from \"./views/database\";\n     |                                      ^\n  15 |  import { renderCyclesView } from \"./views/cycles\";\n  16 |  // Configurable accordion categories for sidebar layout\n      at TransformPluginContext._formatLog (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29914:39)\n      at TransformPluginContext.error (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29911:14)\n      at normalizeUrl (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:26975:18)\n      at async file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:27038:30\n      at async Promise.all (index 13)\n      at async TransformPluginContext.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:27006:4)\n      at async EnvironmentPluginContainer.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29699:14)\n      at async loadAndTransform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:19725:26)","label":"vite","level":"error"}
+{"message":"src/views/kanban.ts","label":"watch","level":"info"}
+{"message":"[200] / 388ms","label":null,"level":"info"}
+{"message":"Internal server error: Failed to resolve import \"./views/database\" from \"src/router.ts\". Does the file exist?\n  Plugin: vite:import-analysis\n  File: /Users/hosanna/Documents/GitHub/meidallm/src/router.ts:14:35\n  12 |  import { renderCRMView } from \"./views/crm\";\n  13 |  import { renderTeamView } from \"./views/team\";\n  14 |  import { renderDatabaseView } from \"./views/database\";\n     |                                      ^\n  15 |  import { renderCyclesView } from \"./views/cycles\";\n  16 |  // Configurable accordion categories for sidebar layout\n      at TransformPluginContext._formatLog (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29914:39)\n      at TransformPluginContext.error (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29911:14)\n      at normalizeUrl (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:26975:18)\n      at async file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:27038:30\n      at async Promise.all (index 13)\n      at async TransformPluginContext.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:27006:4)\n      at async EnvironmentPluginContainer.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29699:14)\n      at async loadAndTransform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:19725:26)","label":"vite","level":"error"}
+{"message":"src/views/cycles.ts","label":"watch","level":"info"}
+{"message":"[200] / 297ms","label":null,"level":"info"}
+{"message":"Internal server error: Failed to resolve import \"./views/database\" from \"src/router.ts\". Does the file exist?\n  Plugin: vite:import-analysis\n  File: /Users/hosanna/Documents/GitHub/meidallm/src/router.ts:14:35\n  12 |  import { renderCRMView } from \"./views/crm\";\n  13 |  import { renderTeamView } from \"./views/team\";\n  14 |  import { renderDatabaseView } from \"./views/database\";\n     |                                      ^\n  15 |  import { renderCyclesView } from \"./views/cycles\";\n  16 |  // Configurable accordion categories for sidebar layout\n      at TransformPluginContext._formatLog (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29914:39)\n      at TransformPluginContext.error (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29911:14)\n      at normalizeUrl (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:26975:18)\n      at async file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:27038:30\n      at async Promise.all (index 13)\n      at async TransformPluginContext.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:27006:4)\n      at async EnvironmentPluginContainer.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29699:14)\n      at async loadAndTransform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:19725:26)\n      at async viteTransformMiddleware (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:24149:20)","label":"vite","level":"error"}
+{"message":"src/views/database.ts","label":"watch","level":"info"}
+{"message":"[200] / 394ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 44ms","label":null,"level":"info"}
+{"message":"src/views/layout.ts","label":"watch","level":"info"}
+{"message":"[200] / 41ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 44ms","label":null,"level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"[200] / 424ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 39ms","label":null,"level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"[200] / 377ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 45ms","label":null,"level":"info"}
+{"message":"/index.css","label":"watch","level":"info"}
+{"message":"[200] / 510ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 45ms","label":null,"level":"info"}
+{"message":"src/pages/index.astro","label":"watch","level":"info"}
+{"message":"[200] / 377ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 43ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"/index.css","label":"watch","level":"info"}
+{"message":"src/views/layout.ts","label":"watch","level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"src/views/layout.ts","label":"watch","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}

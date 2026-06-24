@@ -15,6 +15,8 @@ export interface KanbanTask {
     checklist?: string;
     priority?: 'none' | 'low' | 'medium' | 'high' | 'urgent';
     points?: number;
+    cycleId?: string;
+    moduleId?: string;
 }
 
 export interface Project {
@@ -109,4 +111,42 @@ export interface TeamMember {
     role: string;
     status: 'active' | 'meeting' | 'offline' | 'vacation';
     avatarColor: string;
+}
+
+export interface Cycle {
+    id: string;
+    projectId: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+    status: 'active' | 'completed' | 'upcoming';
+}
+
+export interface Module {
+    id: string;
+    projectId: string;
+    name: string;
+    description: string;
+    status: 'backlog' | 'in-progress' | 'done';
+}
+
+export interface DbField {
+    id: string;
+    name: string;
+    type: 'text' | 'number' | 'date' | 'select';
+    options?: string[];
+}
+
+export interface DbRow {
+    id: string;
+    cells: Record<string, any>;
+}
+
+export interface DbTable {
+    id: string;
+    projectId: string;
+    name: string;
+    description: string;
+    fields: DbField[];
+    rows: DbRow[];
 }

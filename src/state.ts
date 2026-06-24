@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember } from "./types";
+import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember, Cycle, Module, DbField, DbRow, DbTable } from "./types";
 
 // --- Zod Validation Schemas ---
 export const KanbanTaskSchema = z.object({
@@ -18,7 +18,9 @@ export const KanbanTaskSchema = z.object({
     dueDate: z.string().optional(),
     checklist: z.string().optional(),
     priority: z.enum(['none', 'low', 'medium', 'high', 'urgent']).optional(),
-    points: z.number().optional()
+    points: z.number().optional(),
+    cycleId: z.string().optional(),
+    moduleId: z.string().optional()
 });
 
 export const ProjectSchema = z.object({
@@ -113,6 +115,44 @@ export const TeamMemberSchema = z.object({
     role: z.string(),
     status: z.enum(['active', 'meeting', 'offline', 'vacation']),
     avatarColor: z.string()
+});
+
+export const CycleSchema = z.object({
+    id: z.string(),
+    projectId: z.string(),
+    name: z.string(),
+    startDate: z.string(),
+    endDate: z.string(),
+    status: z.enum(['active', 'completed', 'upcoming'])
+});
+
+export const ModuleSchema = z.object({
+    id: z.string(),
+    projectId: z.string(),
+    name: z.string(),
+    description: z.string(),
+    status: z.enum(['backlog', 'in-progress', 'done'])
+});
+
+export const DbFieldSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    type: z.enum(['text', 'number', 'date', 'select']),
+    options: z.array(z.string()).optional()
+});
+
+export const DbRowSchema = z.object({
+    id: z.string(),
+    cells: z.record(z.any())
+});
+
+export const DbTableSchema = z.object({
+    id: z.string(),
+    projectId: z.string(),
+    name: z.string(),
+    description: z.string(),
+    fields: z.array(DbFieldSchema),
+    rows: z.array(DbRowSchema)
 });
 
 // --- Default Initial State Fallbacks ---
@@ -213,6 +253,107 @@ const DEFAULT_TEAM: TeamMember[] = [
     { id: 'tm4', name: 'Monica Hall', role: 'Agency Relations', status: 'vacation', avatarColor: 'bg-amber-500' }
 ];
 
+const DEFAULT_CYCLES: Cycle[] = [
+    { id: 'cy1', projectId: 'p1', name: 'Cycle 1: Alpha Launch', startDate: '2026-06-01', endDate: '2026-06-14', status: 'completed' },
+    { id: 'cy2', projectId: 'p1', name: 'Cycle 2: Core UX', startDate: '2026-06-15', endDate: '2026-06-28', status: 'active' },
+    { id: 'cy3', projectId: 'p1', name: 'Cycle 3: Integrations', startDate: '2026-06-29', endDate: '2026-07-12', status: 'upcoming' }
+];
+
+const DEFAULT_MODULES: Module[] = [
+    { id: 'mod1', projectId: 'p1', name: 'Core Platform', description: 'Underlying services and authentication.', status: 'done' },
+    { id: 'mod2', projectId: 'p1', name: 'Campaign RAG Engine', description: 'AI-assisted context search & generation.', status: 'in-progress' },
+    { id: 'mod3', projectId: 'p1', name: 'Direct Social Publishing', description: 'Connections and auto-scheduler.', status: 'backlog' }
+];
+
+const DEFAULT_TABLES: DbTable[] = [
+    {
+        id: 'tbl-influencer',
+        projectId: 'p1',
+        name: 'Influencer Directory',
+        description: 'Track media outreach contacts, sponsor deals, and follower metrics.',
+        fields: [
+            { id: 'f-name', name: 'Influencer Name', type: 'text' },
+            { id: 'f-platform', name: 'Platform', type: 'select', options: ['YouTube', 'TikTok', 'X (Twitter)', 'Instagram'] },
+            { id: 'f-followers', name: 'Follower Count', type: 'number' },
+            { id: 'f-email', name: 'Contact Email', type: 'text' },
+            { id: 'f-status', name: 'Outreach Status', type: 'select', options: ['Planned', 'Contacted', 'Negotiating', 'Contracted'] }
+        ],
+        rows: [
+            {
+                id: 'row-1',
+                cells: {
+                    'f-name': 'Linus Tech Tips',
+                    'f-platform': 'YouTube',
+                    'f-followers': 15000000,
+                    'f-email': 'linus@lttgroup.com',
+                    'f-status': 'Negotiating'
+                }
+            },
+            {
+                id: 'row-2',
+                cells: {
+                    'f-name': 'MKBHD',
+                    'f-platform': 'YouTube',
+                    'f-followers': 18000000,
+                    'f-email': 'marques@mkbhd.com',
+                    'f-status': 'Contracted'
+                }
+            },
+            {
+                id: 'row-3',
+                cells: {
+                    'f-name': 'TechCrunch',
+                    'f-platform': 'X (Twitter)',
+                    'f-followers': 10000000,
+                    'f-email': 'tips@techcrunch.com',
+                    'f-status': 'Planned'
+                }
+            }
+        ]
+    },
+    {
+        id: 'tbl-budget',
+        projectId: 'p1',
+        name: 'Campaign Budget & Expenses',
+        description: 'Record operating spend, sponsorship costs, and ad investments.',
+        fields: [
+            { id: 'f-desc', name: 'Expense Description', type: 'text' },
+            { id: 'f-category', name: 'Category', type: 'select', options: ['Sponsor Costs', 'Paid Ads', 'Tooling & APIs', 'Contractors'] },
+            { id: 'f-amount', name: 'Amount ($)', type: 'number' },
+            { id: 'f-date', name: 'Date Incurred', type: 'date' }
+        ],
+        rows: [
+            {
+                id: 'row-b1',
+                cells: {
+                    'f-desc': 'YouTube Sponsor Retainer',
+                    'f-category': 'Sponsor Costs',
+                    'f-amount': 12000,
+                    'f-date': '2026-06-10'
+                }
+            },
+            {
+                id: 'row-b2',
+                cells: {
+                    'f-desc': 'Better-Auth API Subscriptions',
+                    'f-category': 'Tooling & APIs',
+                    'f-amount': 150,
+                    'f-date': '2026-06-12'
+                }
+            },
+            {
+                id: 'row-b3',
+                cells: {
+                    'f-desc': 'Vercel Enterprise Plan',
+                    'f-category': 'Tooling & APIs',
+                    'f-amount': 3000,
+                    'f-date': '2026-06-15'
+                }
+            }
+        ]
+    }
+];
+
 export const state = {
     currentUser: null as string | null,
     currentProject: null as string | null,
@@ -236,8 +377,18 @@ export const state = {
     workspacesSortBy: 'last-active' as 'last-active' | 'name-asc' | 'name-desc' | 'tasks-count',
     workspacesFilter: 'active' as 'active' | 'archived' | 'bin',
     kanbanFilter: 'active' as 'active' | 'archived' | 'bin',
+    kanbanActiveCycleId: null as string | null,
+    kanbanActiveModuleId: null as string | null,
     contacts: [] as Contact[],
-    team: [] as TeamMember[]
+    team: [] as TeamMember[],
+    
+    cycles: [] as Cycle[],
+    modules: [] as Module[],
+    tables: [] as DbTable[],
+    kanbanViewMode: 'board' as 'board' | 'list' | 'spreadsheet',
+    activeTableId: 'tbl-influencer' as string | null,
+    databaseViewMode: 'grid' as 'grid' | 'gallery',
+    activeCommandMenu: false
 };
 
 // UI Re-render Callback Registration
@@ -247,8 +398,10 @@ export function registerStateListener(listener: () => void) {
     stateChangeListener = listener;
 }
 
-export function notifyStateChange() {
-    saveState();
+export function notifyStateChange(skipSave = false) {
+    if (!skipSave) {
+        saveState();
+    }
     if (stateChangeListener) {
         stateChangeListener();
     }
@@ -268,127 +421,139 @@ export function applyThemeClass(theme: 'day' | 'night' | 'auto') {
 }
 
 // Persistence & Zod Verification Helpers
-export function loadState() {
+function applyDbState(parsed: any) {
+    if (!parsed) return;
+    
+    if (parsed.kanbanState) {
+        const val = z.array(KanbanTaskSchema).safeParse(parsed.kanbanState);
+        if (val.success) state.kanbanState = val.data;
+    }
+    if (parsed.projects) {
+        const val = z.array(ProjectSchema).safeParse(parsed.projects);
+        if (val.success) state.projects = val.data;
+    }
+    if (parsed.ideasState) {
+        const val = z.array(IdeaSchema).safeParse(parsed.ideasState);
+        if (val.success) state.ideasState = val.data;
+    }
+    if (parsed.taskLogs) {
+        const val = z.array(TaskLogSchema).safeParse(parsed.taskLogs);
+        if (val.success) state.taskLogs = val.data;
+    }
+    if (parsed.researchDocs) {
+        const val = z.array(ResearchDocSchema).safeParse(parsed.researchDocs);
+        if (val.success) state.researchDocs = val.data;
+    }
+    if (parsed.mediaAssets) {
+        const val = z.array(MediaAssetSchema).safeParse(parsed.mediaAssets);
+        if (val.success) state.mediaAssets = val.data;
+    }
+    if (parsed.drafts) {
+        const val = z.array(DraftSchema).safeParse(parsed.drafts);
+        if (val.success) state.drafts = val.data;
+    }
+    if (parsed.connections) {
+        const val = z.array(ConnectionSchema).safeParse(parsed.connections);
+        if (val.success) state.connections = val.data;
+    }
+    if (parsed.publishSchedules) {
+        const val = z.array(PublishScheduleSchema).safeParse(parsed.publishSchedules);
+        if (val.success) state.publishSchedules = val.data;
+    }
+    if (parsed.contacts) {
+        const val = z.array(ContactSchema).safeParse(parsed.contacts);
+        if (val.success) state.contacts = val.data;
+    }
+    if (parsed.team) {
+        const val = z.array(TeamMemberSchema).safeParse(parsed.team);
+        if (val.success) state.team = val.data;
+    }
+    if (parsed.cycles) {
+        const val = z.array(CycleSchema).safeParse(parsed.cycles);
+        if (val.success) state.cycles = val.data;
+    }
+    if (parsed.modules) {
+        const val = z.array(ModuleSchema).safeParse(parsed.modules);
+        if (val.success) state.modules = val.data;
+    }
+    if (parsed.tables) {
+        const val = z.array(DbTableSchema).safeParse(parsed.tables);
+        if (val.success) state.tables = val.data;
+    }
+    if (parsed.theme) state.theme = parsed.theme;
+    if (parsed.kanbanViewMode) state.kanbanViewMode = parsed.kanbanViewMode;
+    if (parsed.activeTableId) state.activeTableId = parsed.activeTableId;
+    if (parsed.databaseViewMode) state.databaseViewMode = parsed.databaseViewMode;
+}
+
+function loadLocalState() {
     try {
-        state.currentUser = localStorage.getItem('meidallm_user');
-        
-        const storedTheme = localStorage.getItem('meidallm_theme');
-        state.theme = (storedTheme as any) || 'night';
-        
-        // Apply theme class to document element on load
-        applyThemeClass(state.theme);
-        
-        const storedKanban = localStorage.getItem('meidallm_kanban');
-        if (storedKanban) {
-            const parsed = JSON.parse(storedKanban);
-            const val = z.array(KanbanTaskSchema).safeParse(parsed);
-            state.kanbanState = val.success ? val.data : DEFAULT_KANBAN;
-        } else {
-            state.kanbanState = DEFAULT_KANBAN;
-        }
-        
-        const storedProjects = localStorage.getItem('meidallm_projects');
-        if (storedProjects) {
-            const parsed = JSON.parse(storedProjects);
-            const val = z.array(ProjectSchema).safeParse(parsed);
-            state.projects = val.success ? val.data : DEFAULT_PROJECTS;
-        } else {
-            state.projects = DEFAULT_PROJECTS;
-        }
-
-        const storedIdeas = localStorage.getItem('meidallm_ideas');
-        if (storedIdeas) {
-            const parsed = JSON.parse(storedIdeas);
-            const val = z.array(IdeaSchema).safeParse(parsed);
-            state.ideasState = val.success ? val.data : DEFAULT_IDEAS;
-        } else {
-            state.ideasState = DEFAULT_IDEAS;
-        }
-
-        const storedLogs = localStorage.getItem('meidallm_logs');
-        if (storedLogs) {
-            const parsed = JSON.parse(storedLogs);
-            const val = z.array(TaskLogSchema).safeParse(parsed);
-            state.taskLogs = val.success ? val.data : [];
-        } else {
-            state.taskLogs = [];
-        }
-
-        const storedResearch = localStorage.getItem('meidallm_research');
-        if (storedResearch) {
-            const parsed = JSON.parse(storedResearch);
-            const val = z.array(ResearchDocSchema).safeParse(parsed);
-            state.researchDocs = val.success ? val.data : DEFAULT_RESEARCH;
-        } else {
-            state.researchDocs = DEFAULT_RESEARCH;
-        }
-
-        const storedMedia = localStorage.getItem('meidallm_media');
-        if (storedMedia) {
-            const parsed = JSON.parse(storedMedia);
-            const val = z.array(MediaAssetSchema).safeParse(parsed);
-            state.mediaAssets = val.success ? val.data : DEFAULT_MEDIA;
-        } else {
-            state.mediaAssets = DEFAULT_MEDIA;
-        }
-
-        const storedDrafts = localStorage.getItem('meidallm_drafts');
-        if (storedDrafts) {
-            const parsed = JSON.parse(storedDrafts);
-            const val = z.array(DraftSchema).safeParse(parsed);
-            state.drafts = val.success ? val.data : DEFAULT_DRAFTS;
-        } else {
-            state.drafts = DEFAULT_DRAFTS;
-        }
-
-        const storedConnections = localStorage.getItem('meidallm_connections');
-        if (storedConnections) {
-            const parsed = JSON.parse(storedConnections);
-            const val = z.array(ConnectionSchema).safeParse(parsed);
-            state.connections = val.success ? val.data : DEFAULT_CONNECTIONS;
-        } else {
-            state.connections = DEFAULT_CONNECTIONS;
-        }
-
-        const storedSchedules = localStorage.getItem('meidallm_schedules');
-        if (storedSchedules) {
-            const parsed = JSON.parse(storedSchedules);
-            const val = z.array(PublishScheduleSchema).safeParse(parsed);
-            state.publishSchedules = val.success ? val.data : [];
-        } else {
-            state.publishSchedules = [];
-        }
-
-        const storedContacts = localStorage.getItem('meidallm_contacts');
-        if (storedContacts) {
-            const parsed = JSON.parse(storedContacts);
-            const val = z.array(ContactSchema).safeParse(parsed);
-            state.contacts = val.success ? val.data : DEFAULT_CONTACTS;
-        } else {
-            state.contacts = DEFAULT_CONTACTS;
-        }
-
-        const storedTeam = localStorage.getItem('meidallm_team');
-        if (storedTeam) {
-            const parsed = JSON.parse(storedTeam);
-            const val = z.array(TeamMemberSchema).safeParse(parsed);
-            state.team = val.success ? val.data : DEFAULT_TEAM;
-        } else {
-            state.team = DEFAULT_TEAM;
-        }
+        const local = {
+            kanbanState: JSON.parse(localStorage.getItem('meidallm_kanban') || 'null'),
+            projects: JSON.parse(localStorage.getItem('meidallm_projects') || 'null'),
+            ideasState: JSON.parse(localStorage.getItem('meidallm_ideas') || 'null'),
+            taskLogs: JSON.parse(localStorage.getItem('meidallm_logs') || 'null'),
+            researchDocs: JSON.parse(localStorage.getItem('meidallm_research') || 'null'),
+            mediaAssets: JSON.parse(localStorage.getItem('meidallm_media') || 'null'),
+            drafts: JSON.parse(localStorage.getItem('meidallm_drafts') || 'null'),
+            connections: JSON.parse(localStorage.getItem('meidallm_connections') || 'null'),
+            publishSchedules: JSON.parse(localStorage.getItem('meidallm_schedules') || 'null'),
+            contacts: JSON.parse(localStorage.getItem('meidallm_contacts') || 'null'),
+            team: JSON.parse(localStorage.getItem('meidallm_team') || 'null'),
+            cycles: JSON.parse(localStorage.getItem('meidallm_cycles') || 'null'),
+            modules: JSON.parse(localStorage.getItem('meidallm_modules') || 'null'),
+            tables: JSON.parse(localStorage.getItem('meidallm_tables') || 'null'),
+            theme: localStorage.getItem('meidallm_theme'),
+            kanbanViewMode: localStorage.getItem('meidallm_kanban_viewmode'),
+            activeTableId: localStorage.getItem('meidallm_active_tableid'),
+            databaseViewMode: localStorage.getItem('meidallm_database_viewmode')
+        };
+        applyDbState(local);
     } catch (e) {
-        console.error("Failed to load local storage state:", e);
-        // Clean slate recovery
-        state.kanbanState = DEFAULT_KANBAN;
-        state.projects = DEFAULT_PROJECTS;
-        state.ideasState = DEFAULT_IDEAS;
-        state.taskLogs = [];
-        state.researchDocs = DEFAULT_RESEARCH;
-        state.mediaAssets = DEFAULT_MEDIA;
-        state.drafts = DEFAULT_DRAFTS;
-        state.theme = 'dark';
-        state.connections = DEFAULT_CONNECTIONS;
-        state.publishSchedules = [];
+        console.error("Local storage load fallback failed:", e);
+    }
+    
+    // Seed default sets if arrays are completely empty
+    if (state.projects.length === 0) state.projects = DEFAULT_PROJECTS;
+    if (state.kanbanState.length === 0) state.kanbanState = DEFAULT_KANBAN;
+    if (state.ideasState.length === 0) state.ideasState = DEFAULT_IDEAS;
+    if (state.researchDocs.length === 0) state.researchDocs = DEFAULT_RESEARCH;
+    if (state.mediaAssets.length === 0) state.mediaAssets = DEFAULT_MEDIA;
+    if (state.drafts.length === 0) state.drafts = DEFAULT_DRAFTS;
+    if (state.connections.length === 0) state.connections = DEFAULT_CONNECTIONS;
+    if (state.contacts.length === 0) state.contacts = DEFAULT_CONTACTS;
+    if (state.team.length === 0) state.team = DEFAULT_TEAM;
+    if (state.cycles.length === 0) state.cycles = DEFAULT_CYCLES;
+    if (state.modules.length === 0) state.modules = DEFAULT_MODULES;
+    if (state.tables.length === 0) state.tables = DEFAULT_TABLES;
+    
+    applyThemeClass(state.theme);
+}
+
+export async function loadState() {
+    const email = (typeof window !== 'undefined') ? (window as any).__user_email : null;
+    if (email) {
+        state.currentUser = email;
+        localStorage.setItem('meidallm_user', email);
+    } else {
+        state.currentUser = localStorage.getItem('meidallm_user');
+    }
+
+    // 1. Instant fallback from localStorage
+    loadLocalState();
+
+    // 2. Fetch fresh data from postgres database
+    if (state.currentUser && typeof window !== 'undefined') {
+        try {
+            const res = await fetch(`/api/state?email=${encodeURIComponent(state.currentUser)}`);
+            if (res.ok) {
+                const dbState = await res.json();
+                applyDbState(dbState);
+                notifyStateChange(true); // skip save on initial pull
+            }
+        } catch (e) {
+            console.error("Failed to fetch state from postgres:", e);
+        }
     }
 }
 
@@ -411,8 +576,46 @@ export function saveState() {
         localStorage.setItem('meidallm_schedules', JSON.stringify(state.publishSchedules));
         localStorage.setItem('meidallm_contacts', JSON.stringify(state.contacts));
         localStorage.setItem('meidallm_team', JSON.stringify(state.team));
+        localStorage.setItem('meidallm_cycles', JSON.stringify(state.cycles));
+        localStorage.setItem('meidallm_modules', JSON.stringify(state.modules));
+        localStorage.setItem('meidallm_tables', JSON.stringify(state.tables));
+        localStorage.setItem('meidallm_kanban_viewmode', state.kanbanViewMode);
+        if (state.activeTableId) localStorage.setItem('meidallm_active_tableid', state.activeTableId);
+        localStorage.setItem('meidallm_database_viewmode', state.databaseViewMode);
+
+        // Async save to Postgres database
+        if (state.currentUser && typeof window !== 'undefined') {
+            const body = {
+                email: state.currentUser,
+                state: {
+                    kanbanState: state.kanbanState,
+                    projects: state.projects,
+                    ideasState: state.ideasState,
+                    taskLogs: state.taskLogs,
+                    researchDocs: state.researchDocs,
+                    mediaAssets: state.mediaAssets,
+                    drafts: state.drafts,
+                    connections: state.connections,
+                    publishSchedules: state.publishSchedules,
+                    contacts: state.contacts,
+                    team: state.team,
+                    cycles: state.cycles,
+                    modules: state.modules,
+                    tables: state.tables,
+                    theme: state.theme,
+                    kanbanViewMode: state.kanbanViewMode,
+                    activeTableId: state.activeTableId,
+                    databaseViewMode: state.databaseViewMode
+                }
+            };
+            fetch('/api/state', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            }).catch(err => console.error("Database save failed:", err));
+        }
     } catch (e) {
-        console.error("Failed to save state to local storage:", e);
+        console.error("Failed to save state:", e);
     }
 }
 
@@ -764,6 +967,141 @@ export function addPublishSchedule(pid: string, draftId: string, title: string, 
 export function deletePublishSchedule(id: string) {
     state.publishSchedules = state.publishSchedules.filter(s => s.id !== id);
     notifyStateChange();
+}
+
+// Sprints/Cycles Mutators
+export function addCycle(pid: string, name: string, startDate: string, endDate: string, status: Cycle['status']) {
+    const newCycle: Cycle = {
+        id: 'cy-' + Math.random().toString(36).substr(2, 9),
+        projectId: pid,
+        name: name.trim(),
+        startDate,
+        endDate,
+        status
+    };
+    state.cycles.push(newCycle);
+    notifyStateChange();
+    return newCycle.id;
+}
+
+export function deleteCycle(id: string) {
+    state.cycles = state.cycles.filter(cy => cy.id !== id);
+    // Unassign tasks belonging to this cycle
+    state.kanbanState.forEach(t => {
+        if (t.cycleId === id) t.cycleId = undefined;
+    });
+    notifyStateChange();
+}
+
+// Modules Mutators
+export function addModule(pid: string, name: string, description: string, status: Module['status']) {
+    const newModule: Module = {
+        id: 'mod-' + Math.random().toString(36).substr(2, 9),
+        projectId: pid,
+        name: name.trim(),
+        description: description.trim(),
+        status
+    };
+    state.modules.push(newModule);
+    notifyStateChange();
+    return newModule.id;
+}
+
+export function deleteModule(id: string) {
+    state.modules = state.modules.filter(m => m.id !== id);
+    // Unassign tasks belonging to this module
+    state.kanbanState.forEach(t => {
+        if (t.moduleId === id) t.moduleId = undefined;
+    });
+    notifyStateChange();
+}
+
+// Collaborative Databases Mutators
+export function addDbTable(pid: string, name: string, description: string) {
+    const newTable: DbTable = {
+        id: 'tbl-' + Math.random().toString(36).substr(2, 9),
+        projectId: pid,
+        name: name.trim(),
+        description: description.trim(),
+        fields: [
+            { id: 'f-name', name: 'Name', type: 'text' }
+        ],
+        rows: []
+    };
+    state.tables.push(newTable);
+    state.activeTableId = newTable.id;
+    notifyStateChange();
+    return newTable.id;
+}
+
+export function deleteDbTable(id: string) {
+    state.tables = state.tables.filter(tbl => tbl.id !== id);
+    if (state.activeTableId === id) {
+        const remaining = state.tables.find(tbl => tbl.projectId === state.currentProject);
+        state.activeTableId = remaining ? remaining.id : null;
+    }
+    notifyStateChange();
+}
+
+export function addDbField(tableId: string, name: string, type: DbField['type'], options?: string[]) {
+    const tbl = state.tables.find(t => t.id === tableId);
+    if (tbl) {
+        const newField: DbField = {
+            id: 'f-' + Math.random().toString(36).substr(2, 9),
+            name: name.trim(),
+            type,
+            options
+        };
+        tbl.fields.push(newField);
+        notifyStateChange();
+        return newField.id;
+    }
+    return null;
+}
+
+export function deleteDbField(tableId: string, fieldId: string) {
+    const tbl = state.tables.find(t => t.id === tableId);
+    if (tbl) {
+        tbl.fields = tbl.fields.filter(f => f.id !== fieldId);
+        // Clean up data in cell records for this column
+        tbl.rows.forEach(r => {
+            delete r.cells[fieldId];
+        });
+        notifyStateChange();
+    }
+}
+
+export function addDbRow(tableId: string, cells: Record<string, any>) {
+    const tbl = state.tables.find(t => t.id === tableId);
+    if (tbl) {
+        const newRow: DbRow = {
+            id: 'row-' + Math.random().toString(36).substr(2, 9),
+            cells
+        };
+        tbl.rows.push(newRow);
+        notifyStateChange();
+        return newRow.id;
+    }
+    return null;
+}
+
+export function updateDbRow(tableId: string, rowId: string, cells: Record<string, any>) {
+    const tbl = state.tables.find(t => t.id === tableId);
+    if (tbl) {
+        const row = tbl.rows.find(r => r.id === rowId);
+        if (row) {
+            row.cells = { ...row.cells, ...cells };
+            notifyStateChange();
+        }
+    }
+}
+
+export function deleteDbRow(tableId: string, rowId: string) {
+    const tbl = state.tables.find(t => t.id === tableId);
+    if (tbl) {
+        tbl.rows = tbl.rows.filter(r => r.id !== rowId);
+        notifyStateChange();
+    }
 }
 
 export function resetAppState() {

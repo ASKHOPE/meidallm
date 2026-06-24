@@ -32,6 +32,10 @@ if (!session) {
     <!-- App Target Mount Point -->
     <div id="app"></div>
 
+    <script define:vars={{ userEmail: session.user.email }}>
+        window.__user_email = userEmail;
+    </script>
+
     <script>
         // Load main client script
         import "../main.ts";
