@@ -73,3 +73,152 @@ See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode de
 {"message":"[200] /api/auth/get-session 45ms","label":null,"level":"info"}
 {"message":"/index.css","label":"watch","level":"info"}
 {"message":"[Unhandled error] TypeError: window.toggleWorkspacesViewMode is not a function. (In 'window.toggleWorkspacesViewMode('list')', 'window.toggleWorkspacesViewMode' is undefined)\n > onclick ../../../../..:1:32\n","label":"vite","level":"error"}
+{"message":"[Unhandled error] TypeError: window.setTheme is not a function. (In 'window.setTheme('light')', 'window.setTheme' is undefined)\n > onclick ../../../../..:1:16\n","label":"vite","level":"error"}
+{"message":"[Unhandled error] TypeError: window.setTheme is not a function. (In 'window.setTheme('dark')', 'window.setTheme' is undefined)\n > onclick ../../../../..:1:16\n","label":"vite","level":"error"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 464ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 44ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 46ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 43ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 407ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 45ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 42ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 47ms","label":null,"level":"info"}
+{"message":"src/views/layout.ts","label":"watch","level":"info"}
+{"message":"[200] / 43ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 41ms","label":null,"level":"info"}
+{"message":"src/views/publish.ts","label":"watch","level":"info"}
+{"message":"[200] / 45ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 41ms","label":null,"level":"info"}
+{"message":"src/views/analytics.ts","label":"watch","level":"info"}
+{"message":"[200] / 353ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 41ms","label":null,"level":"info"}
+{"message":"[Unhandled error] TypeError: window.setTheme is not a function. (In 'window.setTheme('auto')', 'window.setTheme' is undefined)\n > onclick ../../../../..:1:16\n","label":"vite","level":"error"}
+{"message":"[Unhandled error] TypeError: window.setTheme is not a function. (In 'window.setTheme('day')', 'window.setTheme' is undefined)\n > onclick ../../../../..:1:16\n","label":"vite","level":"error"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"[200] / 486ms","label":null,"level":"info"}
+{"message":"[console.error] Auth session fetch failed: init@http://localhost:4321/src/main.ts:390:38\nmodule code@http://localhost:4321/src/main.ts:425:6","label":"vite","level":"error"}
+{"message":"[Unhandled error] TypeError: window.setTheme is not a function. (In 'window.setTheme('night')', 'window.setTheme' is undefined)\n > onclick ../../../../..:2150:16\n","label":"vite","level":"error"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"[200] / 47ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 48ms","label":null,"level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"[Unhandled error] TypeError: window.toggleWorkspacesViewMode is not a function. (In 'window.toggleWorkspacesViewMode('list')', 'window.toggleWorkspacesViewMode' is undefined)\n > onclick ../../../../..:1:32\n","label":"vite","level":"error"}
+{"message":"[200] / 47ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 51ms","label":null,"level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"[200] / 385ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 40ms","label":null,"level":"info"}
+{"message":"src/views/projects.ts","label":"watch","level":"info"}
+{"message":"[200] / 414ms","label":null,"level":"info"}
+{"message":"Internal server error: Transform failed with 2 errors:\n\n[PARSE_ERROR] Expected `>` but found `class`\n    ╭─[ src/views/projects.ts:80:14 ]\n    │\n 80 │         <div class=\"flex items-center justify-between gap-4 bg-panel-hover/30 border border-glass-border/30 p-4 rounded-2xl flex-wrap md:flex-nowrap\">\n    │              ──┬──  \n    │                ╰──── `>` expected\n────╯\n\n[PARSE_ERROR] HTML comments are not allowed in modules\n    ╭─[ src/views/projects.ts:79:9 ]\n    │\n 79 │         <!-- Control Header Bar -->\n    │         ──┬─  \n    │           ╰─── \n────╯\n\n  Plugin: vite:oxc\n  File: /Users/hosanna/Documents/GitHub/meidallm/src/views/projects.ts\n      at transformWithOxc (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:3657:19)\n      at TransformPluginContext.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:3728:26)\n      at EnvironmentPluginContainer.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29699:51)\n      at async loadAndTransform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:19725:26)\n      at async viteTransformMiddleware (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:24149:20)","label":"vite","level":"error"}
+{"message":"src/views/projects.ts","label":"watch","level":"info"}
+{"message":"[200] / 43ms","label":null,"level":"info"}
+{"message":"Internal server error: Transform failed with 1 error:\n\n[PARSE_ERROR] Expected `)` but found `EOF`\n     ╭─[ src/views/projects.ts:119:3 ]\n     │\n 119 │ }\n     │   │ \n     │   ╰─ `)` expected\n─────╯\n\n  Plugin: vite:oxc\n  File: /Users/hosanna/Documents/GitHub/meidallm/src/views/projects.ts\n      at transformWithOxc (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:3657:19)\n      at TransformPluginContext.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:3728:26)\n      at EnvironmentPluginContainer.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29699:51)\n      at async loadAndTransform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:19725:26)\n      at async viteTransformMiddleware (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:24149:20)","label":"vite","level":"error"}
+{"message":"src/views/projects.ts","label":"watch","level":"info"}
+{"message":"[200] / 365ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 48ms","label":null,"level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"[200] / 395ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 44ms","label":null,"level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"[200] / 416ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 43ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 42ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 40ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 305ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 88ms","label":null,"level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"[200] / 41ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 38ms","label":null,"level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"[200] / 41ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 36ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 39ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 38ms","label":null,"level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"[200] / 389ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 41ms","label":null,"level":"info"}
+{"message":"src/views/projects.ts","label":"watch","level":"info"}
+{"message":"[200] / 42ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 43ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 41ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 41ms","label":null,"level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"[200] / 43ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 41ms","label":null,"level":"info"}
+{"message":"src/views/kanban.ts","label":"watch","level":"info"}
+{"message":"[200] / 598ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 44ms","label":null,"level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"[200] / 302ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 50ms","label":null,"level":"info"}
+{"message":"src/views/drafts.ts","label":"watch","level":"info"}
+{"message":"[200] / 604ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 56ms","label":null,"level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"[200] / 59ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 49ms","label":null,"level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"[200] / 92ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 41ms","label":null,"level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"[200] / 447ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 45ms","label":null,"level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"[200] / 443ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 44ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 50ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 44ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 330ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 44ms","label":null,"level":"info"}
+{"message":"src/views/kanban.ts","label":"watch","level":"info"}
+{"message":"[200] / 317ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 46ms","label":null,"level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"[200] / 414ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 38ms","label":null,"level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"[200] / 518ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 46ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 391ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 43ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 46ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 45ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 475ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 40ms","label":null,"level":"info"}
+{"message":"src/router.ts","label":"watch","level":"info"}
+{"message":"[200] / 365ms","label":null,"level":"info"}
+{"message":"Internal server error: Failed to resolve import \"./views/crm\" from \"src/router.ts\". Does the file exist?\n  Plugin: vite:import-analysis\n  File: /Users/hosanna/Documents/GitHub/meidallm/src/router.ts:12:30\n  10 |  import { renderAnalyticsView } from \"./views/analytics\";\n  11 |  import { renderConnectionsView } from \"./views/connections\";\n  12 |  import { renderCRMView } from \"./views/crm\";\n     |                                 ^\n  13 |  import { renderTeamView } from \"./views/team\";\n  14 |  // Configurable accordion categories for sidebar layout\n      at TransformPluginContext._formatLog (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29914:39)\n      at TransformPluginContext.error (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29911:14)\n      at normalizeUrl (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:26975:18)\n      at async file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:27038:30\n      at async Promise.all (index 11)\n      at async TransformPluginContext.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:27006:4)\n      at async EnvironmentPluginContainer.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29699:14)\n      at async loadAndTransform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:19725:26)\n      at async viteTransformMiddleware (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:24149:20)","label":"vite","level":"error"}
+{"message":"src/router.ts","label":"watch","level":"info"}
+{"message":"[200] / 46ms","label":null,"level":"info"}
+{"message":"Internal server error: Failed to resolve import \"./views/crm\" from \"src/router.ts\". Does the file exist?\n  Plugin: vite:import-analysis\n  File: /Users/hosanna/Documents/GitHub/meidallm/src/router.ts:12:30\n  10 |  import { renderAnalyticsView } from \"./views/analytics\";\n  11 |  import { renderConnectionsView } from \"./views/connections\";\n  12 |  import { renderCRMView } from \"./views/crm\";\n     |                                 ^\n  13 |  import { renderTeamView } from \"./views/team\";\n  14 |  // Configurable accordion categories for sidebar layout\n      at TransformPluginContext._formatLog (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29914:39)\n      at TransformPluginContext.error (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29911:14)\n      at normalizeUrl (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:26975:18)\n      at async file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:27038:30\n      at async Promise.all (index 11)\n      at async TransformPluginContext.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:27006:4)\n      at async EnvironmentPluginContainer.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29699:14)\n      at async loadAndTransform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:19725:26)\n      at async viteTransformMiddleware (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:24149:20)","label":"vite","level":"error"}
+{"message":"src/views/crm.ts","label":"watch","level":"info"}
+{"message":"[200] / 50ms","label":null,"level":"info"}
+{"message":"Internal server error: Failed to resolve import \"./views/team\" from \"src/router.ts\". Does the file exist?\n  Plugin: vite:import-analysis\n  File: /Users/hosanna/Documents/GitHub/meidallm/src/router.ts:13:31\n  11 |  import { renderConnectionsView } from \"./views/connections\";\n  12 |  import { renderCRMView } from \"./views/crm\";\n  13 |  import { renderTeamView } from \"./views/team\";\n     |                                  ^\n  14 |  // Configurable accordion categories for sidebar layout\n  15 |  export const sidebarGroups = [{\n      at TransformPluginContext._formatLog (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29914:39)\n      at TransformPluginContext.error (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29911:14)\n      at normalizeUrl (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:26975:18)\n      at async file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:27038:30\n      at async Promise.all (index 12)\n      at async TransformPluginContext.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:27006:4)\n      at async EnvironmentPluginContainer.transform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:29699:14)\n      at async loadAndTransform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:19725:26)\n      at async viteTransformMiddleware (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:24149:20)","label":"vite","level":"error"}
+{"message":"src/views/team.ts","label":"watch","level":"info"}
+{"message":"[200] / 46ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 43ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"src/views/kanban.ts","label":"watch","level":"info"}
+{"message":"src/views/team.ts","label":"watch","level":"info"}
+{"message":"src/views/team.ts","label":"watch","level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}

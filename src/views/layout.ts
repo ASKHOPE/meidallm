@@ -115,9 +115,9 @@ export function renderLayoutHTML(): string {
             <div class="flex items-center justify-between bg-panel-hover/50 p-1.5 rounded-lg border border-glass-border text-[10px] my-1">
                 <span class="text-text-muted pl-1.5 font-medium uppercase tracking-wider">Theme</span>
                 <div class="flex gap-1">
-                    <button onclick="window.setTheme('dark')" class="theme-btn px-2 py-0.5 rounded transition-colors font-semibold ${state.theme === 'dark' ? 'text-white bg-primary' : 'text-text-muted hover:text-white'}" id="theme-btn-dark">Dark</button>
-                    <button onclick="window.setTheme('light')" class="theme-btn px-2 py-0.5 rounded transition-colors font-semibold ${state.theme === 'light' ? 'text-white bg-primary' : 'text-text-muted hover:text-white'}" id="theme-btn-light">Light</button>
-                    <button onclick="window.setTheme('neon')" class="theme-btn px-2 py-0.5 rounded transition-colors font-semibold ${state.theme === 'neon' ? 'text-white bg-primary' : 'text-text-muted hover:text-white'}" id="theme-btn-neon">Neon</button>
+                    <button onclick="window.setTheme('day')" class="theme-btn px-2 py-0.5 rounded transition-colors font-semibold ${state.theme === 'day' ? 'text-white bg-primary' : 'text-text-muted hover:text-white'}" id="theme-btn-day">Day</button>
+                    <button onclick="window.setTheme('night')" class="theme-btn px-2 py-0.5 rounded transition-colors font-semibold ${state.theme === 'night' ? 'text-white bg-primary' : 'text-text-muted hover:text-white'}" id="theme-btn-night">Night</button>
+                    <button onclick="window.setTheme('auto')" class="theme-btn px-2 py-0.5 rounded transition-colors font-semibold ${state.theme === 'auto' ? 'text-white bg-primary' : 'text-text-muted hover:text-white'}" id="theme-btn-auto">Auto</button>
                 </div>
             </div>
 

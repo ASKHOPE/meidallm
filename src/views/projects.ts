@@ -3,14 +3,24 @@ import { sanitizeHTML, formatTime } from "../utils";
 
 export function renderProjectsView(): string {
     let list = [...state.projects];
-    
-    // 1. Search Query Filter
+    const filter = state.workspacesFilter || 'active';
+
+    // 1. Filter by status: active, archived, bin (soft-deleted)
+    if (filter === 'active') {
+        list = list.filter(p => !p.isBinned && !p.isArchived);
+    } else if (filter === 'archived') {
+        list = list.filter(p => p.isArchived && !p.isBinned);
+    } else if (filter === 'bin') {
+        list = list.filter(p => p.isBinned);
+    }
+
+    // 2. Search Query Filter
     const query = (state.workspacesSearchQuery || '').toLowerCase().trim();
     if (query) {
         list = list.filter(p => p.name.toLowerCase().includes(query) || p.description.toLowerCase().includes(query));
     }
     
-    // 2. Sort Logic
+    // 3. Sort Logic
     const sortBy = state.workspacesSortBy || 'last-active';
     if (sortBy === 'last-active') {
         list.sort((a, b) => b.lastActive - a.lastActive);
@@ -35,15 +45,40 @@ export function renderProjectsView(): string {
         const projectTasks = state.kanbanState.filter(k => k.projectId === p.id);
         const lastActiveLabel = formatTime(p.lastActive);
 
+        // Action controls based on filter
+        let actionHTML = "";
+        if (filter === 'active') {
+            actionHTML = `
+            <div class="flex gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onclick="event.stopPropagation(); window.updateProjectPrompt('${p.id}')" class="text-xs text-text-muted hover:text-white cursor-pointer" title="Edit Name/Desc">✏️</button>
+                <button onclick="event.stopPropagation(); window.archiveProjectToggle('${p.id}', true)" class="text-xs text-text-muted hover:text-amber-400 cursor-pointer" title="Archive Folder">📦</button>
+                <button onclick="event.stopPropagation(); window.binProjectToggle('${p.id}', true)" class="text-xs text-text-muted hover:text-rose-500 cursor-pointer" title="Move to Bin">🗑️</button>
+            </div>
+            `;
+        } else if (filter === 'archived') {
+            actionHTML = `
+            <div class="flex gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onclick="event.stopPropagation(); window.archiveProjectToggle('${p.id}', false)" class="text-xs text-text-muted hover:text-emerald-400 cursor-pointer" title="Restore to Workspaces">📂</button>
+                <button onclick="event.stopPropagation(); window.binProjectToggle('${p.id}', true)" class="text-xs text-text-muted hover:text-rose-500 cursor-pointer" title="Move to Bin">🗑️</button>
+            </div>
+            `;
+        } else if (filter === 'bin') {
+            actionHTML = `
+            <div class="flex gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onclick="event.stopPropagation(); window.binProjectToggle('${p.id}', false)" class="text-xs text-text-muted hover:text-emerald-400 cursor-pointer" title="Restore Folder">🔄</button>
+                <button onclick="event.stopPropagation(); window.deleteProject('${p.id}')" class="text-xs text-text-muted hover:text-rose-500 cursor-pointer font-bold" title="Delete Permanently">✕</button>
+            </div>
+            `;
+        }
+
         if (isGrid) {
             return `
-            <div class="bg-glass-bg border border-glass-border hover:border-primary p-6 rounded-2xl transition-all cursor-pointer flex flex-col justify-between group" onclick="window.navigateTo('project-workspace', '${p.id}')">
+            <div class="bg-glass-bg border border-glass-border hover:border-primary p-6 rounded-2xl transition-all cursor-pointer flex flex-col justify-between min-h-[180px] group" onclick="window.navigateTo('project-workspace', '${p.id}')">
                 <div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-3xl filter drop-shadow-[0_0_8px_rgba(99,102,241,0.3)]">📂</span>
-                        <div class="flex gap-2">
-                            <span class="text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">Active</span>
-                            <button onclick="event.stopPropagation(); window.deleteProject('${p.id}')" class="opacity-0 group-hover:opacity-100 text-xs text-text-muted hover:text-rose-500 transition-opacity pl-2 cursor-pointer">✕</button>
+                        <div class="flex items-center gap-2">
+                            ${actionHTML}
                         </div>
                     </div>
                     <h3 class="text-lg font-semibold text-white mb-2 font-outfit group-hover:text-primary transition-colors">${sanitizeHTML(p.name)}</h3>
@@ -69,7 +104,9 @@ export function renderProjectsView(): string {
                 <div class="flex items-center gap-6 text-[11px] text-text-muted whitespace-nowrap">
                     <span>Tasks: <strong class="text-white">${projectTasks.length}</strong></span>
                     <span>Last active: <strong class="text-white">${lastActiveLabel}</strong></span>
-                    <button onclick="event.stopPropagation(); window.deleteProject('${p.id}')" class="opacity-0 group-hover:opacity-100 text-xs text-text-muted hover:text-rose-500 transition-opacity pl-2 cursor-pointer">✕</button>
+                    <div class="flex items-center">
+                        ${actionHTML}
+                    </div>
                 </div>
             </div>
             `;
@@ -78,27 +115,34 @@ export function renderProjectsView(): string {
 
     return `
     <div class="fade-in flex flex-col gap-6">
+        <!-- Tabs Header Row -->
+        <div class="flex justify-between items-center mb-1">
+            <div class="flex gap-6 border-b border-glass-border/30 w-full pb-2">
+                <button onclick="window.setWorkspacesFilter('active')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'active' ? 'text-primary border-b-2 border-primary font-bold' : 'text-text-muted hover:text-white'}">Active Workspaces</button>
+                <button onclick="window.setWorkspacesFilter('archived')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'archived' ? 'text-primary border-b-2 border-primary font-bold' : 'text-text-muted hover:text-white'}">Archived</button>
+                <button onclick="window.setWorkspacesFilter('bin')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'bin' ? 'text-primary border-b-2 border-primary font-bold' : 'text-text-muted hover:text-white'}">Bin / Trash</button>
+            </div>
+        </div>
+
         <!-- Control Header Bar -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-panel-hover/30 border border-glass-border/30 p-4 rounded-2xl">
+        <div class="flex items-center justify-between gap-4 bg-panel-hover/30 border border-glass-border/30 p-4 rounded-2xl flex-wrap md:flex-nowrap">
             <!-- Search Control -->
-            <div class="relative w-full md:w-80">
+            <div class="relative flex-grow max-w-md">
                 <input type="text" id="workspaces-search-input" value="${sanitizeHTML(state.workspacesSearchQuery)}" oninput="window.filterWorkspaces(this.value)" placeholder="Search folders & workspaces..." class="w-full bg-panel-hover border border-glass-border rounded-xl pl-4 pr-10 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition-all">
                 <span class="absolute right-3.5 top-3 text-text-muted text-xs">🔍</span>
             </div>
 
             <!-- Sorting & Layout Controls -->
-            <div class="flex items-center gap-3 justify-end">
-                <div>
-                    <select id="workspaces-sort-select" onchange="window.sortWorkspaces(this.value)" class="bg-panel-hover border border-glass-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none cursor-pointer">
-                        <option value="last-active" ${sortBy === 'last-active' ? 'selected' : ''}>Sort: Last Active</option>
-                        <option value="name-asc" ${sortBy === 'name-asc' ? 'selected' : ''}>Sort: Name A-Z</option>
-                        <option value="name-desc" ${sortBy === 'name-desc' ? 'selected' : ''}>Sort: Name Z-A</option>
-                        <option value="tasks-count" ${sortBy === 'tasks-count' ? 'selected' : ''}>Sort: Tasks Count</option>
-                    </select>
-                </div>
+            <div class="flex items-center gap-3 shrink-0">
+                <select id="workspaces-sort-select" onchange="window.sortWorkspaces(this.value)" class="bg-panel-hover border border-glass-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none cursor-pointer">
+                    <option value="last-active" ${sortBy === 'last-active' ? 'selected' : ''}>Sort: Last Active</option>
+                    <option value="name-asc" ${sortBy === 'name-asc' ? 'selected' : ''}>Sort: Name A-Z</option>
+                    <option value="name-desc" ${sortBy === 'name-desc' ? 'selected' : ''}>Sort: Name Z-A</option>
+                    <option value="tasks-count" ${sortBy === 'tasks-count' ? 'selected' : ''}>Sort: Tasks Count</option>
+                </select>
 
                 <!-- Grid/List Toggles -->
-                <div class="flex bg-panel-hover border border-glass-border rounded-xl p-1">
+                <div class="flex bg-panel-hover border border-glass-border rounded-xl p-1 shrink-0">
                     <button onclick="window.toggleWorkspacesViewMode('grid')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${isGrid ? 'bg-primary text-white' : 'text-text-muted hover:text-white'}">
                         Grid
                     </button>
@@ -116,7 +160,7 @@ export function renderProjectsView(): string {
         <!-- Render Target Grid/List -->
         <div id="workspaces-listing-container" class="${activeLayoutClass}">
             ${workspacesHTML}
-            ${list.length === 0 ? `<div class="col-span-3 text-center text-text-muted py-16">No folders or workspaces found.</div>` : ''}
+            ${list.length === 0 ? `<div class="col-span-3 text-center text-text-muted py-16">No folders or workspaces found in this filter.</div>` : ''}
         </div>
     </div>
     `;

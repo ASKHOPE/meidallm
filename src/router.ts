@@ -9,6 +9,8 @@ import { renderSettingsView } from "./views/settings";
 import { renderPublishView } from "./views/publish";
 import { renderAnalyticsView } from "./views/analytics";
 import { renderConnectionsView } from "./views/connections";
+import { renderCRMView } from "./views/crm";
+import { renderTeamView } from "./views/team";
 
 export interface NavGroup {
     key: string;
@@ -111,6 +113,22 @@ export const views: ViewConfig[] = [
         scope: 'global',
         group: 'workflow',
         render: () => renderConnectionsView()
+    },
+    {
+        key: 'crm',
+        title: 'CRM Hub',
+        icon: '💼',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderCRMView(pid || '')
+    },
+    {
+        key: 'team',
+        title: 'Team Office',
+        icon: '👥',
+        scope: 'global',
+        group: 'workflow',
+        render: () => renderTeamView()
     },
     {
         key: 'settings',

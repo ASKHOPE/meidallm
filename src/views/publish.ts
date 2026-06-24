@@ -26,18 +26,34 @@ export function renderPublishView(pid: string): string {
 
                 <div>
                     <label class="block text-xs font-semibold text-text-muted uppercase mb-2">Publish channels</label>
-                    <div class="grid grid-cols-3 gap-3">
-                        <label class="flex items-center gap-2 bg-panel-hover border border-glass-border p-3 rounded-xl text-sm text-white cursor-pointer hover:border-primary transition-all">
-                            <input type="checkbox" name="channels" value="X / Twitter" class="rounded text-primary focus:ring-primary">
-                            <span>📢 X / Twitter</span>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <label class="flex items-center gap-2 bg-panel-hover border border-glass-border p-2.5 rounded-xl text-xs text-white cursor-pointer hover:border-primary transition-all">
+                            <input type="checkbox" name="channels" value="WhatsApp" class="rounded text-primary focus:ring-primary">
+                            <span>💬 WhatsApp</span>
                         </label>
-                        <label class="flex items-center gap-2 bg-panel-hover border border-glass-border p-3 rounded-xl text-sm text-white cursor-pointer hover:border-primary transition-all">
-                            <input type="checkbox" name="channels" value="LinkedIn" class="rounded text-primary focus:ring-primary">
-                            <span>💼 LinkedIn</span>
+                        <label class="flex items-center gap-2 bg-panel-hover border border-glass-border p-2.5 rounded-xl text-xs text-white cursor-pointer hover:border-primary transition-all">
+                            <input type="checkbox" name="channels" value="Pinterest" class="rounded text-primary focus:ring-primary">
+                            <span>📌 Pinterest</span>
                         </label>
-                        <label class="flex items-center gap-2 bg-panel-hover border border-glass-border p-3 rounded-xl text-sm text-white cursor-pointer hover:border-primary transition-all">
-                            <input type="checkbox" name="channels" value="Medium" class="rounded text-primary focus:ring-primary">
-                            <span>✍️ Medium</span>
+                        <label class="flex items-center gap-2 bg-panel-hover border border-glass-border p-2.5 rounded-xl text-xs text-white cursor-pointer hover:border-primary transition-all">
+                            <input type="checkbox" name="channels" value="YouTube" class="rounded text-primary focus:ring-primary">
+                            <span>🎥 YouTube</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-panel-hover border border-glass-border p-2.5 rounded-xl text-xs text-white cursor-pointer hover:border-primary transition-all">
+                            <input type="checkbox" name="channels" value="Facebook" class="rounded text-primary focus:ring-primary">
+                            <span>🔵 Facebook</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-panel-hover border border-glass-border p-2.5 rounded-xl text-xs text-white cursor-pointer hover:border-primary transition-all">
+                            <input type="checkbox" name="channels" value="Instagram" class="rounded text-primary focus:ring-primary">
+                            <span>📸 Instagram</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-panel-hover border border-glass-border p-2.5 rounded-xl text-xs text-white cursor-pointer hover:border-primary transition-all">
+                            <input type="checkbox" name="channels" value="Threads" class="rounded text-primary focus:ring-primary">
+                            <span>🌀 Threads</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-panel-hover border border-glass-border p-2.5 rounded-xl text-xs text-white cursor-pointer hover:border-primary transition-all">
+                            <input type="checkbox" name="channels" value="X (Twitter)" class="rounded text-primary focus:ring-primary">
+                            <span>🐦 X (Twitter)</span>
                         </label>
                     </div>
                 </div>

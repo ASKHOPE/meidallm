@@ -20,9 +20,20 @@ import {
     addDraft,
     updateDraft,
     deleteDraft,
+    addPublishSchedule,
+    deletePublishSchedule,
+    applyThemeClass,
+    updateProject,
+    archiveProject,
+    binProject,
+    updateTask,
+    archiveTask,
+    binTask,
     resetAppState
 } from "./state";
 import { renderLayoutHTML, renderProjectDropdownOptions } from "./views/layout";
+import { renderPostDetailHTML } from "./views/analytics";
+import { parseDraftContent } from "./views/drafts";
 import { views } from "./router";
 import { sanitizeHTML } from "./utils";
 import type { KanbanTask, ResearchDoc, MediaAsset, Draft } from "./types";
@@ -221,12 +232,17 @@ w.hideAddTaskModal = () => {
 w.submitTaskForm = (pid: string) => {
     const titleEl = document.getElementById('modal-task-title') as HTMLInputElement;
     const tagEl = document.getElementById('modal-task-tag') as HTMLInputElement;
+    const prioEl = document.getElementById('modal-task-priority') as HTMLSelectElement;
+    const ptsEl = document.getElementById('modal-task-points') as HTMLInputElement;
     
     if (!titleEl || !titleEl.value.trim()) {
         alert("Task Title is required!");
         return;
     }
-    addTask(pid, titleEl.value, tagEl ? tagEl.value : '');
+    const priority = prioEl ? prioEl.value : 'none';
+    const points = ptsEl ? parseInt(ptsEl.value) || 0 : 0;
+    
+    addTask(pid, titleEl.value, tagEl ? tagEl.value : '', priority as any, points);
     w.hideAddTaskModal();
 };
 
@@ -389,13 +405,48 @@ w.createNewDraft = (pid: string) => {
     w.selectDraft(newId);
 };
 
-w.changeDraftFormat = (id: string, format: string) => {
+w.changeDraftFormat = (id: string, targetFormat: 'blog' | 'tweet' | 'email') => {
     const draft = state.drafts.find(d => d.id === id);
-    if (draft) {
-        draft.format = format as Draft['format'];
-        saveState();
-        renderView('drafts', state.currentProject || undefined);
+    if (!draft) return;
+
+    // Parse structured content
+    const data = parseDraftContent(draft.content);
+    
+    // Adapt content based on the target format
+    let adaptedBody = data.body;
+    
+    if (targetFormat === 'tweet') {
+        // Adapt into a punchy short social post based on hook & thesis
+        const bulletPoints = data.thesis
+            ? data.thesis.split('\n').filter(l => l.trim()).map((l, i) => `${i + 1}️⃣ ${l.replace(/^-\s*/, '')}`).join('\n')
+            : "";
+        adaptedBody = `${data.hook ? data.hook : "📢 Quick insights from our workspace:"}\n\n${bulletPoints || data.body.substring(0, 100) + '...'}\n\n#agency #marketing`;
+    } else if (targetFormat === 'email') {
+        // Adapt into a structured newsletter broadcast layout
+        const authorLabel = data.author ? `Best,\n${data.author}` : "Best regards,\nThe Workspace Team";
+        const bulletPoints = data.thesis
+            ? data.thesis.split('\n').filter(l => l.trim()).map(l => `• ${l.replace(/^-\s*/, '')}`).join('\n')
+            : "";
+        adaptedBody = `Subject: ${data.hook || draft.title}\n\nHi there,\n\n${data.body || "Here is a brief update from our workspace."}\n\nKey takeaways:\n${bulletPoints || "• Stay tuned for more features!"}\n\n${authorLabel}`;
+    } else {
+        // Adapt into a full-scale Article/Blog post
+        const intro = data.hook ? `## ${data.hook}\n\n` : '';
+        const bodyContent = data.body || "This campaign article covers the essential metrics and RAG context indexed in our workspace.";
+        const subSections = data.thesis
+            ? "\n\n" + data.thesis.split('\n').filter(l => l.trim()).map(l => `### ${l.replace(/^-\s*/, '')}\n\n[Section content goes here...]`).join('\n\n')
+            : "";
+        adaptedBody = `${intro}${bodyContent}${subSections}`;
     }
+
+    const updatedData = {
+        ...data,
+        body: adaptedBody
+    };
+
+    draft.format = targetFormat;
+    draft.content = JSON.stringify(updatedData);
+    saveState();
+    renderView('drafts', state.currentProject || undefined);
 };
 
 w.saveEditorState = (id: string) => {
@@ -426,10 +477,265 @@ w.deleteDraft = (id: string) => {
     }
 };
 
+w.filterWorkspaces = (val: string) => {
+    state.workspacesSearchQuery = val;
+    notifyStateChange();
+};
+
+w.sortWorkspaces = (val: any) => {
+    state.workspacesSortBy = val;
+    notifyStateChange();
+};
+
+w.toggleWorkspacesViewMode = (mode: 'grid' | 'list') => {
+    state.workspacesViewMode = mode;
+    notifyStateChange();
+};
+
+w.setWorkspacesFilter = (filter: 'active' | 'archived' | 'bin') => {
+    state.workspacesFilter = filter;
+    notifyStateChange();
+};
+
+w.setKanbanFilter = (filter: 'active' | 'archived' | 'bin') => {
+    state.kanbanFilter = filter;
+    notifyStateChange();
+};
+
+w.updateProjectPrompt = (pid: string) => {
+    const p = state.projects.find(x => x.id === pid);
+    if (!p) return;
+    const name = prompt("Edit folder/campaign name:", p.name);
+    if (name === null) return;
+    if (!name.trim()) {
+        alert("Folder name cannot be empty.");
+        return;
+    }
+    const desc = prompt("Edit folder/campaign description:", p.description) || "";
+    updateProject(pid, name, desc);
+};
+
+w.archiveProjectToggle = (pid: string, isArchived: boolean) => {
+    archiveProject(pid, isArchived);
+};
+
+w.binProjectToggle = (pid: string, isBinned: boolean) => {
+    binProject(pid, isBinned);
+};
+
+w.updateTaskPrompt = (taskId: string) => {
+    const t = state.kanbanState.find(x => x.id === taskId);
+    if (!t) return;
+    const title = prompt("Edit task title:", t.title);
+    if (title === null) return;
+    if (!title.trim()) {
+        alert("Task title cannot be empty.");
+        return;
+    }
+    const tag = prompt("Edit task tag:", t.tag) || "General";
+    updateTask(taskId, title, tag);
+};
+
+w.archiveTaskToggle = (taskId: string, isArchived: boolean) => {
+    archiveTask(taskId, isArchived);
+};
+
+w.binTaskToggle = (taskId: string, isBinned: boolean) => {
+    binTask(taskId, isBinned);
+};
+
 w.resetAppState = () => {
     if (confirm("This will clear all custom campaigns, tasks, and notes, restoring setup defaults. Continue?")) {
         resetAppState();
     }
+};
+
+// Theme switcher handler
+w.setTheme = (theme: 'day' | 'night' | 'auto') => {
+    state.theme = theme;
+    applyThemeClass(theme);
+    notifyStateChange();
+};
+
+// System color scheme change listener
+if (typeof window !== 'undefined') {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (state.theme === 'auto') {
+            applyThemeClass('auto');
+        }
+    });
+}
+
+// Connections handlers
+w.toggleConnectionState = (id: string) => {
+    const conn = state.connections.find(c => c.id === id);
+    if (conn) {
+        conn.connected = !conn.connected;
+        if (conn.connected && !conn.username) {
+            conn.username = conn.name.toLowerCase().replace(/\s+/g, '') + '_user';
+        }
+        notifyStateChange();
+    }
+};
+
+w.configureConnectionPrompt = (id: string) => {
+    const conn = state.connections.find(c => c.id === id);
+    if (!conn) return;
+    if (conn.connected) {
+        if (confirm(`Disconnect ${conn.name}?`)) {
+            conn.connected = false;
+            conn.username = undefined;
+            conn.apiKey = undefined;
+            notifyStateChange();
+        }
+    } else {
+        const username = prompt(`Enter username/account for ${conn.name}:`, conn.username || "");
+        if (username === null) return;
+        const apiKey = prompt(`Enter API Key / Token for ${conn.name}:`, conn.apiKey || "");
+        if (apiKey === null) return;
+        conn.connected = true;
+        conn.username = username.trim() || conn.name.toLowerCase().replace(/\s+/g, '') + '_user';
+        conn.apiKey = apiKey.trim();
+        notifyStateChange();
+    }
+};
+
+// Publish schedule handlers
+w.schedulePost = (pid: string) => {
+    const selectEl = document.getElementById('publish-draft-select') as HTMLSelectElement;
+    const dateEl = document.getElementById('publish-datetime') as HTMLInputElement;
+    const channelsEl = document.querySelectorAll('input[name="channels"]:checked');
+
+    if (!selectEl || !dateEl) return;
+    const draftId = selectEl.value;
+    if (!draftId) {
+        alert("Please select a content draft to publish.");
+        return;
+    }
+    const draft = state.drafts.find(d => d.id === draftId);
+    if (!draft) return;
+
+    const channels: string[] = [];
+    channelsEl.forEach(el => channels.push((el as HTMLInputElement).value));
+    if (channels.length === 0) {
+        alert("Please select at least one publishing channel.");
+        return;
+    }
+
+    const publishTimeStr = dateEl.value;
+    if (!publishTimeStr) {
+        alert("Please specify a publishing date and time.");
+        return;
+    }
+    const scheduledTime = new Date(publishTimeStr).getTime();
+
+    addPublishSchedule(pid, draftId, draft.title, draft.format, channels, scheduledTime);
+    alert("Post successfully scheduled!");
+};
+
+w.deleteSchedule = (id: string, pid: string) => {
+    if (confirm("Cancel and delete this scheduled publication?")) {
+        deletePublishSchedule(id);
+    }
+};
+
+// Analytics post selection
+w.selectAnalyticsPost = (postId: string) => {
+    const posts = (window as any).analyticsPosts || [];
+    const post = posts.find((p: any) => p.id === postId);
+    if (!post) return;
+
+    // Highlight the selected card in list
+    document.querySelectorAll('[id^="anal-post-card-"]').forEach(card => {
+        card.classList.remove('border-primary', 'bg-panel-hover/60', 'shadow-[0_0_15px_var(--color-primary-glow)]');
+        card.classList.add('border-glass-border', 'bg-panel-hover/20');
+    });
+
+    const selectedCard = document.getElementById(`anal-post-card-${postId}`);
+    if (selectedCard) {
+        selectedCard.classList.remove('border-glass-border', 'bg-panel-hover/20');
+        selectedCard.classList.add('border-primary', 'bg-panel-hover/60', 'shadow-[0_0_15px_var(--color-primary-glow)]');
+    }
+
+    // Update detail pane content
+    const detailPanel = document.getElementById('analytics-detail-panel');
+    if (detailPanel) {
+        detailPanel.innerHTML = renderPostDetailHTML(post);
+    }
+};
+
+// Search filters
+w.filterKanbanTasks = () => {
+    const input = document.getElementById('kanban-search-input') as HTMLInputElement;
+    if (!input) return;
+    const query = input.value.toLowerCase().trim();
+    document.querySelectorAll('.kanban-col-item').forEach(item => {
+        const title = item.getAttribute('data-title')?.toLowerCase() || '';
+        const tag = item.getAttribute('data-tag')?.toLowerCase() || '';
+        if (title.includes(query) || tag.includes(query)) {
+            (item as HTMLElement).classList.remove('hidden');
+        } else {
+            (item as HTMLElement).classList.add('hidden');
+        }
+    });
+};
+
+w.filterIdeas = () => {
+    const input = document.getElementById('ideas-search-input') as HTMLInputElement;
+    if (!input) return;
+    const query = input.value.toLowerCase().trim();
+    document.querySelectorAll('.idea-note-item').forEach(item => {
+        const content = item.getAttribute('data-content')?.toLowerCase() || '';
+        if (content.includes(query)) {
+            (item as HTMLElement).classList.remove('hidden');
+        } else {
+            (item as HTMLElement).classList.add('hidden');
+        }
+    });
+};
+
+w.filterResearchDocs = () => {
+    const input = document.getElementById('research-search-input') as HTMLInputElement;
+    if (!input) return;
+    const query = input.value.toLowerCase().trim();
+    document.querySelectorAll('.research-doc-item').forEach(item => {
+        const text = item.textContent?.toLowerCase() || '';
+        if (text.includes(query)) {
+            (item as HTMLElement).classList.remove('hidden');
+        } else {
+            (item as HTMLElement).classList.add('hidden');
+        }
+    });
+};
+
+w.filterMediaAssets = () => {
+    const input = document.getElementById('media-search-input') as HTMLInputElement;
+    if (!input) return;
+    const query = input.value.toLowerCase().trim();
+    document.querySelectorAll('.media-asset-item').forEach(item => {
+        const title = item.getAttribute('data-title')?.toLowerCase() || '';
+        const cat = item.getAttribute('data-category')?.toLowerCase() || '';
+        if (title.includes(query) || cat.includes(query)) {
+            (item as HTMLElement).classList.remove('hidden');
+        } else {
+            (item as HTMLElement).classList.add('hidden');
+        }
+    });
+};
+
+w.filterDrafts = () => {
+    const input = document.getElementById('drafts-search-input') as HTMLInputElement;
+    if (!input) return;
+    const query = input.value.toLowerCase().trim();
+    document.querySelectorAll('.draft-item-card').forEach(item => {
+        const title = item.getAttribute('data-title')?.toLowerCase() || '';
+        const content = item.getAttribute('data-content')?.toLowerCase() || '';
+        if (title.includes(query) || content.includes(query)) {
+            (item as HTMLElement).classList.remove('hidden');
+        } else {
+            (item as HTMLElement).classList.add('hidden');
+        }
+    });
 };
 
 w.signOut = async () => {

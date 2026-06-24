@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule } from "./types";
+import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember } from "./types";
 
 // --- Zod Validation Schemas ---
 export const KanbanTaskSchema = z.object({
@@ -9,7 +9,16 @@ export const KanbanTaskSchema = z.object({
     tag: z.string(),
     status: z.enum(['backlog', 'progress', 'review', 'done']),
     created: z.number(),
-    updated: z.number()
+    updated: z.number(),
+    isArchived: z.boolean().optional(),
+    isBinned: z.boolean().optional(),
+    complexity: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+    assignee: z.string().optional(),
+    description: z.string().optional(),
+    dueDate: z.string().optional(),
+    checklist: z.string().optional(),
+    priority: z.enum(['none', 'low', 'medium', 'high', 'urgent']).optional(),
+    points: z.number().optional()
 });
 
 export const ProjectSchema = z.object({
@@ -17,7 +26,9 @@ export const ProjectSchema = z.object({
     name: z.string(),
     description: z.string(),
     status: z.enum(['active', 'completed']),
-    lastActive: z.number()
+    lastActive: z.number(),
+    isArchived: z.boolean().optional(),
+    isBinned: z.boolean().optional()
 });
 
 export const IdeaSchema = z.object({
@@ -83,6 +94,25 @@ export const PublishScheduleSchema = z.object({
     channels: z.array(z.string()),
     scheduledTime: z.number(),
     status: z.enum(['queued', 'published'])
+});
+
+export const ContactSchema = z.object({
+    id: z.string(),
+    projectId: z.string(),
+    name: z.string(),
+    email: z.string(),
+    company: z.string(),
+    dealStage: z.enum(['lead', 'contacted', 'negotiation', 'won']),
+    dealValue: z.number(),
+    created: z.number()
+});
+
+export const TeamMemberSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    role: z.string(),
+    status: z.enum(['active', 'meeting', 'offline', 'vacation']),
+    avatarColor: z.string()
 });
 
 // --- Default Initial State Fallbacks ---
@@ -161,9 +191,26 @@ const DEFAULT_DRAFTS: Draft[] = [
 ];
 
 const DEFAULT_CONNECTIONS: Connection[] = [
-    { id: 'conn-twitter', name: 'X / Twitter', icon: '📢', connected: false },
-    { id: 'conn-linkedin', name: 'LinkedIn Professional', icon: '💼', connected: false },
-    { id: 'conn-medium', name: 'Medium Publishing', icon: '✍️', connected: false }
+    { id: 'conn-x', name: 'X (Twitter)', icon: '🐦', connected: false },
+    { id: 'conn-instagram', name: 'Instagram', icon: '📸', connected: false },
+    { id: 'conn-facebook', name: 'Facebook', icon: '🔵', connected: false },
+    { id: 'conn-youtube', name: 'YouTube', icon: '🎥', connected: false },
+    { id: 'conn-whatsapp', name: 'WhatsApp', icon: '💬', connected: false },
+    { id: 'conn-pinterest', name: 'Pinterest', icon: '📌', connected: false },
+    { id: 'conn-threads', name: 'Threads', icon: '🌀', connected: false }
+];
+
+const DEFAULT_CONTACTS: Contact[] = [
+    { id: 'c1', projectId: 'p1', name: 'Sarah Jenkins', email: 'sarah@stripe.com', company: 'Stripe', dealStage: 'contacted', dealValue: 12000, created: Date.now() - 86400000 * 4 },
+    { id: 'c2', projectId: 'p1', name: 'Alex Rivera', email: 'alex@vercel.com', company: 'Vercel', dealStage: 'negotiation', dealValue: 25000, created: Date.now() - 86400000 * 2 },
+    { id: 'c3', projectId: 'p1', name: 'Emily Chen', email: 'emily@notion.so', company: 'Notion', dealStage: 'lead', dealValue: 8000, created: Date.now() - 86400000 * 6 }
+];
+
+const DEFAULT_TEAM: TeamMember[] = [
+    { id: 'tm1', name: 'Hosanna (You)', role: 'Product Architect', status: 'active', avatarColor: 'bg-indigo-500' },
+    { id: 'tm2', name: 'Gavin Belson', role: 'Campaign Strategist', status: 'meeting', avatarColor: 'bg-rose-500' },
+    { id: 'tm3', name: 'Richard Hendricks', role: 'Lead Developer', status: 'active', avatarColor: 'bg-emerald-500' },
+    { id: 'tm4', name: 'Monica Hall', role: 'Agency Relations', status: 'vacation', avatarColor: 'bg-amber-500' }
 ];
 
 export const state = {
@@ -181,12 +228,16 @@ export const state = {
     drafts: [] as Draft[],
     
     // Extended States
-    theme: 'dark' as 'dark' | 'light' | 'neon',
+    theme: 'night' as 'night' | 'day' | 'auto',
     connections: [] as Connection[],
     publishSchedules: [] as PublishSchedule[],
     workspacesSearchQuery: '',
     workspacesViewMode: 'grid' as 'grid' | 'list',
-    workspacesSortBy: 'last-active' as 'last-active' | 'name-asc' | 'name-desc' | 'tasks-count'
+    workspacesSortBy: 'last-active' as 'last-active' | 'name-asc' | 'name-desc' | 'tasks-count',
+    workspacesFilter: 'active' as 'active' | 'archived' | 'bin',
+    kanbanFilter: 'active' as 'active' | 'archived' | 'bin',
+    contacts: [] as Contact[],
+    team: [] as TeamMember[]
 };
 
 // UI Re-render Callback Registration
@@ -203,21 +254,29 @@ export function notifyStateChange() {
     }
 }
 
+export function applyThemeClass(theme: 'day' | 'night' | 'auto') {
+    if (typeof window === 'undefined') return;
+    document.documentElement.className = '';
+    if (theme === 'day') {
+        document.documentElement.classList.add('theme-light');
+    } else if (theme === 'night') {
+        document.documentElement.classList.add('theme-dark');
+    } else if (theme === 'auto') {
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.classList.add(systemPrefersDark ? 'theme-dark' : 'theme-light');
+    }
+}
+
 // Persistence & Zod Verification Helpers
 export function loadState() {
     try {
         state.currentUser = localStorage.getItem('meidallm_user');
         
         const storedTheme = localStorage.getItem('meidallm_theme');
-        state.theme = (storedTheme as any) || 'dark';
+        state.theme = (storedTheme as any) || 'night';
         
         // Apply theme class to document element on load
-        if (state.theme !== 'dark') {
-            document.documentElement.className = '';
-            document.documentElement.classList.add(`theme-${state.theme}`);
-        } else {
-            document.documentElement.className = '';
-        }
+        applyThemeClass(state.theme);
         
         const storedKanban = localStorage.getItem('meidallm_kanban');
         if (storedKanban) {
@@ -299,6 +358,24 @@ export function loadState() {
         } else {
             state.publishSchedules = [];
         }
+
+        const storedContacts = localStorage.getItem('meidallm_contacts');
+        if (storedContacts) {
+            const parsed = JSON.parse(storedContacts);
+            const val = z.array(ContactSchema).safeParse(parsed);
+            state.contacts = val.success ? val.data : DEFAULT_CONTACTS;
+        } else {
+            state.contacts = DEFAULT_CONTACTS;
+        }
+
+        const storedTeam = localStorage.getItem('meidallm_team');
+        if (storedTeam) {
+            const parsed = JSON.parse(storedTeam);
+            const val = z.array(TeamMemberSchema).safeParse(parsed);
+            state.team = val.success ? val.data : DEFAULT_TEAM;
+        } else {
+            state.team = DEFAULT_TEAM;
+        }
     } catch (e) {
         console.error("Failed to load local storage state:", e);
         // Clean slate recovery
@@ -332,40 +409,128 @@ export function saveState() {
         localStorage.setItem('meidallm_theme', state.theme);
         localStorage.setItem('meidallm_connections', JSON.stringify(state.connections));
         localStorage.setItem('meidallm_schedules', JSON.stringify(state.publishSchedules));
+        localStorage.setItem('meidallm_contacts', JSON.stringify(state.contacts));
+        localStorage.setItem('meidallm_team', JSON.stringify(state.team));
     } catch (e) {
         console.error("Failed to save state to local storage:", e);
     }
 }
 
 // State Mutators
+export function logChange(projectId: string, taskId: string, itemTitle: string, fromState: string, toState: string) {
+    const logEntry: TaskLog = {
+        id: 'log-' + Math.random().toString(36).substr(2, 9),
+        projectId,
+        taskId,
+        taskTitle: itemTitle,
+        fromStatus: fromState,
+        toStatus: toState,
+        timestamp: Date.now()
+    };
+    state.taskLogs.push(logEntry);
+}
+
+export function addContact(pid: string, name: string, email: string, company: string, dealStage: Contact['dealStage'], dealValue: number) {
+    const newContact: Contact = {
+        id: 'c-' + Math.random().toString(36).substr(2, 9),
+        projectId: pid,
+        name: name.trim(),
+        email: email.trim(),
+        company: company.trim(),
+        dealStage,
+        dealValue,
+        created: Date.now()
+    };
+    state.contacts.push(newContact);
+    logChange(pid, '', `Contact ${newContact.name}`, 'none', 'created_contact');
+    notifyStateChange();
+    return newContact.id;
+}
+
+export function updateContact(cid: string, name: string, email: string, company: string, dealStage: Contact['dealStage'], dealValue: number) {
+    const contact = state.contacts.find(c => c.id === cid);
+    if (contact) {
+        contact.name = name.trim();
+        contact.email = email.trim();
+        contact.company = company.trim();
+        contact.dealStage = dealStage;
+        contact.dealValue = dealValue;
+        logChange(contact.projectId, '', `Contact ${contact.name}`, 'edited', 'updated_contact');
+        notifyStateChange();
+    }
+}
+
+export function deleteContact(cid: string) {
+    const contact = state.contacts.find(c => c.id === cid);
+    if (contact) {
+        logChange(contact.projectId, '', `Contact ${contact.name}`, 'active', 'deleted_contact');
+        state.contacts = state.contacts.filter(c => c.id !== cid);
+        notifyStateChange();
+    }
+}
+
 export function addProject(name: string, description: string) {
     const newProj: Project = {
         id: 'p-' + Math.random().toString(36).substr(2, 9),
         name: name.trim(),
         description: description.trim(),
         status: 'active',
-        lastActive: Date.now()
+        lastActive: Date.now(),
+        isArchived: false,
+        isBinned: false
     };
     state.projects.push(newProj);
+    logChange(newProj.id, '', newProj.name, 'none', 'created');
     notifyStateChange();
     return newProj.id;
 }
 
+export function updateProject(pid: string, name: string, description: string) {
+    const p = state.projects.find(x => x.id === pid);
+    if (p) {
+        const oldName = p.name;
+        p.name = name.trim();
+        p.description = description.trim();
+        p.lastActive = Date.now();
+        logChange(pid, '', p.name, oldName, 'edited');
+        notifyStateChange();
+    }
+}
+
+export function archiveProject(pid: string, isArchived: boolean) {
+    const p = state.projects.find(x => x.id === pid);
+    if (p) {
+        p.isArchived = isArchived;
+        p.lastActive = Date.now();
+        logChange(pid, '', p.name, isArchived ? 'active' : 'archived', isArchived ? 'archived' : 'active');
+        notifyStateChange();
+    }
+}
+
+export function binProject(pid: string, isBinned: boolean) {
+    const p = state.projects.find(x => x.id === pid);
+    if (p) {
+        p.isBinned = isBinned;
+        p.lastActive = Date.now();
+        logChange(pid, '', p.name, isBinned ? 'active' : 'binned', isBinned ? 'binned' : 'active');
+        notifyStateChange();
+    }
+}
+
 export function deleteProject(pid: string) {
+    const p = state.projects.find(x => x.id === pid);
+    const pName = p ? p.name : 'Unknown Folder';
     state.projects = state.projects.filter(p => p.id !== pid);
     state.kanbanState = state.kanbanState.filter(k => k.projectId !== pid);
     state.ideasState = state.ideasState.filter(i => i.projectId !== pid);
-    state.taskLogs = state.taskLogs.filter(l => l.projectId !== pid);
-    state.researchDocs = state.researchDocs.filter(r => r.projectId !== pid);
-    state.mediaAssets = state.mediaAssets.filter(m => m.projectId !== pid);
-    state.drafts = state.drafts.filter(d => d.projectId !== pid);
+    logChange(pid, '', pName, 'binned', 'permanently_deleted');
     if (state.currentProject === pid) {
         state.currentProject = null;
     }
     notifyStateChange();
 }
 
-export function addTask(pid: string, title: string, tag: string) {
+export function addTask(pid: string, title: string, tag: string, priority?: KanbanTask['priority'], points?: number) {
     const newTask: KanbanTask = {
         id: 't-' + Math.random().toString(36).substr(2, 9),
         projectId: pid,
@@ -373,9 +538,14 @@ export function addTask(pid: string, title: string, tag: string) {
         tag: tag.trim() || 'General',
         status: 'backlog',
         created: Date.now(),
-        updated: Date.now()
+        updated: Date.now(),
+        isArchived: false,
+        isBinned: false,
+        priority: priority || 'none',
+        points: points || 0
     };
     state.kanbanState.push(newTask);
+    logChange(pid, newTask.id, newTask.title, 'none', 'created');
     
     const p = state.projects.find(proj => proj.id === pid);
     if (p) p.lastActive = Date.now();
@@ -383,11 +553,63 @@ export function addTask(pid: string, title: string, tag: string) {
     notifyStateChange();
 }
 
+export function updateTask(
+    taskId: string, 
+    title: string, 
+    tag: string, 
+    status?: KanbanTask['status'],
+    complexity?: KanbanTask['complexity'],
+    assignee?: string,
+    description?: string,
+    dueDate?: string,
+    checklist?: string,
+    priority?: KanbanTask['priority'],
+    points?: number
+) {
+    const t = state.kanbanState.find(x => x.id === taskId);
+    if (t) {
+        const oldTitle = t.title;
+        t.title = title.trim();
+        t.tag = tag.trim() || 'General';
+        if (status) t.status = status;
+        if (complexity !== undefined) t.complexity = complexity;
+        if (assignee !== undefined) t.assignee = assignee;
+        if (description !== undefined) t.description = description;
+        if (dueDate !== undefined) t.dueDate = dueDate;
+        if (checklist !== undefined) t.checklist = checklist;
+        if (priority !== undefined) t.priority = priority;
+        if (points !== undefined) t.points = points;
+        t.updated = Date.now();
+        logChange(t.projectId, t.id, t.title, oldTitle, 'edited');
+        notifyStateChange();
+    }
+}
+
+export function archiveTask(taskId: string, isArchived: boolean) {
+    const t = state.kanbanState.find(x => x.id === taskId);
+    if (t) {
+        t.isArchived = isArchived;
+        t.updated = Date.now();
+        logChange(t.projectId, t.id, t.title, isArchived ? 'active' : 'archived', isArchived ? 'archived' : 'active');
+        notifyStateChange();
+    }
+}
+
+export function binTask(taskId: string, isBinned: boolean) {
+    const t = state.kanbanState.find(x => x.id === taskId);
+    if (t) {
+        t.isBinned = isBinned;
+        t.updated = Date.now();
+        logChange(t.projectId, t.id, t.title, isBinned ? 'active' : 'binned', isBinned ? 'binned' : 'active');
+        notifyStateChange();
+    }
+}
+
 export function deleteTask(taskId: string) {
     const task = state.kanbanState.find(t => t.id === taskId);
     if (task) {
+        logChange(task.projectId, task.id, task.title, 'binned', 'permanently_deleted');
         state.kanbanState = state.kanbanState.filter(t => t.id !== taskId);
-        state.taskLogs = state.taskLogs.filter(l => l.taskId !== taskId);
         notifyStateChange();
     }
 }
@@ -398,17 +620,7 @@ export function moveTask(taskId: string, targetStatus: KanbanTask['status']) {
         const oldStatus = task.status;
         task.status = targetStatus;
         task.updated = Date.now();
-        
-        const logEntry: TaskLog = {
-            id: 'log-' + Math.random().toString(36).substr(2, 9),
-            projectId: task.projectId,
-            taskId: task.id,
-            taskTitle: task.title,
-            fromStatus: oldStatus,
-            toStatus: targetStatus,
-            timestamp: Date.now()
-        };
-        state.taskLogs.push(logEntry);
+        logChange(task.projectId, task.id, task.title, oldStatus, targetStatus);
         
         const p = state.projects.find(proj => proj.id === task.projectId);
         if (p) p.lastActive = Date.now();
@@ -530,6 +742,27 @@ export function updateDraft(id: string, title: string, content: string) {
 
 export function deleteDraft(id: string) {
     state.drafts = state.drafts.filter(d => d.id !== id);
+    notifyStateChange();
+}
+
+export function addPublishSchedule(pid: string, draftId: string, title: string, format: string, channels: string[], scheduledTime: number) {
+    const newSchedule: PublishSchedule = {
+        id: 's-' + Math.random().toString(36).substr(2, 9),
+        projectId: pid,
+        draftId,
+        title,
+        format,
+        channels,
+        scheduledTime,
+        status: scheduledTime <= Date.now() ? 'published' : 'queued'
+    };
+    state.publishSchedules.push(newSchedule);
+    notifyStateChange();
+    return newSchedule.id;
+}
+
+export function deletePublishSchedule(id: string) {
+    state.publishSchedules = state.publishSchedules.filter(s => s.id !== id);
     notifyStateChange();
 }
 

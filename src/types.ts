@@ -6,6 +6,15 @@ export interface KanbanTask {
     status: 'backlog' | 'progress' | 'review' | 'done';
     created: number;
     updated: number;
+    isArchived?: boolean;
+    isBinned?: boolean;
+    complexity?: 'low' | 'medium' | 'high' | 'critical';
+    assignee?: string;
+    description?: string;
+    dueDate?: string;
+    checklist?: string;
+    priority?: 'none' | 'low' | 'medium' | 'high' | 'urgent';
+    points?: number;
 }
 
 export interface Project {
@@ -14,6 +23,8 @@ export interface Project {
     description: string;
     status: 'active' | 'completed';
     lastActive: number;
+    isArchived?: boolean;
+    isBinned?: boolean;
 }
 
 export interface Idea {
@@ -79,4 +90,23 @@ export interface PublishSchedule {
     channels: string[];
     scheduledTime: number;
     status: 'queued' | 'published';
+}
+
+export interface Contact {
+    id: string;
+    projectId: string;
+    name: string;
+    email: string;
+    company: string;
+    dealStage: 'lead' | 'contacted' | 'negotiation' | 'won';
+    dealValue: number;
+    created: number;
+}
+
+export interface TeamMember {
+    id: string;
+    name: string;
+    role: string;
+    status: 'active' | 'meeting' | 'offline' | 'vacation';
+    avatarColor: string;
 }
