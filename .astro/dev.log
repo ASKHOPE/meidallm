@@ -360,3 +360,17 @@ Failed to initialize state tables: error: duplicate key value violates unique co
 {"message":"src/main.ts","label":"watch","level":"info"}
 {"message":"program reload","label":"vite","level":"info"}
 {"message":"program reload","label":"vite","level":"info"}
+{"message":"[200] / 868ms","label":null,"level":"info"}
+{"message":"[200] / 42ms","label":null,"level":"info"}
+{"message":"[200] /api/state 78ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 339ms","label":null,"level":"info"}
+{"message":"[Unhandled error] ReferenceError: notifyStateChange is not defined\n > w.setWorkspacesFilter src/main.ts:532:4\n    530 |  w.setWorkspacesFilter = (filter: 'active' | 'archived' | 'bin') => {\n    531 |      state.workspacesFilter = filter;\n    532 |      notifyStateChange();\n        |      ^\n    533 |  };\n    534 |  \n > HTMLButtonElement.onclick ../../../../..:1:8\n","label":"vite","level":"error"}
+{"message":"[200] POST /api/state 578ms","label":null,"level":"info"}
+{"message":"[Unhandled error] ReferenceError: notifyStateChange is not defined\n > w.setWorkspacesFilter src/main.ts:532:4\n    530 |  w.setWorkspacesFilter = (filter: 'active' | 'archived' | 'bin') => {\n    531 |      state.workspacesFilter = filter;\n    532 |      notifyStateChange();\n        |      ^\n    533 |  };\n    534 |  \n > HTMLButtonElement.onclick ../../../../..:1:8\n","label":"vite","level":"error"}
+{"message":"[200] / 470ms","label":null,"level":"info"}
+{"message":"[200] /api/state 88ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 361ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 1015ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 502ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 1066ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 1074ms","label":null,"level":"info"}
