@@ -1,0 +1,21 @@
+{"message":"connected.","label":"vite","level":"info"}
+{"message":"Generated 0ms","label":"types","level":"info"}
+{"message":"connected.","label":"vite","level":"info"}
+{"message":" astro  v7.0.2 ready in 542 ms\n┃ Local    http://localhost:4321/\n┃ Network  use --host to expose","label":"SKIP_FORMAT","level":"info"}
+{"message":"watching for file changes...","label":null,"level":"info"}
+(node:7194) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"message":"[200] / 652ms","label":null,"level":"info"}
+{"message":"[200] / 51ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 42ms","label":null,"level":"info"}
+{"message":"[200] / 409ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 62ms","label":null,"level":"info"}
+{"message":"[200] / 510ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 49ms","label":null,"level":"info"}

@@ -3,6 +3,7 @@ import {
     state,
     registerStateListener,
     loadState,
+    saveState,
     addProject,
     deleteProject,
     addTask,
@@ -21,16 +22,38 @@ import {
     deleteDraft,
     resetAppState
 } from "./state";
-import { renderLayoutHTML, renderSidebarProjectsList } from "./views/layout";
+import { renderLayoutHTML, renderProjectDropdownOptions } from "./views/layout";
 import { views } from "./router";
+import { sanitizeHTML } from "./utils";
 import type { KanbanTask, ResearchDoc, MediaAsset, Draft } from "./types";
 
-// Update sidebar project listing
+// Update sidebar project listing and active dropdown state
 function updateSidebarUI() {
-    const listContainer = document.getElementById('sidebar-projects-list');
-    if (listContainer) {
-        listContainer.innerHTML = renderSidebarProjectsList();
+    // 1. Update dropdown options list
+    const dropdownList = document.getElementById('project-dropdown-list');
+    if (dropdownList) {
+        dropdownList.innerHTML = renderProjectDropdownOptions();
     }
+    
+    // 2. Update dropdown display name
+    const activeDisplay = document.getElementById('active-project-name-display');
+    if (activeDisplay) {
+        const currentProject = state.projects.find(p => p.id === state.currentProject);
+        activeDisplay.innerHTML = currentProject ? `📁 ${sanitizeHTML(currentProject.name)}` : "Select Campaign...";
+    }
+    
+    // 3. Update the data-pid attribute of project-scoped buttons
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        const viewKey = btn.getAttribute('data-view');
+        const view = views.find(v => v.key === viewKey);
+        if (view && view.scope === 'project') {
+            if (state.currentProject) {
+                btn.setAttribute('data-pid', state.currentProject);
+            } else {
+                btn.removeAttribute('data-pid');
+            }
+        }
+    });
 }
 
 // Word & Character count helper
@@ -48,8 +71,24 @@ function updateCounters(text: string) {
 
 // Global Routing
 function renderView(viewKey: string, pid?: string) {
+    const view = views.find(v => v.key === viewKey);
+    if (view && view.scope === 'project' && !pid && !state.currentProject) {
+        alert("Please select a project first using the dropdown selector!");
+        const dropdown = document.getElementById('project-selector-dropdown');
+        if (dropdown) dropdown.classList.remove('hidden');
+        return;
+    }
+
     state.activeViewKey = viewKey;
-    if (pid) state.currentProject = pid;
+    const activePid = pid || state.currentProject || undefined;
+    if (activePid) {
+        state.currentProject = activePid;
+    } else if (viewKey === 'workspaces' || viewKey === 'settings') {
+        state.currentProject = null;
+    }
+    
+    // Update sidebar UI dynamically so project submenus render when currentProject changes
+    updateSidebarUI();
     
     const pageTitle = document.getElementById('page-title');
     const appContent = document.getElementById('app-content');
@@ -60,7 +99,8 @@ function renderView(viewKey: string, pid?: string) {
         btn.classList.add('text-text-muted');
     });
     
-    const activeBtn = document.querySelector(`.nav-btn[data-view="${viewKey}"]${pid ? `[data-pid="${pid}"]` : ''}`);
+    const searchPid = pid || state.currentProject || '';
+    const activeBtn = document.querySelector(`.nav-btn[data-view="${viewKey}"]${searchPid ? `[data-pid="${searchPid}"]` : ''}`);
     if (activeBtn) {
         activeBtn.classList.remove('text-text-muted');
         activeBtn.classList.add('bg-[rgba(99,102,241,0.1)]', 'border-[rgba(99,102,241,0.2)]', 'text-primary');
@@ -70,10 +110,9 @@ function renderView(viewKey: string, pid?: string) {
     let viewTitle = '';
 
     // Dynamically retrieve the view template and info from the registry
-    const view = views.find(v => v.key === viewKey);
     if (view) {
         viewTitle = view.title;
-        viewHTML = view.render(pid);
+        viewHTML = view.render(searchPid);
     } else {
         viewTitle = 'Module Offline';
         viewHTML = `<div class="fade-in text-text-muted">This module is under construction.</div>`;
@@ -114,10 +153,43 @@ w.createProjectPrompt = () => {
     renderView('project-workspace', newId);
 };
 
+w.toggleProjectDropdown = (e: Event) => {
+    e.stopPropagation();
+    const dropdown = document.getElementById('project-selector-dropdown');
+    const arrow = document.getElementById('project-selector-arrow');
+    if (dropdown) {
+        const isHidden = dropdown.classList.toggle('hidden');
+        if (arrow) {
+            arrow.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+        }
+    }
+};
+
+w.closeProjectDropdown = () => {
+    const dropdown = document.getElementById('project-selector-dropdown');
+    const arrow = document.getElementById('project-selector-arrow');
+    if (dropdown) dropdown.classList.add('hidden');
+    if (arrow) arrow.style.transform = 'rotate(0deg)';
+};
+
+w.selectProject = (pid: string) => {
+    state.currentProject = pid;
+    saveState();
+    
+    // Maintain the active workflow view if it's project-scoped; otherwise navigate to project workspace
+    const activeView = views.find(v => v.key === state.activeViewKey);
+    if (activeView && activeView.scope === 'project') {
+        renderView(state.activeViewKey, pid);
+    } else {
+        renderView('project-workspace', pid);
+    }
+    w.closeProjectDropdown();
+};
+
 w.deleteProject = (pid: string) => {
     if (confirm("Are you sure you want to delete this project and all its associated tasks and ideas?")) {
         deleteProject(pid);
-        renderView('projects');
+        renderView('workspaces');
     }
 };
 
@@ -388,7 +460,10 @@ registerStateListener(() => {
 });
 
 // Initialization
+let initialized = false;
 async function init() {
+    if (initialized) return;
+    initialized = true;
     loadState();
     
     try {
@@ -416,6 +491,13 @@ async function init() {
             const view = target.getAttribute('data-view');
             const pid = target.getAttribute('data-pid') || undefined;
             if (view) renderView(view, pid);
+        }
+        
+        // Close project dropdown when clicking outside
+        const dropdown = document.getElementById('project-selector-dropdown');
+        const selectorBtn = document.getElementById('project-selector-btn');
+        if (dropdown && !dropdown.classList.contains('hidden') && selectorBtn && !selectorBtn.contains(e.target as Node) && !dropdown.contains(e.target as Node)) {
+            w.closeProjectDropdown();
         }
     });
 }

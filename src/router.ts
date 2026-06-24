@@ -24,24 +24,25 @@ export interface ViewConfig {
 
 // Configurable accordion categories for sidebar layout
 export const sidebarGroups: NavGroup[] = [
-    { key: 'campaigns', label: 'Projects & Campaigns', open: true },
+    { key: 'workflow', label: 'Campaign Workflow', open: true },
     { key: 'system', label: 'System', open: true }
 ];
 
 // Global registry of application views
 export const views: ViewConfig[] = [
     {
-        key: 'projects',
-        title: 'All Projects',
+        key: 'workspaces',
+        title: 'Workspaces',
+        icon: '📂',
         scope: 'global',
-        group: 'campaigns',
+        group: 'workflow',
         render: () => renderProjectsView()
     },
     {
         key: 'project-workspace',
         title: 'Project Workspace',
         scope: 'global',
-        group: 'campaigns',
+        group: 'workflow',
         render: (pid) => renderWorkspaceView(pid || '')
     },
     {
@@ -49,7 +50,7 @@ export const views: ViewConfig[] = [
         title: 'Task Kanban Board',
         icon: '📋',
         scope: 'project',
-        group: 'campaigns',
+        group: 'workflow',
         render: (pid) => renderKanbanView(pid || '')
     },
     {
@@ -57,7 +58,7 @@ export const views: ViewConfig[] = [
         title: 'Idea Canvas',
         icon: '💡',
         scope: 'project',
-        group: 'campaigns',
+        group: 'workflow',
         render: (pid) => renderIdeasView(pid || '')
     },
     {
@@ -65,7 +66,7 @@ export const views: ViewConfig[] = [
         title: 'Research & RAG Engine',
         icon: '🔍',
         scope: 'project',
-        group: 'campaigns',
+        group: 'workflow',
         render: (pid) => renderResearchView(pid || '')
     },
     {
@@ -73,7 +74,7 @@ export const views: ViewConfig[] = [
         title: 'Media Assets Studio',
         icon: '🖼️',
         scope: 'project',
-        group: 'campaigns',
+        group: 'workflow',
         render: (pid) => renderMediaView(pid || '')
     },
     {
@@ -81,7 +82,7 @@ export const views: ViewConfig[] = [
         title: 'Drafts & Compose',
         icon: '📝',
         scope: 'project',
-        group: 'campaigns',
+        group: 'workflow',
         render: (pid) => renderDraftsView(pid || '')
     },
     {

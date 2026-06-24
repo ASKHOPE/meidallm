@@ -28,7 +28,7 @@ export function renderWorkspaceView(pid: string): string {
                         <div class="flex justify-between text-sm"><span class="text-text-muted">Ideas Count</span><span class="text-white font-medium">${projectIdeas.length}</span></div>
                     </div>
                 </div>
-                <button onclick="window.navigateTo('projects')" class="w-full mt-6 px-4 py-2 bg-panel-hover border border-glass-border rounded-lg text-sm hover:bg-glass-border transition-colors">Back to Projects</button>
+                <button onclick="window.navigateTo('workspaces')" class="w-full mt-6 px-4 py-2 bg-panel-hover border border-glass-border rounded-lg text-sm hover:bg-glass-border transition-colors">Back to Workspaces</button>
             </div>
 
             <!-- Kanban Preview -->

@@ -2,58 +2,44 @@ import { state } from "../state";
 import { sanitizeHTML } from "../utils";
 import { views, sidebarGroups } from "../router";
 
-export function renderSidebarProjectsList(): string {
-    // Filter project-scoped tools dynamically from router
-    const projectTools = views.filter(v => v.scope === 'project' && v.icon);
-
-    return state.projects.map(p => {
+export function renderProjectDropdownOptions(): string {
+    let options = state.projects.map(p => {
         const isCurrent = state.currentProject === p.id;
-        const activeClass = isCurrent ? "text-primary bg-[rgba(99,102,241,0.05)] font-semibold" : "text-text-muted";
-        
-        let subMenu = "";
-        if (isCurrent) {
-            const toolButtons = projectTools.map(tool => `
-                <button class="nav-btn w-full text-left px-3 py-1.5 rounded-lg text-xs text-text-muted hover:bg-panel-hover hover:text-white flex items-center gap-1.5" data-view="${tool.key}" data-pid="${p.id}">
-                    <span>${tool.icon}</span> ${tool.title}
-                </button>
-            `).join('');
-
-            subMenu = `
-            <div class="flex flex-col gap-1 pl-4 pr-1 py-1 border-l border-glass-border/20 ml-6 mb-2 animate-[fadeIn_0.2s_ease-out]">
-                ${toolButtons}
-            </div>
-            `;
-        }
-        
+        const currentClass = isCurrent ? "text-primary font-semibold bg-[rgba(99,102,241,0.05)]" : "text-text-muted hover:text-white";
         return `
-        <div class="flex flex-col w-full">
-            <button class="nav-btn w-full text-left px-4 py-3 rounded-xl transition-all font-medium hover:bg-panel-hover hover:text-white flex items-center justify-between group/btn truncate ${activeClass}" 
-                    data-view="project-workspace" data-pid="${p.id}">
-                <span class="truncate">📁 ${sanitizeHTML(p.name)}</span>
-                <span class="opacity-0 group-hover/btn:opacity-100 text-xs text-rose-400 hover:text-rose-600 transition-opacity pl-2" onclick="event.stopPropagation(); window.deleteProject('${p.id}')">✕</span>
-            </button>
-            ${subMenu}
-        </div>
+        <button onclick="window.selectProject('${p.id}')" class="w-full text-left px-4 py-2 text-sm transition-colors flex items-center justify-between group/dropdown-item ${currentClass}">
+            <span class="truncate">📁 ${sanitizeHTML(p.name)}</span>
+            <span class="opacity-0 group-hover/dropdown-item:opacity-100 text-xs text-rose-400 hover:text-rose-600 transition-opacity pl-2" onclick="event.stopPropagation(); window.deleteProject('${p.id}')">✕</span>
+        </button>
         `;
     }).join('');
+    
+    if (state.projects.length === 0) {
+        options = `<div class="px-4 py-2.5 text-xs text-text-muted italic">No active projects</div>`;
+    }
+    return options;
 }
 
 export function renderSidebarNavigation(): string {
     return sidebarGroups.map(group => {
         let groupContent = "";
         
-        if (group.key === 'campaigns') {
-            // Render campaigns list and submenus dynamically
-            groupContent = `
-            <div id="sidebar-projects-list" class="flex flex-col gap-1 mt-1">
-                ${renderSidebarProjectsList()}
-            </div>
-            `;
+        if (group.key === 'workflow') {
+            const workflowTools = views.filter(v => v.group === 'workflow' && v.icon);
+            groupContent = workflowTools.map(item => {
+                const isProjectScoped = item.scope === 'project';
+                const pidAttr = isProjectScoped && state.currentProject ? `data-pid="${state.currentProject}"` : '';
+                return `
+                <button class="nav-btn w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-text-muted hover:bg-panel-hover hover:text-white flex items-center gap-2.5" 
+                        data-view="${item.key}" ${pidAttr}>
+                    <span>${item.icon}</span> ${item.title}
+                </button>
+                `;
+            }).join('');
         } else {
-            // Render other scoped views in this category dynamically
             const groupTools = views.filter(v => v.group === group.key && v.icon && v.scope !== 'project');
             groupContent = groupTools.map(item => `
-                <button class="nav-btn w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-text-muted hover:bg-panel-hover hover:text-white flex items-center gap-1.5" data-view="${item.key}">
+                <button class="nav-btn w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-text-muted hover:bg-panel-hover hover:text-white flex items-center gap-2.5" data-view="${item.key}">
                     <span>${item.icon}</span> ${item.title}
                 </button>
             `).join('');
@@ -62,7 +48,7 @@ export function renderSidebarNavigation(): string {
         const openAttr = group.open ? 'open' : '';
         
         return `
-        <details class="group ${group.key === 'campaigns' ? '' : 'mt-4'}" ${openAttr}>
+        <details class="group ${group.key === 'workflow' ? '' : 'mt-4'}" ${openAttr}>
             <summary class="flex justify-between items-center text-xs uppercase tracking-wide text-text-muted font-semibold cursor-pointer select-none py-2 hover:text-white transition-colors list-none [&::-webkit-details-marker]:hidden">
                 ${group.label}
                 <span class="transition-transform group-open:-rotate-180 text-sm">▾</span>
@@ -77,15 +63,35 @@ export function renderSidebarNavigation(): string {
 
 export function renderLayoutHTML(): string {
     const displayName = state.currentUser ? state.currentUser.split('@')[0] || 'Admin' : 'Admin';
+    const currentProject = state.projects.find(p => p.id === state.currentProject);
+    const activeProjectName = currentProject ? sanitizeHTML(currentProject.name) : "Select Campaign...";
     
     return `
 <div class="flex h-screen w-full overflow-hidden text-text-main font-inter">
     <!-- Sidebar -->
     <aside class="w-64 bg-glass-bg border-r border-glass-border flex flex-col p-6 backdrop-blur-md">
         <!-- HARDCODED: Branding Header Title on Top -->
-        <div class="flex items-center gap-4 mb-12 cursor-pointer" onclick="window.navigateTo('projects')">
+        <div class="flex items-center gap-4 mb-8 cursor-pointer" onclick="window.navigateTo('workspaces')">
             <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center font-bold text-xl shadow-[0_0_20px_var(--color-primary-glow)]">M</div>
             <h2 class="text-xl font-semibold font-outfit">Meidallm</h2>
+        </div>
+
+        <!-- Project Selector Dropdown -->
+        <div class="relative mb-6">
+            <label class="text-[10px] font-semibold text-text-muted uppercase tracking-wider block mb-1.5">Active Workspace</label>
+            <button id="project-selector-btn" onclick="window.toggleProjectDropdown(event)" class="w-full bg-[rgba(255,255,255,0.03)] border border-glass-border hover:bg-panel-hover rounded-xl px-4 py-3 text-left text-sm font-medium text-white flex justify-between items-center transition-all cursor-pointer">
+                <span id="active-project-name-display" class="truncate">📁 ${activeProjectName}</span>
+                <span class="text-xs text-text-muted transition-transform" id="project-selector-arrow">▾</span>
+            </button>
+            <div id="project-selector-dropdown" class="hidden absolute top-[calc(100%+6px)] left-0 w-full bg-[rgba(20,24,37,0.95)] border border-glass-border rounded-xl shadow-2xl py-2 z-50 flex flex-col backdrop-blur-xl animate-[fadeIn_0.15s_ease-out]">
+                <div id="project-dropdown-list" class="flex flex-col max-h-48 overflow-y-auto">
+                    ${renderProjectDropdownOptions()}
+                </div>
+                <div class="border-t border-glass-border my-1.5"></div>
+                <button onclick="window.createProjectPrompt(); window.closeProjectDropdown();" class="w-full text-left px-4 py-2 text-xs text-primary hover:bg-panel-hover hover:text-white transition-colors flex items-center gap-2 font-medium">
+                    <span>+</span> New Project
+                </button>
+            </div>
         </div>
 
         <!-- DYNAMIC: Navigation categories and buttons loaded from config -->

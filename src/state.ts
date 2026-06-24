@@ -143,7 +143,7 @@ const DEFAULT_DRAFTS: Draft[] = [
 export const state = {
     currentUser: null as string | null,
     currentProject: null as string | null,
-    activeViewKey: 'projects',
+    activeViewKey: 'workspaces',
     draggedTaskId: null as string | null,
     
     kanbanState: [] as KanbanTask[],
