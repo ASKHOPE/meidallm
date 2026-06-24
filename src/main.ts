@@ -22,14 +22,7 @@ import {
     resetAppState
 } from "./state";
 import { renderLayoutHTML, renderSidebarProjectsList } from "./views/layout";
-import { renderProjectsView } from "./views/projects";
-import { renderWorkspaceView } from "./views/workspace";
-import { renderKanbanView } from "./views/kanban";
-import { renderIdeasView } from "./views/ideas";
-import { renderSettingsView } from "./views/settings";
-import { renderResearchView } from "./views/research";
-import { renderMediaView } from "./views/media";
-import { renderDraftsView } from "./views/drafts";
+import { views } from "./router";
 import type { KanbanTask, ResearchDoc, MediaAsset, Draft } from "./types";
 
 // Update sidebar project listing
@@ -76,42 +69,14 @@ function renderView(viewKey: string, pid?: string) {
     let viewHTML = '';
     let viewTitle = '';
 
-    switch (viewKey) {
-        case 'projects':
-            viewTitle = 'All Projects';
-            viewHTML = renderProjectsView();
-            break;
-        case 'project-workspace':
-            viewTitle = 'Project Workspace';
-            viewHTML = renderWorkspaceView(pid || '');
-            break;
-        case 'kanban-board':
-            viewTitle = 'Task Kanban Board';
-            viewHTML = renderKanbanView(pid || '');
-            break;
-        case 'idea-canvas':
-            viewTitle = 'Idea Canvas';
-            viewHTML = renderIdeasView(pid || '');
-            break;
-        case 'research':
-            viewTitle = 'Research & RAG Engine';
-            viewHTML = renderResearchView(pid || '');
-            break;
-        case 'media':
-            viewTitle = 'Media Assets Studio';
-            viewHTML = renderMediaView(pid || '');
-            break;
-        case 'drafts':
-            viewTitle = 'Drafts & Compose';
-            viewHTML = renderDraftsView(pid || '');
-            break;
-        case 'settings':
-            viewTitle = 'Settings';
-            viewHTML = renderSettingsView();
-            break;
-        default:
-            viewTitle = 'Module Offline';
-            viewHTML = `<div class="fade-in text-text-muted">This module is under construction.</div>`;
+    // Dynamically retrieve the view template and info from the registry
+    const view = views.find(v => v.key === viewKey);
+    if (view) {
+        viewTitle = view.title;
+        viewHTML = view.render(pid);
+    } else {
+        viewTitle = 'Module Offline';
+        viewHTML = `<div class="fade-in text-text-muted">This module is under construction.</div>`;
     }
 
     if (pageTitle) pageTitle.innerText = viewTitle;
@@ -282,7 +247,6 @@ w.queryRAG = (pid: string) => {
     sourcesList.innerHTML = '';
 
     if (matches.length > 0) {
-        // Compile summary from top matches
         const facts = matches.map(m => m.content).join(' ');
         responseText.innerText = `I searched your knowledge base and found information related to "${query}":\n\n"${facts.slice(0, 300)}..."`;
         
@@ -350,7 +314,6 @@ w.deleteMediaAsset = (id: string) => {
 // --- Drafts Module Window Handlers ---
 w.createNewDraft = (pid: string) => {
     const newId = addDraft(pid, "Untitled Compose Draft", "", "blog");
-    // Switch selection view to the new draft
     w.selectDraft(newId);
 };
 
