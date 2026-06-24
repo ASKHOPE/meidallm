@@ -1,5 +1,16 @@
 import { z } from "zod";
-import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember, Cycle, Module, DbField, DbRow, DbTable } from "./types";
+import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember, Cycle, Module, DbField, DbRow, DbTable, Goal } from "./types";
+
+export const GoalSchema = z.object({
+    id: z.string(),
+    projectId: z.string(),
+    title: z.string(),
+    targetValue: z.number(),
+    currentValue: z.number(),
+    unit: z.string(),
+    dueDate: z.string(),
+    status: z.enum(['on-track', 'behind', 'achieved'])
+});
 
 // --- Zod Validation Schemas ---
 export const KanbanTaskSchema = z.object({
@@ -354,8 +365,15 @@ const DEFAULT_TABLES: DbTable[] = [
     }
 ];
 
+const DEFAULT_GOALS: Goal[] = [
+    { id: 'g1', projectId: 'p1', title: 'YouTube Retainer Views', targetValue: 50000, currentValue: 12400, unit: 'Views', dueDate: '2026-07-15', status: 'on-track' },
+    { id: 'g2', projectId: 'p1', title: 'Publish Marketing Content', targetValue: 30, currentValue: 12, unit: 'Posts', dueDate: '2026-07-01', status: 'on-track' },
+    { id: 'g3', projectId: 'p1', title: 'Organic Signups Target', targetValue: 1500, currentValue: 240, unit: 'Users', dueDate: '2026-08-01', status: 'behind' }
+];
+
 export const state = {
     currentUser: null as string | null,
+    activeOrgId: null as string | null,
     currentProject: null as string | null,
     activeViewKey: 'workspaces',
     draggedTaskId: null as string | null,
@@ -367,6 +385,7 @@ export const state = {
     researchDocs: [] as ResearchDoc[],
     mediaAssets: [] as MediaAsset[],
     drafts: [] as Draft[],
+    goals: [] as Goal[],
     
     // Extended States
     theme: 'night' as 'night' | 'day' | 'auto',
@@ -388,7 +407,9 @@ export const state = {
     kanbanViewMode: 'board' as 'board' | 'list' | 'spreadsheet',
     activeTableId: 'tbl-influencer' as string | null,
     databaseViewMode: 'grid' as 'grid' | 'gallery',
-    activeCommandMenu: false
+    activeCommandMenu: false,
+    activeAiAssistant: false,
+    aiMessages: [] as { sender: 'user' | 'ai', text: string }[]
 };
 
 // UI Re-render Callback Registration
@@ -480,6 +501,10 @@ function applyDbState(parsed: any) {
         const val = z.array(DbTableSchema).safeParse(parsed.tables);
         if (val.success) state.tables = val.data;
     }
+    if (parsed.goals) {
+        const val = z.array(GoalSchema).safeParse(parsed.goals);
+        if (val.success) state.goals = val.data;
+    }
     if (parsed.theme) state.theme = parsed.theme;
     if (parsed.kanbanViewMode) state.kanbanViewMode = parsed.kanbanViewMode;
     if (parsed.activeTableId) state.activeTableId = parsed.activeTableId;
@@ -503,12 +528,15 @@ function loadLocalState() {
             cycles: JSON.parse(localStorage.getItem('meidallm_cycles') || 'null'),
             modules: JSON.parse(localStorage.getItem('meidallm_modules') || 'null'),
             tables: JSON.parse(localStorage.getItem('meidallm_tables') || 'null'),
+            goals: JSON.parse(localStorage.getItem('meidallm_goals') || 'null'),
             theme: localStorage.getItem('meidallm_theme'),
             kanbanViewMode: localStorage.getItem('meidallm_kanban_viewmode'),
             activeTableId: localStorage.getItem('meidallm_active_tableid'),
             databaseViewMode: localStorage.getItem('meidallm_database_viewmode')
         };
         applyDbState(local);
+        
+        state.activeOrgId = localStorage.getItem('meidallm_active_orgid');
     } catch (e) {
         console.error("Local storage load fallback failed:", e);
     }
@@ -526,6 +554,7 @@ function loadLocalState() {
     if (state.cycles.length === 0) state.cycles = DEFAULT_CYCLES;
     if (state.modules.length === 0) state.modules = DEFAULT_MODULES;
     if (state.tables.length === 0) state.tables = DEFAULT_TABLES;
+    if (state.goals.length === 0) state.goals = DEFAULT_GOALS;
     
     applyThemeClass(state.theme);
 }
@@ -547,9 +576,16 @@ export async function loadState() {
         try {
             const res = await fetch(`/api/state?email=${encodeURIComponent(state.currentUser)}`);
             if (res.ok) {
-                const dbState = await res.json();
-                applyDbState(dbState);
-                notifyStateChange(true); // skip save on initial pull
+                const data = await res.json();
+                if (data.userPrefs) {
+                    state.activeOrgId = data.userPrefs.activeOrgId;
+                    state.theme = data.userPrefs.theme;
+                    applyThemeClass(state.theme);
+                }
+                if (data.orgState) {
+                    applyDbState(data.orgState);
+                    notifyStateChange(true); // skip save on initial pull
+                }
             }
         } catch (e) {
             console.error("Failed to fetch state from postgres:", e);
@@ -563,6 +599,9 @@ export function saveState() {
             localStorage.setItem('meidallm_user', state.currentUser);
         } else {
             localStorage.removeItem('meidallm_user');
+        }
+        if (state.activeOrgId) {
+            localStorage.setItem('meidallm_active_orgid', state.activeOrgId);
         }
         localStorage.setItem('meidallm_kanban', JSON.stringify(state.kanbanState));
         localStorage.setItem('meidallm_projects', JSON.stringify(state.projects));
@@ -579,15 +618,22 @@ export function saveState() {
         localStorage.setItem('meidallm_cycles', JSON.stringify(state.cycles));
         localStorage.setItem('meidallm_modules', JSON.stringify(state.modules));
         localStorage.setItem('meidallm_tables', JSON.stringify(state.tables));
+        localStorage.setItem('meidallm_goals', JSON.stringify(state.goals));
         localStorage.setItem('meidallm_kanban_viewmode', state.kanbanViewMode);
         if (state.activeTableId) localStorage.setItem('meidallm_active_tableid', state.activeTableId);
         localStorage.setItem('meidallm_database_viewmode', state.databaseViewMode);
 
         // Async save to Postgres database
         if (state.currentUser && typeof window !== 'undefined') {
+            if (!state.activeOrgId) {
+                const parts = state.currentUser.split("@");
+                state.activeOrgId = parts.length === 2 ? parts[1] : `personal-${parts[0]}`;
+            }
             const body = {
                 email: state.currentUser,
-                state: {
+                orgId: state.activeOrgId,
+                theme: state.theme,
+                orgState: {
                     kanbanState: state.kanbanState,
                     projects: state.projects,
                     ideasState: state.ideasState,
@@ -602,7 +648,7 @@ export function saveState() {
                     cycles: state.cycles,
                     modules: state.modules,
                     tables: state.tables,
-                    theme: state.theme,
+                    goals: state.goals,
                     kanbanViewMode: state.kanbanViewMode,
                     activeTableId: state.activeTableId,
                     databaseViewMode: state.databaseViewMode

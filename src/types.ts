@@ -150,3 +150,14 @@ export interface DbTable {
     fields: DbField[];
     rows: DbRow[];
 }
+
+export interface Goal {
+    id: string;
+    projectId: string;
+    title: string;
+    targetValue: number;
+    currentValue: number;
+    unit: string;
+    dueDate: string;
+    status: 'on-track' | 'behind' | 'achieved';
+}

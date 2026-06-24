@@ -129,7 +129,7 @@ export function renderLayoutHTML(): string {
                 </div>
                 <div>
                     <div id="user-display-name" class="font-semibold text-sm">${sanitizeHTML(displayName)}</div>
-                    <div class="text-xs text-text-muted">Pro Plan</div>
+                    <div class="text-[10px] text-text-muted font-mono uppercase tracking-wider">Tenant: ${sanitizeHTML(state.activeOrgId || 'personal')}</div>
                 </div>
             </div>
 
@@ -150,16 +150,44 @@ export function renderLayoutHTML(): string {
     </aside>
 
     <!-- Main Content Area -->
-    <main class="flex-grow flex flex-col p-8 overflow-y-auto">
+    <main class="flex-grow flex flex-col p-8 overflow-y-auto mr-0 transition-all duration-300" id="main-content-wrapper">
         <header class="flex justify-between items-center pb-6 border-b border-glass-border mb-8">
             <h1 id="page-title" class="text-3xl font-semibold font-outfit">Overview</h1>
             <div class="flex gap-3">
                 <button class="w-11 h-11 bg-glass-bg border border-glass-border rounded-xl flex items-center justify-center hover:bg-panel-hover hover:-translate-y-0.5 transition-all cursor-pointer" onclick="window.toggleCommandMenu(true)" title="Command Menu (⌘K)">🔍</button>
+                <button class="w-11 h-11 bg-glass-bg border border-glass-border rounded-xl flex items-center justify-center hover:bg-panel-hover hover:-translate-y-0.5 transition-all cursor-pointer" onclick="window.toggleAiAssistant(true)" title="ClickUp Brain AI">🤖</button>
                 <button class="w-11 h-11 bg-glass-bg border border-glass-border rounded-xl flex items-center justify-center hover:bg-panel-hover hover:-translate-y-0.5 transition-all cursor-pointer" onclick="alert('No new notifications')">🔔</button>
             </div>
         </header>
         <div id="app-content" class="flex-grow flex flex-col"></div>
     </main>
+    
+    <!-- Collapsible AI Assistant slide-out drawer -->
+    <aside id="ai-assistant-drawer" class="w-80 bg-glass-bg border-l border-glass-border flex flex-col p-6 backdrop-blur-md transition-all duration-300 transform translate-x-full fixed right-0 top-0 bottom-0 z-40 shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center gap-2">
+                <span class="text-lg">🤖</span>
+                <h3 class="font-bold text-white font-outfit text-sm">ClickUp AI Brain</h3>
+            </div>
+            <button onclick="window.toggleAiAssistant(false)" class="text-text-muted hover:text-white transition-colors text-sm">✕</button>
+        </div>
+        
+        <div id="ai-chat-thread" class="flex-grow overflow-y-auto flex flex-col gap-4 text-xs pr-1">
+            <div class="bg-panel-hover/50 p-3 rounded-xl border border-glass-border/40 text-text-muted leading-relaxed">
+                Hello! I am your AI assistant. I have full context of your database tables, tasks, cycles, and CRM. Try asking:
+                <ul class="list-disc pl-4 mt-2 flex flex-col gap-1.5">
+                    <li><button onclick="window.sendAiMessage('Show tasks at risk')" class="text-left text-white underline hover:text-zinc-200">Show tasks at risk</button></li>
+                    <li><button onclick="window.sendAiMessage('Summarize current cycle progress')" class="text-left text-white underline hover:text-zinc-200">Summarize current cycle progress</button></li>
+                    <li><button onclick="window.sendAiMessage('Recommend copywriting tone')" class="text-left text-white underline hover:text-zinc-200">Recommend copywriting tone</button></li>
+                </ul>
+            </div>
+        </div>
+        
+        <form id="ai-chat-form" onsubmit="event.preventDefault(); window.submitAiChat();" class="mt-4 pt-4 border-t border-glass-border/40 flex gap-2">
+            <input type="text" id="ai-chat-input" placeholder="Ask AI assistant..." class="flex-grow bg-panel-hover border border-glass-border p-2.5 rounded-xl text-white text-xs focus:outline-none focus:border-white">
+            <button type="submit" class="px-3 bg-white text-black font-semibold text-xs rounded-xl hover:bg-zinc-200 transition-colors">Send</button>
+        </form>
+    </aside>
 </div>
 
 <!-- Command Menu Modal -->
@@ -175,5 +203,6 @@ export function renderLayoutHTML(): string {
         </div>
     </div>
 </div>
+
 `;
 }

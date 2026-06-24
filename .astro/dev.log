@@ -282,3 +282,55 @@ See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode de
 {"message":"program reload","label":"vite","level":"info"}
 {"message":"program reload","label":"vite","level":"info"}
 {"message":"program reload","label":"vite","level":"info"}
+{"message":"[console.error] [vite] TypeError: Importing a module script failed.","label":"vite","level":"error"}
+{"message":"[console.error] [vite] Failed to reload /index.css. This could be due to syntax errors or importing non-existent modules. (see errors above)","label":"vite","level":"error"}
+{"message":"[200] / 469ms","label":null,"level":"info"}
+{"message":"[200] / 445ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 44ms","label":null,"level":"info"}
+{"message":"[404] /api/state 377ms","label":null,"level":"info"}
+{"message":"[Unhandled error] ReferenceError: Can't find variable: notifyStateChange\n > src/main.ts:557:22\n    555 |      state.theme = theme;\n    556 |      applyThemeClass(theme);\n    557 |      notifyStateChange();\n        |                        ^\n    558 |  };\n    559 |  \n > onclick ../../../../..:1:16\n","label":"vite","level":"error"}
+{"message":"[Unhandled error] ReferenceError: Can't find variable: notifyStateChange\n > src/main.ts:557:22\n    555 |      state.theme = theme;\n    556 |      applyThemeClass(theme);\n    557 |      notifyStateChange();\n        |                        ^\n    558 |  };\n    559 |  \n > onclick ../../../../..:1:16\n","label":"vite","level":"error"}
+{"message":"[200] / 46ms","label":null,"level":"info"}
+{"message":"[404] /api/state 45ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 354ms","label":null,"level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"[200] / 459ms","label":null,"level":"info"}
+{"message":"[200] /api/state 39ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 38ms","label":null,"level":"info"}
+{"message":"[200] / 376ms","label":null,"level":"info"}
+{"message":"[200] /api/state 40ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 336ms","label":null,"level":"info"}
+{"message":"[200] POST /api/auth/sign-out 96ms","label":null,"level":"info"}
+{"message":"[200] /login 34ms","label":null,"level":"info"}
+{"message":"/index.css","label":"watch","level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"src/router.ts","label":"watch","level":"info"}
+{"message":"src/router.ts","label":"watch","level":"info"}
+{"message":"src/views/layout.ts","label":"watch","level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+Failed to initialize state tables: error: duplicate key value violates unique constraint "pg_type_typname_nsp_index"
+    at /Users/hosanna/Documents/GitHub/meidallm/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async initDb (/Users/hosanna/Documents/GitHub/meidallm/src/pages/api/state.ts:6:3) {
+  length: 256,
+  severity: 'ERROR',
+  code: '23505',
+  detail: 'Key (typname, typnamespace)=(user_preferences, 2200) already exists.',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'pg_catalog',
+  table: 'pg_type',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'pg_type_typname_nsp_index',
+  file: 'nbtinsert.c',
+  line: '666',
+  routine: '_bt_check_unique'
+}

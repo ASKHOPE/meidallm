@@ -927,6 +927,177 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// AI Assistant Slide-over Drawer
+w.toggleAiAssistant = (open: boolean) => {
+    state.activeAiAssistant = open;
+    const drawer = document.getElementById('ai-assistant-drawer');
+    const mainWrapper = document.getElementById('main-content-wrapper');
+    if (drawer && mainWrapper) {
+        if (open) {
+            drawer.classList.remove('translate-x-full');
+            drawer.classList.add('translate-x-0');
+            mainWrapper.classList.add('mr-80');
+        } else {
+            drawer.classList.add('translate-x-full');
+            drawer.classList.remove('translate-x-0');
+            mainWrapper.classList.remove('mr-80');
+        }
+    }
+};
+
+w.sendAiMessage = (text: string) => {
+    if (!text.trim()) return;
+    state.aiMessages.push({ sender: 'user', text: text });
+    w.renderAiChat();
+    
+    const chatThread = document.getElementById('ai-chat-thread');
+    if (chatThread) {
+        setTimeout(() => chatThread.scrollTop = chatThread.scrollHeight, 50);
+    }
+    
+    setTimeout(() => {
+        let response = "I'm analyzing the active state...";
+        const lower = text.toLowerCase();
+        
+        if (lower.includes('task') && (lower.includes('risk') || lower.includes('overdue'))) {
+            const activeTasks = state.kanbanState.filter(t => !t.isArchived && !t.isBinned && t.status !== 'done');
+            if (activeTasks.length > 0) {
+                response = `Here are tasks currently at risk:<br><br>` + 
+                  activeTasks.map(t => `• <strong>${t.title}</strong> (${t.tag}) - Status: ${t.status}`).join('<br>');
+            } else {
+                response = "Great news! All active tasks are completed or on-schedule.";
+            }
+        } else if (lower.includes('cycle') || lower.includes('sprint')) {
+            const activeCycle = state.cycles.find(c => c.status === 'active');
+            if (activeCycle) {
+                const cycleTasks = state.kanbanState.filter(t => t.cycleId === activeCycle.id);
+                const doneTasks = cycleTasks.filter(t => t.status === 'done');
+                response = `<strong>Active Cycle: ${activeCycle.name}</strong><br>
+                Duration: ${activeCycle.startDate} to ${activeCycle.endDate}<br>
+                Progress: ${doneTasks.length} / ${cycleTasks.length} tasks completed.`;
+            } else {
+                response = "There is no currently active cycle. Head over to Cycles & Sprints to start one!";
+            }
+        } else if (lower.includes('tone') || lower.includes('copywriting')) {
+            const toneSelect = document.getElementById('setting-brand-tone') as HTMLSelectElement;
+            const currentTone = toneSelect ? toneSelect.value : 'Creative';
+            response = `I recommend drafting with a <strong>${currentTone}</strong> tone to align with your current Campaign Preferences.`;
+        } else {
+            response = "I've checked the organization state. Let me know if you need me to summarize task logs, check goals, or filter database entries!";
+        }
+        
+        state.aiMessages.push({ sender: 'ai', text: response });
+        w.renderAiChat();
+        if (chatThread) {
+            setTimeout(() => chatThread.scrollTop = chatThread.scrollHeight, 50);
+        }
+    }, 800);
+};
+
+w.submitAiChat = () => {
+    const input = document.getElementById('ai-chat-input') as HTMLInputElement;
+    if (input && input.value) {
+        w.sendAiMessage(input.value);
+        input.value = "";
+    }
+};
+
+w.renderAiChat = () => {
+    const chatThread = document.getElementById('ai-chat-thread');
+    if (!chatThread) return;
+    
+    let html = `
+        <div class="bg-panel-hover/50 p-3 rounded-xl border border-glass-border/40 text-text-muted leading-relaxed">
+            Hello! I am your AI assistant. I have full context of your database tables, tasks, cycles, and CRM. Try asking:
+            <ul class="list-disc pl-4 mt-2 flex flex-col gap-1.5">
+                <li><button onclick="window.sendAiMessage('Show tasks at risk')" class="text-left text-white underline hover:text-zinc-200">Show tasks at risk</button></li>
+                <li><button onclick="window.sendAiMessage('Summarize current cycle progress')" class="text-left text-white underline hover:text-zinc-200">Summarize current cycle progress</button></li>
+                <li><button onclick="window.sendAiMessage('Recommend copywriting tone')" class="text-left text-white underline hover:text-zinc-200">Recommend copywriting tone</button></li>
+            </ul>
+        </div>
+    `;
+    
+    html += state.aiMessages.map(m => {
+        if (m.sender === 'user') {
+            return `
+            <div class="bg-panel-hover border border-glass-border/40 p-3 rounded-xl ml-6 text-white text-right">
+                ${m.text}
+            </div>
+            `;
+        } else {
+            return `
+            <div class="bg-white/5 border border-glass-border/30 p-3 rounded-xl mr-6 text-text-main leading-relaxed">
+                ${m.text}
+            </div>
+            `;
+        }
+    }).join('');
+    
+    chatThread.innerHTML = html;
+};
+
+// Goals & Milestones handlers
+w.createGoalPrompt = () => {
+    const title = prompt("Enter goal title:");
+    if (!title) return;
+    const target = prompt("Enter target numeric value (e.g. 50000):");
+    if (!target || isNaN(Number(target))) return;
+    const unit = prompt("Enter metric unit (e.g. Views, Posts, Signups):") || "units";
+    const date = prompt("Enter due date (YYYY-MM-DD):") || new Date().toISOString().split('T')[0];
+    
+    const newGoal = {
+        id: 'g-' + Math.random().toString(36).substr(2, 9),
+        projectId: state.currentProject || 'p1',
+        title: title.trim(),
+        targetValue: Number(target),
+        currentValue: 0,
+        unit: unit.trim(),
+        dueDate: date,
+        status: 'on-track' as const
+    };
+    
+    state.goals.push(newGoal);
+    notifyStateChange();
+};
+
+w.deleteGoal = (id: string) => {
+    if (confirm("Are you sure you want to delete this campaign goal?")) {
+        state.goals = state.goals.filter(g => g.id !== id);
+        notifyStateChange();
+    }
+};
+
+w.incrementGoalProgress = (id: string) => {
+    const goal = state.goals.find(g => g.id === id);
+    if (goal) {
+        const valStr = prompt(`Increment progress for "${goal.title}" by:`, "5");
+        if (valStr && !isNaN(Number(valStr))) {
+            goal.currentValue += Number(valStr);
+            if (goal.currentValue >= goal.targetValue) {
+                goal.status = 'achieved';
+            } else if (goal.currentValue < goal.targetValue / 2) {
+                goal.status = 'behind';
+            } else {
+                goal.status = 'on-track';
+            }
+            notifyStateChange();
+        }
+    }
+};
+
+// Multi-tenant organization switcher
+w.createOrganizationPrompt = () => {
+    const name = prompt("Switch or create active Tenant (domain or org slug, e.g. acme-marketing):");
+    if (name) {
+        const cleanName = name.toLowerCase().replace(/[^a-z0-9-.]/g, '');
+        if (cleanName) {
+            state.activeOrgId = cleanName;
+            localStorage.setItem('meidallm_active_orgid', cleanName);
+            loadState().then(() => notifyStateChange());
+        }
+    }
+};
+
 // Startup Hooks
 document.addEventListener('DOMContentLoaded', init);
 if (document.readyState === 'interactive' || document.readyState === 'complete') {

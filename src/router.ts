@@ -13,6 +13,7 @@ import { renderCRMView } from "./views/crm";
 import { renderTeamView } from "./views/team";
 import { renderDatabaseView } from "./views/database";
 import { renderCyclesView } from "./views/cycles";
+import { renderGoalsView } from "./views/goals";
 
 export interface NavGroup {
     key: string;
@@ -83,6 +84,14 @@ export const views: ViewConfig[] = [
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderDatabaseView(pid || '')
+    },
+    {
+        key: 'project-goals',
+        title: 'Campaign Goals',
+        icon: '🎯',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderGoalsView(pid || '')
     },
     {
         key: 'research',
