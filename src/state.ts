@@ -752,6 +752,10 @@ export function archiveProject(pid: string, isArchived: boolean) {
         p.isArchived = isArchived;
         p.lastActive = Date.now();
         logChange(pid, '', p.name, isArchived ? 'active' : 'archived', isArchived ? 'archived' : 'active');
+        if (isArchived && state.currentProject === pid) {
+            state.currentProject = null;
+            state.activeViewKey = 'workspaces';
+        }
         notifyStateChange();
     }
 }
@@ -762,6 +766,10 @@ export function binProject(pid: string, isBinned: boolean) {
         p.isBinned = isBinned;
         p.lastActive = Date.now();
         logChange(pid, '', p.name, isBinned ? 'active' : 'binned', isBinned ? 'binned' : 'active');
+        if (isBinned && state.currentProject === pid) {
+            state.currentProject = null;
+            state.activeViewKey = 'workspaces';
+        }
         notifyStateChange();
     }
 }

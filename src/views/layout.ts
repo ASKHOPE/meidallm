@@ -3,18 +3,19 @@ import { sanitizeHTML } from "../utils";
 import { views, sidebarGroups } from "../router";
 
 export function renderProjectDropdownOptions(): string {
-    let options = state.projects.map(p => {
+    const activeProjects = state.projects.filter(p => !p.isArchived && !p.isBinned);
+    let options = activeProjects.map(p => {
         const isCurrent = state.currentProject === p.id;
-        const currentClass = isCurrent ? "text-primary font-semibold bg-[rgba(99,102,241,0.05)]" : "text-text-muted hover:text-white";
+        const currentClass = isCurrent ? "text-text-main font-semibold bg-panel-hover" : "text-text-muted hover:text-text-main";
         return `
         <button onclick="window.selectProject('${p.id}')" class="w-full text-left px-4 py-2 text-sm transition-colors flex items-center justify-between group/dropdown-item ${currentClass}">
             <span class="truncate">📁 ${sanitizeHTML(p.name)}</span>
-            <span class="opacity-0 group-hover/dropdown-item:opacity-100 text-xs text-rose-400 hover:text-rose-600 transition-opacity pl-2" onclick="event.stopPropagation(); window.deleteProject('${p.id}')">✕</span>
+            <span class="opacity-0 group-hover/dropdown-item:opacity-100 text-xs text-rose-400 hover:text-rose-600 transition-opacity pl-2" onclick="event.stopPropagation(); window.binProjectToggle('${p.id}', true)" title="Move to Bin">🗑️</span>
         </button>
         `;
     }).join('');
     
-    if (state.projects.length === 0) {
+    if (activeProjects.length === 0) {
         options = `<div class="px-4 py-2.5 text-xs text-text-muted italic">No active projects</div>`;
     }
     return options;
@@ -47,9 +48,9 @@ export function renderSidebarNavigation(): string {
                 const pidAttr = isProjectScoped && state.currentProject ? `data-pid="${state.currentProject}"` : '';
                 const colors = viewIconColors[item.key] || { bg: 'bg-zinc-500/10 dark:bg-zinc-500/20', text: 'text-zinc-600 dark:text-zinc-400' };
                 return `
-                <button class="nav-btn w-full text-left px-4 py-2.5 rounded-xl transition-all font-medium text-text-muted hover:bg-panel-hover hover:text-text-main flex items-center gap-3 border border-transparent" 
+                <button class="nav-btn w-full text-left px-2.5 py-1.5 rounded-lg transition-all font-medium text-xs text-text-muted hover:bg-panel-hover hover:text-text-main flex items-center gap-2 border border-transparent" 
                         data-view="${item.key}" ${pidAttr}>
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center ${colors.bg} ${colors.text} text-base shrink-0">${item.icon}</span> 
+                    <span class="w-6.5 h-6.5 rounded-md flex items-center justify-center ${colors.bg} ${colors.text} text-xs shrink-0">${item.icon}</span> 
                     <span class="truncate">${item.title}</span>
                 </button>
                 `;
@@ -59,8 +60,8 @@ export function renderSidebarNavigation(): string {
             groupContent = groupTools.map(item => {
                 const colors = viewIconColors[item.key] || { bg: 'bg-zinc-500/10 dark:bg-zinc-500/20', text: 'text-zinc-600 dark:text-zinc-400' };
                 return `
-                <button class="nav-btn w-full text-left px-4 py-2.5 rounded-xl transition-all font-medium text-text-muted hover:bg-panel-hover hover:text-text-main flex items-center gap-3 border border-transparent" data-view="${item.key}">
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center ${colors.bg} ${colors.text} text-base shrink-0">${item.icon}</span> 
+                <button class="nav-btn w-full text-left px-2.5 py-1.5 rounded-lg transition-all font-medium text-xs text-text-muted hover:bg-panel-hover hover:text-text-main flex items-center gap-2 border border-transparent" data-view="${item.key}">
+                    <span class="w-6.5 h-6.5 rounded-md flex items-center justify-center ${colors.bg} ${colors.text} text-xs shrink-0">${item.icon}</span> 
                     <span class="truncate">${item.title}</span>
                 </button>
                 `;
@@ -70,12 +71,12 @@ export function renderSidebarNavigation(): string {
         const openAttr = group.open ? 'open' : '';
         
         return `
-        <details class="group ${group.key === 'workflow' ? '' : 'mt-4'}" ${openAttr}>
-            <summary class="flex justify-between items-center text-xs uppercase tracking-wide text-text-muted font-semibold cursor-pointer select-none py-2 hover:text-text-main transition-colors list-none [&::-webkit-details-marker]:hidden">
+        <details class="group ${group.key === 'workflow' ? '' : 'mt-3'}" ${openAttr}>
+            <summary class="flex justify-between items-center text-[10px] uppercase tracking-wider text-text-muted font-bold cursor-pointer select-none py-1.5 hover:text-text-main transition-colors list-none [&::-webkit-details-marker]:hidden">
                 ${group.label}
-                <span class="transition-transform group-open:-rotate-180 text-sm">▾</span>
+                <span class="transition-transform group-open:-rotate-180 text-xs">▾</span>
             </summary>
-            <div class="flex flex-col gap-1 mt-1 animate-[fadeIn_0.3s_ease-out]">
+            <div class="flex flex-col gap-0.5 mt-0.5 animate-[fadeIn_0.3s_ease-out]">
                 ${groupContent}
             </div>
         </details>
@@ -137,9 +138,9 @@ export function renderLayoutHTML(): string {
             <div class="flex items-center justify-between bg-panel-hover/50 p-1.5 rounded-lg border border-glass-border text-[10px] my-1">
                 <span class="text-text-muted pl-1.5 font-medium uppercase tracking-wider">Theme</span>
                 <div class="flex gap-1">
-                    <button onclick="window.setTheme('day')" class="theme-btn px-2 py-0.5 rounded transition-colors font-semibold ${state.theme === 'day' ? 'text-white bg-primary' : 'text-text-muted hover:text-white'}" id="theme-btn-day">Day</button>
-                    <button onclick="window.setTheme('night')" class="theme-btn px-2 py-0.5 rounded transition-colors font-semibold ${state.theme === 'night' ? 'text-white bg-primary' : 'text-text-muted hover:text-white'}" id="theme-btn-night">Night</button>
-                    <button onclick="window.setTheme('auto')" class="theme-btn px-2 py-0.5 rounded transition-colors font-semibold ${state.theme === 'auto' ? 'text-white bg-primary' : 'text-text-muted hover:text-white'}" id="theme-btn-auto">Auto</button>
+                    <button onclick="window.setTheme('day')" class="theme-btn px-2 py-0.5 rounded transition-all font-semibold ${state.theme === 'day' ? 'bg-text-main text-bg-dark' : 'text-text-muted hover:text-text-main'}" id="theme-btn-day">Day</button>
+                    <button onclick="window.setTheme('night')" class="theme-btn px-2 py-0.5 rounded transition-all font-semibold ${state.theme === 'night' ? 'bg-text-main text-bg-dark' : 'text-text-muted hover:text-text-main'}" id="theme-btn-night">Night</button>
+                    <button onclick="window.setTheme('auto')" class="theme-btn px-2 py-0.5 rounded transition-all font-semibold ${state.theme === 'auto' ? 'bg-text-main text-bg-dark' : 'text-text-muted hover:text-text-main'}" id="theme-btn-auto">Auto</button>
                 </div>
             </div>
 

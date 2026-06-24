@@ -334,3 +334,16 @@ Failed to initialize state tables: error: duplicate key value violates unique co
   line: '666',
   routine: '_bt_check_unique'
 }
+{"message":"[302] / 21ms","label":null,"level":"info"}
+{"message":"[200] /login 13ms","label":null,"level":"info"}
+{"message":"[200] /login 1ms","label":null,"level":"info"}
+{"message":"src/views/layout.ts","label":"watch","level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"src/views/layout.ts","label":"watch","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"src/views/layout.ts","label":"watch","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"program reload","label":"vite","level":"info"}

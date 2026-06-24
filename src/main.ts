@@ -67,6 +67,36 @@ function updateSidebarUI() {
     });
 }
 
+function updateThemeButtonsUI() {
+    const themeBtnDay = document.getElementById('theme-btn-day');
+    const themeBtnNight = document.getElementById('theme-btn-night');
+    const themeBtnAuto = document.getElementById('theme-btn-auto');
+    
+    const activeClass = ['bg-text-main', 'text-bg-dark', 'font-semibold'];
+    const inactiveClass = ['text-text-muted', 'hover:text-text-main'];
+    
+    [themeBtnDay, themeBtnNight, themeBtnAuto].forEach(btn => {
+        if (btn) {
+            activeClass.forEach(c => btn.classList.remove(c));
+            inactiveClass.forEach(c => btn.classList.remove(c));
+        }
+    });
+    
+    if (state.theme === 'day' && themeBtnDay) {
+        activeClass.forEach(c => themeBtnDay.classList.add(c));
+        inactiveClass.forEach(c => themeBtnNight?.classList.add(c));
+        inactiveClass.forEach(c => themeBtnAuto?.classList.add(c));
+    } else if (state.theme === 'night' && themeBtnNight) {
+        activeClass.forEach(c => themeBtnNight.classList.add(c));
+        inactiveClass.forEach(c => themeBtnDay?.classList.add(c));
+        inactiveClass.forEach(c => themeBtnAuto?.classList.add(c));
+    } else if (state.theme === 'auto' && themeBtnAuto) {
+        activeClass.forEach(c => themeBtnAuto.classList.add(c));
+        inactiveClass.forEach(c => themeBtnDay?.classList.add(c));
+        inactiveClass.forEach(c => themeBtnNight?.classList.add(c));
+    }
+}
+
 // Word & Character count helper
 function updateCounters(text: string) {
     const wordEl = document.getElementById('editor-counter-words');
@@ -756,12 +786,14 @@ function renderMainApp() {
         appContainer.innerHTML = renderLayoutHTML();
     }
     updateSidebarUI();
+    updateThemeButtonsUI();
     renderView(state.activeViewKey, state.currentProject || undefined);
 }
 
 // Register state-change listener to redraw active UI components
 registerStateListener(() => {
     updateSidebarUI();
+    updateThemeButtonsUI();
     renderView(state.activeViewKey, state.currentProject || undefined);
 });
 
