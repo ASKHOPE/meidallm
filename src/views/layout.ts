@@ -110,7 +110,18 @@ export function renderLayoutHTML(): string {
                     <div class="text-xs text-text-muted">Pro Plan</div>
                 </div>
             </div>
-            <button onclick="window.signOut()" class="w-full mt-2 py-2 border border-glass-border hover:bg-rose-950/20 hover:text-rose-400 text-xs rounded-xl transition-colors font-medium cursor-pointer">
+
+            <!-- Theme Switcher -->
+            <div class="flex items-center justify-between bg-panel-hover/50 p-1.5 rounded-lg border border-glass-border text-[10px] my-1">
+                <span class="text-text-muted pl-1.5 font-medium uppercase tracking-wider">Theme</span>
+                <div class="flex gap-1">
+                    <button onclick="window.setTheme('dark')" class="theme-btn px-2 py-0.5 rounded transition-colors font-semibold ${state.theme === 'dark' ? 'text-white bg-primary' : 'text-text-muted hover:text-white'}" id="theme-btn-dark">Dark</button>
+                    <button onclick="window.setTheme('light')" class="theme-btn px-2 py-0.5 rounded transition-colors font-semibold ${state.theme === 'light' ? 'text-white bg-primary' : 'text-text-muted hover:text-white'}" id="theme-btn-light">Light</button>
+                    <button onclick="window.setTheme('neon')" class="theme-btn px-2 py-0.5 rounded transition-colors font-semibold ${state.theme === 'neon' ? 'text-white bg-primary' : 'text-text-muted hover:text-white'}" id="theme-btn-neon">Neon</button>
+                </div>
+            </div>
+
+            <button onclick="window.signOut()" class="w-full py-2 border border-glass-border hover:bg-rose-950/20 hover:text-rose-400 text-xs rounded-xl transition-colors font-medium cursor-pointer">
                 Sign Out
             </button>
         </div>

@@ -6,6 +6,9 @@ import { renderResearchView } from "./views/research";
 import { renderMediaView } from "./views/media";
 import { renderDraftsView } from "./views/drafts";
 import { renderSettingsView } from "./views/settings";
+import { renderPublishView } from "./views/publish";
+import { renderAnalyticsView } from "./views/analytics";
+import { renderConnectionsView } from "./views/connections";
 
 export interface NavGroup {
     key: string;
@@ -46,20 +49,20 @@ export const views: ViewConfig[] = [
         render: (pid) => renderWorkspaceView(pid || '')
     },
     {
-        key: 'kanban-board',
-        title: 'Task Kanban Board',
-        icon: '📋',
-        scope: 'project',
-        group: 'workflow',
-        render: (pid) => renderKanbanView(pid || '')
-    },
-    {
         key: 'idea-canvas',
         title: 'Idea Canvas',
         icon: '💡',
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderIdeasView(pid || '')
+    },
+    {
+        key: 'kanban-board',
+        title: 'Task Kanban Board',
+        icon: '📋',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderKanbanView(pid || '')
     },
     {
         key: 'research',
@@ -84,6 +87,30 @@ export const views: ViewConfig[] = [
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderDraftsView(pid || '')
+    },
+    {
+        key: 'publish',
+        title: 'Publish & Schedule',
+        icon: '📢',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderPublishView(pid || '')
+    },
+    {
+        key: 'analytics',
+        title: 'Campaign Analytics',
+        icon: '📊',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderAnalyticsView(pid || '')
+    },
+    {
+        key: 'connections',
+        title: 'Connections & API',
+        icon: '🔌',
+        scope: 'global',
+        group: 'workflow',
+        render: () => renderConnectionsView()
     },
     {
         key: 'settings',

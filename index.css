@@ -61,3 +61,39 @@ h1, h2, h3, h4, h5, h6 {
 .fade-in {
     animation: fadeIn 0.4s ease-out forwards;
 }
+
+/* Light Theme Variables */
+html.theme-light {
+  --color-primary-glow: rgba(99, 102, 241, 0.2);
+  --color-bg-dark: #f1f5f9;
+  --color-glass-bg: rgba(255, 255, 255, 0.75);
+  --color-glass-border: rgba(0, 0, 0, 0.08);
+  --color-panel-hover: rgba(0, 0, 0, 0.04);
+  --color-text-main: #0f172a;
+  --color-text-muted: #64748b;
+}
+html.theme-light .background-animation {
+    background: radial-gradient(circle at 50% 50%, #e2e8f0 0%, #f1f5f9 100%);
+}
+html.theme-light .shape {
+    opacity: 0.15;
+}
+
+/* Neon Cyberpunk Theme Variables */
+html.theme-neon {
+  --color-primary: #00f0ff;
+  --color-primary-glow: rgba(0, 240, 255, 0.4);
+  --color-secondary: #ff007f;
+  --color-bg-dark: #05050d;
+  --color-glass-bg: rgba(12, 12, 29, 0.85);
+  --color-glass-border: rgba(0, 240, 255, 0.2);
+  --color-panel-hover: rgba(255, 0, 127, 0.15);
+  --color-text-main: #ffffff;
+  --color-text-muted: #8c9bb4;
+}
+html.theme-neon .background-animation {
+    background: radial-gradient(circle at 50% 50%, #1a0033 0%, #05050d 100%);
+}
+html.theme-neon .shape {
+    opacity: 0.4;
+}

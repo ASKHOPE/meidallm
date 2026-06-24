@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft } from "./types";
+import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule } from "./types";
 
 // --- Zod Validation Schemas ---
 export const KanbanTaskSchema = z.object({
@@ -63,6 +63,26 @@ export const DraftSchema = z.object({
     format: z.enum(['blog', 'tweet', 'email']),
     created: z.number(),
     updated: z.number()
+});
+
+export const ConnectionSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    icon: z.string(),
+    connected: z.boolean(),
+    apiKey: z.string().optional(),
+    username: z.string().optional()
+});
+
+export const PublishScheduleSchema = z.object({
+    id: z.string(),
+    projectId: z.string(),
+    draftId: z.string(),
+    title: z.string(),
+    format: z.string(),
+    channels: z.array(z.string()),
+    scheduledTime: z.number(),
+    status: z.enum(['queued', 'published'])
 });
 
 // --- Default Initial State Fallbacks ---
@@ -140,6 +160,12 @@ const DEFAULT_DRAFTS: Draft[] = [
     }
 ];
 
+const DEFAULT_CONNECTIONS: Connection[] = [
+    { id: 'conn-twitter', name: 'X / Twitter', icon: '📢', connected: false },
+    { id: 'conn-linkedin', name: 'LinkedIn Professional', icon: '💼', connected: false },
+    { id: 'conn-medium', name: 'Medium Publishing', icon: '✍️', connected: false }
+];
+
 export const state = {
     currentUser: null as string | null,
     currentProject: null as string | null,
@@ -152,7 +178,15 @@ export const state = {
     taskLogs: [] as TaskLog[],
     researchDocs: [] as ResearchDoc[],
     mediaAssets: [] as MediaAsset[],
-    drafts: [] as Draft[]
+    drafts: [] as Draft[],
+    
+    // Extended States
+    theme: 'dark' as 'dark' | 'light' | 'neon',
+    connections: [] as Connection[],
+    publishSchedules: [] as PublishSchedule[],
+    workspacesSearchQuery: '',
+    workspacesViewMode: 'grid' as 'grid' | 'list',
+    workspacesSortBy: 'last-active' as 'last-active' | 'name-asc' | 'name-desc' | 'tasks-count'
 };
 
 // UI Re-render Callback Registration
@@ -173,6 +207,17 @@ export function notifyStateChange() {
 export function loadState() {
     try {
         state.currentUser = localStorage.getItem('meidallm_user');
+        
+        const storedTheme = localStorage.getItem('meidallm_theme');
+        state.theme = (storedTheme as any) || 'dark';
+        
+        // Apply theme class to document element on load
+        if (state.theme !== 'dark') {
+            document.documentElement.className = '';
+            document.documentElement.classList.add(`theme-${state.theme}`);
+        } else {
+            document.documentElement.className = '';
+        }
         
         const storedKanban = localStorage.getItem('meidallm_kanban');
         if (storedKanban) {
@@ -236,6 +281,24 @@ export function loadState() {
         } else {
             state.drafts = DEFAULT_DRAFTS;
         }
+
+        const storedConnections = localStorage.getItem('meidallm_connections');
+        if (storedConnections) {
+            const parsed = JSON.parse(storedConnections);
+            const val = z.array(ConnectionSchema).safeParse(parsed);
+            state.connections = val.success ? val.data : DEFAULT_CONNECTIONS;
+        } else {
+            state.connections = DEFAULT_CONNECTIONS;
+        }
+
+        const storedSchedules = localStorage.getItem('meidallm_schedules');
+        if (storedSchedules) {
+            const parsed = JSON.parse(storedSchedules);
+            const val = z.array(PublishScheduleSchema).safeParse(parsed);
+            state.publishSchedules = val.success ? val.data : [];
+        } else {
+            state.publishSchedules = [];
+        }
     } catch (e) {
         console.error("Failed to load local storage state:", e);
         // Clean slate recovery
@@ -246,6 +309,9 @@ export function loadState() {
         state.researchDocs = DEFAULT_RESEARCH;
         state.mediaAssets = DEFAULT_MEDIA;
         state.drafts = DEFAULT_DRAFTS;
+        state.theme = 'dark';
+        state.connections = DEFAULT_CONNECTIONS;
+        state.publishSchedules = [];
     }
 }
 
@@ -263,6 +329,9 @@ export function saveState() {
         localStorage.setItem('meidallm_research', JSON.stringify(state.researchDocs));
         localStorage.setItem('meidallm_media', JSON.stringify(state.mediaAssets));
         localStorage.setItem('meidallm_drafts', JSON.stringify(state.drafts));
+        localStorage.setItem('meidallm_theme', state.theme);
+        localStorage.setItem('meidallm_connections', JSON.stringify(state.connections));
+        localStorage.setItem('meidallm_schedules', JSON.stringify(state.publishSchedules));
     } catch (e) {
         console.error("Failed to save state to local storage:", e);
     }

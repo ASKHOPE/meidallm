@@ -1,31 +1,75 @@
 export function renderSettingsView(): string {
     return `
-        <div class="fade-in bg-glass-bg border border-glass-border rounded-2xl p-8 max-w-2xl">
-            <h2 class="text-2xl font-outfit mb-6">Application Settings</h2>
-            <div class="flex items-center justify-between py-4 border-b border-glass-border">
-                <div>
-                    <h4 class="font-medium text-white">Storage Synchronization</h4>
-                    <p class="text-sm text-text-muted">Local Storage persistence active</p>
-                </div>
-                <div class="text-emerald-400 font-semibold text-sm">Active</div>
+        <div class="fade-in bg-glass-bg border border-glass-border rounded-2xl p-8 max-w-2xl flex flex-col gap-6">
+            <div>
+                <h2 class="text-2xl font-outfit text-white mb-2">Application Settings</h2>
+                <p class="text-text-muted text-sm">Configure system-wide configurations and default agency preferences.</p>
             </div>
-            <div class="flex items-center justify-between py-4 border-b border-glass-border">
-                <div>
-                    <h4 class="font-medium text-white">Tailwind CSS v4</h4>
-                    <p class="text-sm text-text-muted">Successfully migrated layout engine</p>
+
+            <!-- General Configurations -->
+            <div class="flex flex-col gap-4 border-t border-glass-border pt-4">
+                <h3 class="text-lg font-semibold text-white font-outfit">Campaign Preferences</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-text-muted uppercase mb-1">AI Copywriting Brand Tone</label>
+                        <select id="setting-brand-tone" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary cursor-pointer">
+                            <option value="professional">Professional & Technical</option>
+                            <option value="creative" selected>Creative & Catchy</option>
+                            <option value="casual">Casual & Conversational</option>
+                            <option value="academic">Academic & Analytical</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Default Schedule Offset</label>
+                        <select id="setting-schedule-offset" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary cursor-pointer">
+                            <option value="1">1 Hour Offset</option>
+                            <option value="6" selected>6 Hours Offset</option>
+                            <option value="24">24 Hours (1 Day) Offset</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="text-emerald-400 font-semibold text-sm">Active</div>
-            </div>
-            <div class="flex items-center justify-between py-4 border-b border-glass-border">
+
                 <div>
-                    <h4 class="font-medium text-white">TypeScript Engine</h4>
-                    <p class="text-sm text-text-muted">Strict type checks with Vite compilation</p>
+                    <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Incoming Webhook Endpoint</label>
+                    <input type="text" id="setting-webhook-url" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary" placeholder="https://api.yourdomain.com/webhooks/campaigns" value="https://api.meidallm.com/v1/webhooks/ingest">
                 </div>
-                <div class="text-emerald-400 font-semibold text-sm">Active</div>
+
+                <div class="flex items-center gap-3 bg-panel-hover/30 border border-glass-border/30 rounded-xl p-4 mt-2">
+                    <input type="checkbox" id="setting-email-notify" checked class="rounded text-primary focus:ring-primary h-4 w-4">
+                    <label for="setting-email-notify" class="text-sm text-white cursor-pointer select-none">
+                        <strong class="block font-medium">Send Email Logs</strong>
+                        <span class="text-xs text-text-muted">Receive status reports when campaigns auto-publish.</span>
+                    </label>
+                </div>
             </div>
-            <div class="pt-6">
-                <button onclick="window.resetAppState()" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 transition-colors text-white font-medium text-sm rounded-xl cursor-pointer">
+
+            <!-- Platform Engines -->
+            <div class="flex flex-col gap-3 border-t border-glass-border pt-6">
+                <h3 class="text-lg font-semibold text-white font-outfit">Platform Engines</h3>
+                <div class="flex items-center justify-between py-2.5 border-b border-glass-border/30">
+                    <div>
+                        <h4 class="font-medium text-white text-sm">Storage Synchronization</h4>
+                        <p class="text-xs text-text-muted">Local Storage persistence active</p>
+                    </div>
+                    <div class="text-emerald-400 font-semibold text-xs bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">Active</div>
+                </div>
+                <div class="flex items-center justify-between py-2.5 border-b border-glass-border/30">
+                    <div>
+                        <h4 class="font-medium text-white text-sm">Tailwind CSS v4</h4>
+                        <p class="text-xs text-text-muted">Layout rendering engine</p>
+                    </div>
+                    <div class="text-emerald-400 font-semibold text-xs bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">Active</div>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-glass-border flex justify-between gap-4">
+                <button onclick="window.resetAppState()" class="px-5 py-3 bg-rose-950/20 border border-rose-900/30 hover:bg-rose-950/40 text-rose-400 font-medium text-xs rounded-xl cursor-pointer transition-colors">
                     Reset Application Database
+                </button>
+                <button onclick="alert('Settings saved successfully!')" class="px-6 py-3 bg-primary text-white font-medium text-xs rounded-xl shadow-[0_0_15px_var(--color-primary-glow)] hover:shadow-[0_0_25px_var(--color-primary-glow)] cursor-pointer transition-all">
+                    Save Configuration
                 </button>
             </div>
         </div>

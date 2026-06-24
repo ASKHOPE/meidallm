@@ -19,3 +19,57 @@ See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode de
 {"message":"[200] /api/auth/get-session 62ms","label":null,"level":"info"}
 {"message":"[200] / 510ms","label":null,"level":"info"}
 {"message":"[200] /api/auth/get-session 49ms","label":null,"level":"info"}
+{"message":"program reload","label":"vite","level":"info"}
+{"message":"An error happened during full reload\nFailed to load url astro:server-app.js (resolved id: astro:server-app.js). Does the file exist?\nError: Failed to load url astro:server-app.js (resolved id: astro:server-app.js). Does the file exist?\n    at loadAndTransform (file:///Users/hosanna/Documents/GitHub/meidallm/node_modules/vite/dist/node/chunks/node.js:19714:31)","label":"vite","level":"error"}
+{"message":"[200] / 703ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 45ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 54ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 44ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 47ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 46ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 53ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 43ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"[200] / 464ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 43ms","label":null,"level":"info"}
+{"message":"src/router.ts","label":"watch","level":"info"}
+{"message":"[200] / 393ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 40ms","label":null,"level":"info"}
+{"message":"src/router.ts","label":"watch","level":"info"}
+{"message":"[200] / 335ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 43ms","label":null,"level":"info"}
+{"message":"src/views/settings.ts","label":"watch","level":"info"}
+{"message":"[200] / 46ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 41ms","label":null,"level":"info"}
+{"message":"src/views/projects.ts","label":"watch","level":"info"}
+{"message":"[200] / 54ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 66ms","label":null,"level":"info"}
+{"message":"src/views/kanban.ts","label":"watch","level":"info"}
+{"message":"[200] / 499ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 83ms","label":null,"level":"info"}
+{"message":"src/views/ideas.ts","label":"watch","level":"info"}
+{"message":"[200] / 40ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 43ms","label":null,"level":"info"}
+{"message":"src/views/research.ts","label":"watch","level":"info"}
+{"message":"[200] / 40ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 44ms","label":null,"level":"info"}
+{"message":"[Unhandled error] TypeError: window.toggleWorkspacesViewMode is not a function. (In 'window.toggleWorkspacesViewMode('list')', 'window.toggleWorkspacesViewMode' is undefined)\n > onclick ../../../../..:1:32\n","label":"vite","level":"error"}
+{"message":"[Unhandled error] TypeError: window.toggleWorkspacesViewMode is not a function. (In 'window.toggleWorkspacesViewMode('list')', 'window.toggleWorkspacesViewMode' is undefined)\n > onclick ../../../../..:1:32\n","label":"vite","level":"error"}
+{"message":"[Unhandled error] TypeError: window.toggleWorkspacesViewMode is not a function. (In 'window.toggleWorkspacesViewMode('list')', 'window.toggleWorkspacesViewMode' is undefined)\n > onclick ../../../../..:1:32\n","label":"vite","level":"error"}
+{"message":"src/views/media.ts","label":"watch","level":"info"}
+{"message":"[200] / 407ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 45ms","label":null,"level":"info"}
+{"message":"src/views/drafts.ts","label":"watch","level":"info"}
+{"message":"[200] / 45ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 49ms","label":null,"level":"info"}
+{"message":"src/views/drafts.ts","label":"watch","level":"info"}
+{"message":"[200] / 446ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 45ms","label":null,"level":"info"}
+{"message":"src/views/layout.ts","label":"watch","level":"info"}
+{"message":"[200] / 58ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 45ms","label":null,"level":"info"}
+{"message":"/index.css","label":"watch","level":"info"}
+{"message":"[Unhandled error] TypeError: window.toggleWorkspacesViewMode is not a function. (In 'window.toggleWorkspacesViewMode('list')', 'window.toggleWorkspacesViewMode' is undefined)\n > onclick ../../../../..:1:32\n","label":"vite","level":"error"}

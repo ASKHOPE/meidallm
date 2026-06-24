@@ -31,9 +31,15 @@ export function renderDraftsView(pid: string): string {
 
         <div class="flex flex-col lg:flex-row gap-6 flex-grow items-stretch">
             <!-- Left Side: Drafts List Drawer -->
-            <div class="w-full lg:w-80 bg-glass-bg border border-glass-border rounded-2xl p-4 flex flex-col gap-4 max-h-[300px] lg:max-h-none overflow-y-auto">
-                <h3 class="font-semibold text-white text-sm uppercase tracking-wider text-text-muted border-b border-glass-border/40 pb-2">All Drafts (${projectDrafts.length})</h3>
-                <div class="flex flex-col gap-2 flex-grow overflow-y-auto pr-1">
+            <div class="w-full lg:w-80 bg-glass-bg border border-glass-border rounded-2xl p-4 flex flex-col gap-4 max-h-[300px] lg:max-h-none overflow-hidden">
+                <div class="border-b border-glass-border/40 pb-2">
+                    <h3 class="font-semibold text-white text-sm uppercase tracking-wider text-text-muted mb-2">All Drafts (${projectDrafts.length})</h3>
+                    <div class="relative w-full">
+                        <input type="text" id="drafts-search-input" oninput="window.filterDrafts()" placeholder="Search drafts..." class="w-full bg-panel-hover border border-glass-border rounded-xl pl-3 pr-8 py-1.5 text-[11px] text-white focus:outline-none focus:border-primary transition-all">
+                        <span class="absolute right-3 top-2 text-text-muted text-[10px]">🔍</span>
+                    </div>
+                </div>
+                <div id="drafts-drawer-list" class="flex flex-col gap-2 flex-grow overflow-y-auto pr-1">
                     ${projectDrafts.map(d => {
                         let formatIcon = '📝';
                         if (d.format === 'tweet') formatIcon = '🐦';
@@ -45,19 +51,22 @@ export function renderDraftsView(pid: string): string {
                             : 'bg-transparent border-glass-border hover:bg-panel-hover text-text-muted';
                         
                         return `
-                        <div class="border rounded-xl p-3 flex flex-col justify-between gap-3 cursor-pointer transition-all ${activeClasses}" onclick="window.selectDraft('${d.id}')">
+                        <div class="draft-item-card border rounded-xl p-3 flex flex-col justify-between gap-3 cursor-pointer transition-all ${activeClasses} group/draft-card" 
+                             onclick="window.selectDraft('${d.id}')"
+                             data-title="${sanitizeHTML(d.title)}"
+                             data-content="${sanitizeHTML(d.content)}">
                             <div class="flex justify-between items-start gap-2">
                                 <span class="text-xs font-semibold uppercase flex items-center gap-1">
                                     <span>${formatIcon}</span> ${d.format}
                                 </span>
-                                <button onclick="event.stopPropagation(); window.deleteDraft('${d.id}')" class="text-[10px] hover:text-rose-500 font-bold opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity">✕ Remove</button>
+                                <button onclick="event.stopPropagation(); window.deleteDraft('${d.id}')" class="text-[10px] hover:text-rose-500 font-bold opacity-0 group-hover/draft-card:opacity-100 focus:opacity-100 transition-opacity cursor-pointer">✕ Remove</button>
                             </div>
-                            <div class="font-medium text-sm truncate w-full text-white">${sanitizeHTML(d.title)}</div>
+                            <div class="font-medium text-xs truncate w-full text-white">${sanitizeHTML(d.title)}</div>
                         </div>
                         `;
                     }).join('')}
                     ${projectDrafts.length === 0 ? `
-                        <div class="text-center text-text-muted text-xs py-8">No drafts created yet. Click "+ New Draft" to start writing.</div>
+                        <div class="text-center text-text-muted text-[11px] py-8">No drafts created yet. Click "+ New Draft" to start writing.</div>
                     ` : ''}
                 </div>
             </div>

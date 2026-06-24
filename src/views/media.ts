@@ -51,23 +51,31 @@ export function renderMediaView(pid: string): string {
 
         <!-- Active Media Grid -->
         <div class="bg-glass-bg border border-glass-border rounded-2xl p-6">
-            <h3 class="font-medium text-white text-lg mb-4">Active Assets (${projectAssets.length})</h3>
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <h3 class="font-medium text-white text-lg">Active Assets (${projectAssets.length})</h3>
+                <div class="relative w-48">
+                    <input type="text" id="media-search-input" oninput="window.filterMediaAssets()" placeholder="Search assets..." class="w-full bg-panel-hover border border-glass-border rounded-xl pl-3 pr-8 py-2 text-xs text-white focus:outline-none focus:border-primary transition-all">
+                    <span class="absolute right-3 top-2.5 text-text-muted text-[10px]">🔍</span>
+                </div>
+            </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 ${projectAssets.map(a => `
-                <div class="bg-panel-hover border border-glass-border rounded-2xl overflow-hidden hover:border-primary transition-all flex flex-col group relative">
+                <div class="media-asset-item bg-panel-hover border border-glass-border rounded-2xl overflow-hidden hover:border-primary transition-all flex flex-col group relative"
+                     data-title="${sanitizeHTML(a.title)}"
+                     data-category="${a.category}">
                     <div class="h-40 overflow-hidden bg-slate-900 relative">
                         <img src="${a.url}" alt="${sanitizeHTML(a.title)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                         <span class="absolute top-3 left-3 text-[10px] font-semibold uppercase bg-black/60 text-white px-2 py-0.5 rounded backdrop-blur-sm">${a.category}</span>
                         <button onclick="window.deleteMediaAsset('${a.id}')" class="absolute top-3 right-3 w-7 h-7 bg-rose-600/80 hover:bg-rose-600 text-white rounded-full flex items-center justify-center font-bold text-xs shadow-md transition-colors backdrop-blur-sm cursor-pointer">✕</button>
                     </div>
                     <div class="p-4 flex flex-col gap-1">
-                        <h4 class="font-semibold text-white truncate" title="${sanitizeHTML(a.title)}">${sanitizeHTML(a.title)}</h4>
-                        <div class="text-[10px] text-text-muted mt-1">Created ${formatTime(a.created)}</div>
+                        <h4 class="font-semibold text-white truncate text-xs" title="${sanitizeHTML(a.title)}">${sanitizeHTML(a.title)}</h4>
+                        <div class="text-[9px] text-text-muted mt-1">Created ${formatTime(a.created)}</div>
                     </div>
                 </div>
                 `).join('')}
                 ${projectAssets.length === 0 ? `
-                    <div class="col-span-full text-center text-text-muted py-16 border-2 border-dashed border-glass-border/30 rounded-2xl">
+                    <div class="col-span-full text-center text-xs text-text-muted py-16 border-2 border-dashed border-glass-border/30 rounded-2xl">
                         🖼️ No media assets imported yet. Click a preset template above to load visual mockups.
                     </div>
                 ` : ''}

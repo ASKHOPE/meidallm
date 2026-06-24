@@ -21,14 +21,18 @@ export function renderKanbanView(pid: string): string {
     <div class="fade-in flex flex-col xl:flex-row gap-6 h-full min-h-[500px]">
         <!-- Board Columns -->
         <div class="flex-grow flex flex-col">
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
                     <h2 class="text-2xl font-outfit text-white">${sanitizeHTML(p.name)} Board</h2>
-                    <p class="text-sm text-text-muted">Drag tasks to change their pipeline phase.</p>
+                    <p class="text-xs text-text-muted">Drag tasks to change their pipeline phase.</p>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="window.navigateTo('project-workspace', '${p.id}')" class="px-4 py-2 bg-panel-hover border border-glass-border rounded-xl text-sm font-medium hover:bg-glass-border transition-colors cursor-pointer">Workspace</button>
-                    <button onclick="window.showAddTaskModal()" class="px-4 py-2 bg-primary rounded-xl text-sm font-medium hover:bg-indigo-600 transition-colors shadow-[0_0_15px_var(--color-primary-glow)] cursor-pointer">+ Add Task</button>
+                <div class="flex items-center gap-3">
+                    <div class="relative w-48">
+                        <input type="text" id="kanban-search-input" oninput="window.filterKanbanTasks()" placeholder="Search tasks..." class="w-full bg-panel-hover border border-glass-border rounded-xl pl-3 pr-8 py-2 text-xs text-white focus:outline-none focus:border-primary transition-all">
+                        <span class="absolute right-3 top-2.5 text-text-muted text-[10px]">🔍</span>
+                    </div>
+                    <button onclick="window.navigateTo('project-workspace', '${p.id}')" class="px-4 py-2 bg-panel-hover border border-glass-border rounded-xl text-xs font-medium hover:bg-glass-border transition-colors cursor-pointer">Workspace</button>
+                    <button onclick="window.showAddTaskModal()" class="px-4 py-2 bg-primary rounded-xl text-xs font-medium hover:bg-indigo-600 transition-colors shadow-[0_0_15px_var(--color-primary-glow)] cursor-pointer">+ Add Task</button>
                 </div>
             </div>
 
@@ -41,27 +45,29 @@ export function renderKanbanView(pid: string): string {
                          ondrop="window.handleDropTask(event, '${c.key}')"
                          class="kanban-col">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-medium text-white">${c.label}</h3>
-                            <span class="bg-panel-hover text-text-muted px-2 py-0.5 rounded text-xs">${tasks.length}</span>
+                            <h3 class="font-medium text-white text-sm">${c.label}</h3>
+                            <span class="bg-panel-hover text-text-muted px-2 py-0.5 rounded text-[10px]">${tasks.length}</span>
                         </div>
                         <div class="flex flex-col gap-3 flex-grow overflow-y-auto min-h-[300px]">
                             ${tasks.map(t => `
                                 <div draggable="true" 
                                      ondragstart="window.handleDragStart(event, '${t.id}')"
-                                     class="bg-glass-bg border border-glass-border hover:border-primary p-4 rounded-xl cursor-grab active:cursor-grabbing transition-all select-none">
+                                     class="kanban-col-item bg-glass-bg border border-glass-border hover:border-primary p-4 rounded-xl cursor-grab active:cursor-grabbing transition-all select-none"
+                                     data-title="${sanitizeHTML(t.title)}"
+                                     data-tag="${sanitizeHTML(t.tag)}">
                                     <div class="flex justify-between items-start mb-2">
-                                        <span class="px-2 py-0.5 text-[10px] font-semibold bg-panel-hover text-text-muted rounded">${sanitizeHTML(t.tag)}</span>
+                                        <span class="px-2 py-0.5 text-[9px] font-semibold bg-panel-hover text-text-muted rounded">${sanitizeHTML(t.tag)}</span>
                                         <button onclick="window.deleteTask('${t.id}')" class="text-text-muted hover:text-rose-500 text-xs cursor-pointer">✕</button>
                                     </div>
-                                    <h4 class="font-medium text-white mb-3 text-sm">${sanitizeHTML(t.title)}</h4>
-                                    <div class="text-[10px] text-text-muted flex flex-col gap-1 border-t border-glass-border/50 pt-2 mt-2">
+                                    <h4 class="font-medium text-white mb-3 text-xs leading-snug">${sanitizeHTML(t.title)}</h4>
+                                    <div class="text-[9px] text-text-muted flex flex-col gap-0.5 border-t border-glass-border/50 pt-2 mt-2">
                                         <div>📅 Created: ${formatTime(t.created)}</div>
                                         <div>🔄 Updated: ${formatTime(t.updated)}</div>
                                     </div>
                                 </div>
                             `).join('')}
                             ${tasks.length === 0 ? `
-                                <div class="flex-grow flex items-center justify-center border-2 border-dashed border-glass-border/30 rounded-xl p-8 text-center text-xs text-text-muted">
+                                <div class="flex-grow flex items-center justify-center border-2 border-dashed border-glass-border/30 rounded-xl p-8 text-center text-[10px] text-text-muted">
                                     Drop task here
                                 </div>
                             ` : ''}

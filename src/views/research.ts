@@ -40,20 +40,27 @@ export function renderResearchView(pid: string): string {
 
         <!-- Document List -->
         <div class="bg-glass-bg border border-glass-border rounded-2xl p-6">
-            <h3 class="font-medium text-white text-lg mb-4">Knowledge Base Sources (${projectDocs.length})</h3>
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <h3 class="font-medium text-white text-lg">Knowledge Base Sources (${projectDocs.length})</h3>
+                <div class="relative w-48">
+                    <input type="text" id="research-search-input" oninput="window.filterResearchDocs()" placeholder="Search documents..." class="w-full bg-panel-hover border border-glass-border rounded-xl pl-3 pr-8 py-2 text-xs text-white focus:outline-none focus:border-primary transition-all">
+                    <span class="absolute right-3 top-2.5 text-text-muted text-[10px]">🔍</span>
+                </div>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 ${projectDocs.map(d => {
                     let typeIcon = '📄';
                     if (d.type === 'url') typeIcon = '🔗';
                     if (d.type === 'text') typeIcon = '📝';
                     return `
-                    <div class="bg-panel-hover border border-glass-border p-5 rounded-xl flex flex-col justify-between hover:border-glass-border/60 transition-colors">
+                    <div class="research-doc-item bg-panel-hover border border-glass-border p-5 rounded-xl flex flex-col justify-between hover:border-glass-border/60 transition-colors"
+                         data-title="${sanitizeHTML(d.title)}">
                         <div>
                             <div class="flex justify-between items-start gap-2 mb-3">
                                 <span class="text-xs font-semibold uppercase px-2 py-0.5 bg-glass-border/50 text-text-muted rounded flex items-center gap-1">
                                     <span>${typeIcon}</span> ${d.type}
                                 </span>
-                                <button onclick="window.deleteResearchDoc('${d.id}')" class="text-text-muted hover:text-rose-500 text-xs font-bold">✕ Delete</button>
+                                <button onclick="window.deleteResearchDoc('${d.id}')" class="text-text-muted hover:text-rose-500 text-xs font-bold cursor-pointer">✕ Delete</button>
                             </div>
                             <h4 class="font-semibold text-white mb-2 truncate" title="${sanitizeHTML(d.title)}">${sanitizeHTML(d.title)}</h4>
                             <p class="text-xs text-text-muted line-clamp-3 leading-relaxed">${sanitizeHTML(d.content)}</p>
@@ -65,7 +72,7 @@ export function renderResearchView(pid: string): string {
                     `;
                 }).join('')}
                 ${projectDocs.length === 0 ? `
-                    <div class="col-span-2 text-center text-text-muted py-12 border-2 border-dashed border-glass-border/30 rounded-xl">
+                    <div class="col-span-2 text-center text-xs text-text-muted py-12 border-2 border-dashed border-glass-border/30 rounded-xl">
                         No documents added yet. Click "+ Add Document" to populate your RAG database.
                     </div>
                 ` : ''}

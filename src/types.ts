@@ -60,3 +60,23 @@ export interface Draft {
     created: number;
     updated: number;
 }
+
+export interface Connection {
+    id: string;
+    name: string;
+    icon: string;
+    connected: boolean;
+    apiKey?: string;
+    username?: string;
+}
+
+export interface PublishSchedule {
+    id: string;
+    projectId: string;
+    draftId: string;
+    title: string;
+    format: string;
+    channels: string[];
+    scheduledTime: number;
+    status: 'queued' | 'published';
+}
