@@ -5,6 +5,7 @@
   --color-primary-glow: rgba(255, 255, 255, 0.1);
   --color-secondary: #27272a;
   --color-bg-dark: #000000;
+  --color-background: var(--color-bg-dark);
   --color-glass-bg: #09090b;
   --color-glass-border: #27272a;
   --color-panel-hover: #18181b;

@@ -1,6 +1,7 @@
-import { state, updateTask } from "../state";
+import { state, updateTask, notifyStateChange } from "../state";
 import { sanitizeHTML, formatTime, formatExactTime } from "../utils";
 import type { KanbanTask } from "../types";
+import { getIconSVG } from "./icons";
 
 export function renderKanbanView(pid: string): string {
     const p = state.projects.find(x => x.id === pid);
@@ -483,18 +484,30 @@ function renderTaskSpreadsheetRow(t: KanbanTask, filter: string, cycles: any[], 
 function getTaskActions(t: KanbanTask, filter: string): string {
     if (filter === 'active') {
         return `
-        <button onclick="event.stopPropagation(); window.archiveTaskToggle('${t.id}', true)" class="text-text-muted hover:text-amber-400 cursor-pointer" title="Archive">📦</button>
-        <button onclick="event.stopPropagation(); window.binTaskToggle('${t.id}', true)" class="text-text-muted hover:text-rose-500 cursor-pointer" title="Move to Bin">🗑️</button>
+        <button onclick="event.stopPropagation(); window.archiveTaskToggle('${t.id}', true)" class="text-text-muted hover:text-text-main cursor-pointer" title="Archive">
+            ${getIconSVG('archive', 'w-3.5 h-3.5')}
+        </button>
+        <button onclick="event.stopPropagation(); window.binTaskToggle('${t.id}', true)" class="text-text-muted hover:text-red-500 cursor-pointer" title="Move to Bin">
+            ${getIconSVG('trash', 'w-3.5 h-3.5')}
+        </button>
         `;
     } else if (filter === 'archived') {
         return `
-        <button onclick="event.stopPropagation(); window.archiveTaskToggle('${t.id}', false)" class="text-text-muted hover:text-emerald-400 cursor-pointer" title="Restore">📂</button>
-        <button onclick="event.stopPropagation(); window.binTaskToggle('${t.id}', true)" class="text-text-muted hover:text-rose-500 cursor-pointer" title="Move to Bin">🗑️</button>
+        <button onclick="event.stopPropagation(); window.archiveTaskToggle('${t.id}', false)" class="text-text-muted hover:text-text-main cursor-pointer" title="Restore">
+            ${getIconSVG('external-link', 'w-3.5 h-3.5')}
+        </button>
+        <button onclick="event.stopPropagation(); window.binTaskToggle('${t.id}', true)" class="text-text-muted hover:text-red-500 cursor-pointer" title="Move to Bin">
+            ${getIconSVG('trash', 'w-3.5 h-3.5')}
+        </button>
         `;
     } else {
         return `
-        <button onclick="event.stopPropagation(); window.binTaskToggle('${t.id}', false)" class="text-text-muted hover:text-emerald-400 cursor-pointer" title="Restore">🔄</button>
-        <button onclick="event.stopPropagation(); window.deleteTask('${t.id}')" class="text-text-muted hover:text-rose-500 cursor-pointer font-bold" title="Delete Permanently">✕</button>
+        <button onclick="event.stopPropagation(); window.binTaskToggle('${t.id}', false)" class="text-text-muted hover:text-text-main cursor-pointer" title="Restore">
+            ${getIconSVG('check', 'w-3.5 h-3.5')}
+        </button>
+        <button onclick="event.stopPropagation(); window.deleteTask('${t.id}')" class="text-text-muted hover:text-red-500 cursor-pointer font-bold" title="Delete Permanently">
+            ${getIconSVG('close', 'w-3.5 h-3.5')}
+        </button>
         `;
     }
 }
@@ -505,17 +518,17 @@ if (typeof window !== 'undefined') {
 
     w.setKanbanViewMode = (mode: 'board' | 'list' | 'spreadsheet') => {
         state.kanbanViewMode = mode;
-        state.notifyStateChange();
+        notifyStateChange();
     };
 
     w.setKanbanCycleFilter = (val: string) => {
         state.kanbanActiveCycleId = val || null;
-        state.notifyStateChange();
+        notifyStateChange();
     };
 
     w.setKanbanModuleFilter = (val: string) => {
         state.kanbanActiveModuleId = val || null;
-        state.notifyStateChange();
+        notifyStateChange();
     };
 
     w.updateSpreadsheetTask = (taskId: string, key: string, val: string) => {

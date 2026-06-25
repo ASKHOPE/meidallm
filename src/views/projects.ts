@@ -1,5 +1,6 @@
 import { state } from "../state";
 import { sanitizeHTML, formatTime } from "../utils";
+import { getIconSVG } from "./icons";
 
 export function renderProjectsView(): string {
     let list = [...state.projects];
@@ -45,52 +46,70 @@ export function renderProjectsView(): string {
         const projectTasks = state.kanbanState.filter(k => k.projectId === p.id);
         const lastActiveLabel = formatTime(p.lastActive);
 
-        // Action controls based on filter
+        // Action controls based on filter (using clean vector icons)
         let actionHTML = "";
         if (filter === 'active') {
             actionHTML = `
             <div class="flex gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onclick="event.stopPropagation(); window.updateProjectPrompt('${p.id}')" class="text-xs text-text-muted hover:text-white cursor-pointer" title="Edit Name/Desc">✏️</button>
-                <button onclick="event.stopPropagation(); window.archiveProjectToggle('${p.id}', true)" class="text-xs text-text-muted hover:text-amber-400 cursor-pointer" title="Archive Folder">📦</button>
-                <button onclick="event.stopPropagation(); window.binProjectToggle('${p.id}', true)" class="text-xs text-text-muted hover:text-rose-500 cursor-pointer" title="Move to Bin">🗑️</button>
+                <button onclick="event.stopPropagation(); window.updateProjectPrompt('${p.id}')" class="text-text-muted hover:text-text-main cursor-pointer" title="Edit Name/Desc">
+                    ${getIconSVG('edit', 'w-3.5 h-3.5')}
+                </button>
+                <button onclick="event.stopPropagation(); window.archiveProjectToggle('${p.id}', true)" class="text-text-muted hover:text-text-main cursor-pointer" title="Archive Folder">
+                    ${getIconSVG('archive', 'w-3.5 h-3.5')}
+                </button>
+                <button onclick="event.stopPropagation(); window.binProjectToggle('${p.id}', true)" class="text-text-muted hover:text-red-500 cursor-pointer" title="Move to Bin">
+                    ${getIconSVG('trash', 'w-3.5 h-3.5')}
+                </button>
             </div>
             `;
         } else if (filter === 'archived') {
             actionHTML = `
             <div class="flex gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onclick="event.stopPropagation(); window.archiveProjectToggle('${p.id}', false)" class="text-xs text-text-muted hover:text-emerald-400 cursor-pointer" title="Restore to Workspaces">📂</button>
-                <button onclick="event.stopPropagation(); window.binProjectToggle('${p.id}', true)" class="text-xs text-text-muted hover:text-rose-500 cursor-pointer" title="Move to Bin">🗑️</button>
+                <button onclick="event.stopPropagation(); window.archiveProjectToggle('${p.id}', false)" class="text-text-muted hover:text-text-main cursor-pointer" title="Restore to Workspaces">
+                    ${getIconSVG('external-link', 'w-3.5 h-3.5')}
+                </button>
+                <button onclick="event.stopPropagation(); window.binProjectToggle('${p.id}', true)" class="text-text-muted hover:text-red-500 cursor-pointer" title="Move to Bin">
+                    ${getIconSVG('trash', 'w-3.5 h-3.5')}
+                </button>
             </div>
             `;
         } else if (filter === 'bin') {
             actionHTML = `
             <div class="flex gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onclick="event.stopPropagation(); window.binProjectToggle('${p.id}', false)" class="text-xs text-text-muted hover:text-emerald-400 cursor-pointer" title="Restore Folder">🔄</button>
-                <button onclick="event.stopPropagation(); window.deleteProject('${p.id}')" class="text-xs text-text-muted hover:text-rose-500 cursor-pointer font-bold" title="Delete Permanently">✕</button>
+                <button onclick="event.stopPropagation(); window.binProjectToggle('${p.id}', false)" class="text-text-muted hover:text-text-main cursor-pointer" title="Restore Folder">
+                    ${getIconSVG('check', 'w-3.5 h-3.5')}
+                </button>
+                <button onclick="event.stopPropagation(); window.deleteProject('${p.id}')" class="text-text-muted hover:text-red-500 cursor-pointer font-bold" title="Delete Permanently">
+                    ${getIconSVG('close', 'w-3.5 h-3.5')}
+                </button>
             </div>
             `;
         }
 
+        const starBtn = `
+        <button onclick="event.stopPropagation(); window.toggleProjectStar('${p.id}')" class="hover:scale-110 transition-transform cursor-pointer" title="Star Folder">
+            ${p.isStarred ? getIconSVG('star-filled', 'w-4 h-4') : getIconSVG('star', 'w-4 h-4 text-text-muted')}
+        </button>
+        `;
+
         if (isGrid) {
             return `
-            <div class="bg-glass-bg border border-glass-border hover:border-primary p-6 rounded-2xl transition-all cursor-pointer flex flex-col justify-between min-h-[180px] group" onclick="window.navigateTo('project-workspace', '${p.id}')">
+            <div class="bg-background border border-text-main/15 hover:border-text-main p-6 rounded-2xl transition-all cursor-pointer flex flex-col justify-between min-h-[180px] group" onclick="window.navigateTo('project-workspace', '${p.id}')">
                 <div>
                     <div class="flex justify-between items-start mb-4">
                         <div class="flex items-center gap-2">
-                            <span class="text-3xl">📂</span>
-                            <button onclick="event.stopPropagation(); window.toggleProjectStar('${p.id}')" class="text-base hover:scale-115 transition-transform cursor-pointer" title="Star Folder">
-                                ${p.isStarred ? '⭐' : '☆'}
-                            </button>
+                            <span class="text-text-main">${getIconSVG('folder', 'w-7 h-7')}</span>
+                            ${starBtn}
                         </div>
                         <div class="flex items-center gap-2">
                             ${actionHTML}
                         </div>
                     </div>
-                    <h3 class="text-lg font-semibold text-white mb-2 font-outfit group-hover:text-text-main transition-colors">${sanitizeHTML(p.name)}</h3>
+                    <h3 class="text-base font-bold text-text-main mb-2 font-outfit transition-colors">${sanitizeHTML(p.name)}</h3>
                     <p class="text-text-muted text-xs mb-6 line-clamp-2">${sanitizeHTML(p.description)}</p>
                 </div>
-                <div class="text-[10px] text-text-muted border-t border-glass-border/50 pt-4 flex justify-between">
-                    <span>Tasks: <strong class="text-white">${projectTasks.length}</strong></span>
+                <div class="text-[10px] text-text-muted border-t border-text-main/10 pt-4 flex justify-between">
+                    <span>Tasks: <strong class="text-text-main">${projectTasks.length}</strong></span>
                     <span>Last active ${lastActiveLabel}</span>
                 </div>
             </div>
@@ -98,20 +117,18 @@ export function renderProjectsView(): string {
         } else {
             // Row List view row
             return `
-            <div class="bg-glass-bg border border-glass-border hover:border-primary px-6 py-4 rounded-xl transition-all cursor-pointer flex items-center justify-between group" onclick="window.navigateTo('project-workspace', '${p.id}')">
+            <div class="bg-background border border-text-main/15 hover:border-text-main px-6 py-4 rounded-xl transition-all cursor-pointer flex items-center justify-between group" onclick="window.navigateTo('project-workspace', '${p.id}')">
                 <div class="flex items-center gap-4 truncate">
-                    <span class="text-2xl">📂</span>
-                    <button onclick="event.stopPropagation(); window.toggleProjectStar('${p.id}')" class="text-sm hover:scale-115 transition-transform cursor-pointer" title="Star Folder">
-                        ${p.isStarred ? '⭐' : '☆'}
-                    </button>
+                    <span class="text-text-main">${getIconSVG('folder', 'w-5 h-5')}</span>
+                    ${starBtn}
                     <div class="truncate">
-                        <h3 class="font-semibold text-white font-outfit truncate group-hover:text-text-main transition-colors text-sm">${sanitizeHTML(p.name)}</h3>
+                        <h3 class="font-bold text-text-main font-outfit truncate transition-colors text-sm">${sanitizeHTML(p.name)}</h3>
                         <p class="text-text-muted text-[11px] truncate max-w-md">${sanitizeHTML(p.description)}</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-6 text-[11px] text-text-muted whitespace-nowrap">
-                    <span>Tasks: <strong class="text-white">${projectTasks.length}</strong></span>
-                    <span>Last active: <strong class="text-white">${lastActiveLabel}</strong></span>
+                    <span>Tasks: <strong class="text-text-main">${projectTasks.length}</strong></span>
+                    <span>Last active: <strong class="text-text-main">${lastActiveLabel}</strong></span>
                     <div class="flex items-center">
                         ${actionHTML}
                     </div>
@@ -125,7 +142,7 @@ export function renderProjectsView(): string {
     <div class="fade-in flex flex-col gap-6">
         <!-- Tabs Header Row -->
         <div class="flex justify-between items-center mb-1">
-            <div class="flex gap-6 border-b border-glass-border/30 w-full pb-2">
+            <div class="flex gap-6 border-b border-text-main/10 w-full pb-2">
                 <button onclick="window.setWorkspacesFilter('active')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'active' ? 'text-text-main border-b-2 border-text-main font-bold' : 'text-text-muted hover:text-text-main'}">Active Workspaces</button>
                 <button onclick="window.setWorkspacesFilter('archived')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'archived' ? 'text-text-main border-b-2 border-text-main font-bold' : 'text-text-muted hover:text-text-main'}">Archived</button>
                 <button onclick="window.setWorkspacesFilter('bin')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'bin' ? 'text-text-main border-b-2 border-text-main font-bold' : 'text-text-muted hover:text-text-main'}">Bin / Trash</button>
@@ -133,43 +150,72 @@ export function renderProjectsView(): string {
         </div>
 
         <!-- Control Header Bar -->
-        <div class="flex items-center justify-between gap-4 bg-panel-hover/30 border border-glass-border/30 p-4 rounded-2xl flex-wrap md:flex-nowrap">
+        <div class="flex items-center justify-between gap-4 bg-background border border-text-main/15 p-4 rounded-2xl flex-wrap md:flex-nowrap">
             <!-- Search Control -->
             <div class="relative flex-grow max-w-md">
-                <input type="text" id="workspaces-search-input" value="${sanitizeHTML(state.workspacesSearchQuery)}" oninput="window.filterWorkspaces(this.value)" placeholder="Search folders & workspaces..." class="w-full bg-panel-hover border border-glass-border rounded-xl pl-4 pr-10 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition-all">
-                <span class="absolute right-3.5 top-3 text-text-muted text-xs">🔍</span>
+                <input type="text" id="workspaces-search-input" value="${sanitizeHTML(state.workspacesSearchQuery)}" oninput="window.filterWorkspaces(this.value)" placeholder="Search folders & workspaces..." class="w-full bg-background border border-text-main/15 rounded-lg pl-4 pr-10 py-2.5 text-xs text-text-main focus:outline-none focus:border-text-main transition-all">
+                <span class="absolute right-3.5 top-3 text-text-muted text-xs">${getIconSVG('search', 'w-4 h-4')}</span>
             </div>
 
-            <!-- Sorting & Layout Controls -->
+            <!-- Toolbar Controls -->
             <div class="flex items-center gap-3 shrink-0">
-                <select id="workspaces-sort-select" onchange="window.sortWorkspaces(this.value)" class="bg-panel-hover border border-glass-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none cursor-pointer">
-                    <option value="last-active" ${sortBy === 'last-active' ? 'selected' : ''}>Sort: Last Active</option>
-                    <option value="name-asc" ${sortBy === 'name-asc' ? 'selected' : ''}>Sort: Name A-Z</option>
-                    <option value="name-desc" ${sortBy === 'name-desc' ? 'selected' : ''}>Sort: Name Z-A</option>
-                    <option value="tasks-count" ${sortBy === 'tasks-count' ? 'selected' : ''}>Sort: Tasks Count</option>
+                <!-- Sorting select -->
+                <select onchange="window.sortWorkspaces(this.value)" class="bg-background border border-text-main/15 text-xs text-text-main px-3 py-2.5 rounded-lg focus:outline-none focus:border-text-main cursor-pointer">
+                    <option value="last-active" ${state.workspacesSortBy === 'last-active' ? 'selected' : ''}>Sort by: Last Active</option>
+                    <option value="name-asc" ${state.workspacesSortBy === 'name-asc' ? 'selected' : ''}>Sort by: Name (A-Z)</option>
+                    <option value="name-desc" ${state.workspacesSortBy === 'name-desc' ? 'selected' : ''}>Sort by: Name (Z-A)</option>
+                    <option value="tasks-count" ${state.workspacesSortBy === 'tasks-count' ? 'selected' : ''}>Sort by: Tasks Count</option>
                 </select>
 
-                <!-- Grid/List Toggles -->
-                <div class="flex bg-panel-hover border border-glass-border rounded-xl p-1 shrink-0">
-                    <button onclick="window.toggleWorkspacesViewMode('grid')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${isGrid ? 'bg-primary text-white' : 'text-text-muted hover:text-white'}">
-                        Grid
+                <!-- Grid/List switches -->
+                <div class="flex bg-text-main/5 p-1 rounded-lg border border-text-main/10">
+                    <button onclick="window.toggleWorkspacesViewMode('grid')" class="p-1.5 rounded transition-all cursor-pointer ${isGrid ? 'bg-text-main text-background' : 'text-text-muted hover:text-text-main'}" title="Grid View">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
                     </button>
-                    <button onclick="window.toggleWorkspacesViewMode('list')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${!isGrid ? 'bg-primary text-white' : 'text-text-muted hover:text-white'}">
-                        List
+                    <button onclick="window.toggleWorkspacesViewMode('list')" class="p-1.5 rounded transition-all cursor-pointer ${!isGrid ? 'bg-text-main text-background' : 'text-text-muted hover:text-text-main'}" title="List View">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                     </button>
                 </div>
 
-                <button onclick="window.createProjectPrompt()" class="px-5 py-2.5 bg-gradient-to-r from-primary to-secondary text-white font-medium text-xs rounded-xl shadow-[0_0_15px_var(--color-primary-glow)] hover:shadow-[0_0_25px_var(--color-primary-glow)] transition-all cursor-pointer whitespace-nowrap">
-                    + New Folder
+                <!-- Create campaign button -->
+                <button onclick="window.createProjectPrompt()" class="bg-text-main text-background hover:bg-text-main/90 font-bold px-4 py-2.5 rounded-lg text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm">
+                    ${getIconSVG('plus', 'w-3.5 h-3.5')} New Campaign
                 </button>
             </div>
         </div>
 
-        <!-- Render Target Grid/List -->
-        <div id="workspaces-listing-container" class="${activeLayoutClass}">
+        <!-- Workspaces Cards Container -->
+        <div class="${activeLayoutClass}">
             ${workspacesHTML}
-            ${list.length === 0 ? `<div class="col-span-3 text-center text-text-muted py-16">No folders or workspaces found in this filter.</div>` : ''}
         </div>
+
+        ${list.length === 0 ? (() => {
+            let title = "No campaigns found";
+            let desc = "There are no workspaces matching the active search or state parameters.";
+            let icon = getIconSVG('info', 'w-8 h-8 text-text-muted');
+
+            if (filter === 'active') {
+                title = "Welcome to Meidallm";
+                desc = "No active campaign workspaces found. Click '+ New Campaign' above to initialize your first folder.";
+                icon = getIconSVG('folder', 'w-8 h-8 text-text-muted');
+            } else if (filter === 'archived') {
+                title = "Archive is Empty";
+                desc = "Move completed campaign folders to the archive to keep your active workspace panel clean.";
+                icon = getIconSVG('archive', 'w-8 h-8 text-text-muted');
+            } else if (filter === 'bin') {
+                title = "Trash Bin is Empty";
+                desc = "Deleted campaign folders will rest in this trash bin before permanent removal.";
+                icon = getIconSVG('trash', 'w-8 h-8 text-text-muted');
+            }
+
+            return `
+            <div class="border border-dashed border-text-main/15 text-center text-text-muted py-24 rounded-2xl flex flex-col items-center justify-center gap-2">
+                <span class="text-3xl">${icon}</span>
+                <h4 class="font-bold text-text-main mt-2">${title}</h4>
+                <p class="text-xs max-w-xs leading-relaxed">${desc}</p>
+            </div>
+            `;
+        })() : ''}
     </div>
     `;
 }

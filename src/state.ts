@@ -134,6 +134,26 @@ export const TeamMemberSchema = z.object({
     avatarColor: z.string()
 });
 
+export const TeamSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    memberIds: z.array(z.string()),
+    projectIds: z.array(z.string()),
+    isArchived: z.boolean().optional()
+});
+
+export const ActivityLogSchema = z.object({
+    id: z.string(),
+    projectId: z.string().optional(),
+    teamId: z.string().optional(),
+    action: z.string(),
+    details: z.string(),
+    timestamp: z.number(),
+    kpiMetric: z.enum(['task_completed', 'deal_won', 'budget_spent', 'team_created', 'post_published']).optional()
+});
+
+
+
 export const CycleSchema = z.object({
     id: z.string(),
     projectId: z.string(),
@@ -174,11 +194,17 @@ export const DbTableSchema = z.object({
 
 // --- Default Initial State Fallbacks ---
 const DEFAULT_KANBAN: KanbanTask[] = [
+    { id: 't-welcome-1', projectId: 'p-welcome', title: 'Explore the Idea Canvas to map campaign thoughts', tag: 'Brainstorm', status: 'progress', created: Date.now(), updated: Date.now(), priority: 'medium', points: 3 },
+    { id: 't-welcome-2', projectId: 'p-welcome', title: 'Configure Sprints & Cycles to assign team tasks', tag: 'Planning', status: 'backlog', created: Date.now(), updated: Date.now(), priority: 'high', points: 5 },
+    { id: 't-welcome-3', projectId: 'p-welcome', title: 'Track Sponsor Deals in the CRM pipeline', tag: 'CRM', status: 'backlog', created: Date.now(), updated: Date.now(), priority: 'urgent', points: 8 },
+    { id: 't-welcome-4', projectId: 'p-welcome', title: 'Monitor expenditures and workloads in ERP & Budgeting', tag: 'ERP', status: 'backlog', created: Date.now(), updated: Date.now(), priority: 'low', points: 2 },
     { id: 't1', projectId: 'p1', title: 'Setup Campaign Domain', tag: 'DevOps', status: 'backlog', created: Date.now() - 86400000*5, updated: Date.now() - 86400000*5 },
     { id: 't2', projectId: 'p1', title: 'Draft Product Messaging Docs', tag: 'Docs', status: 'progress', created: Date.now() - 172800000, updated: Date.now() - 43200000 }
 ];
 
+
 const DEFAULT_PROJECTS: Project[] = [
+    { id: 'p-welcome', name: '🚀 Welcome Tour', description: 'Interactive overview of Meidallm workflows, features, and capabilities.', status: 'active', lastActive: Date.now(), isStarred: true, budgetLimit: 100000, spent: 45000 },
     { id: 'p1', name: 'Q3 Product Launch', description: 'Major product updates campaign.', status: 'active', lastActive: Date.now(), isStarred: true, budgetLimit: 50000, spent: 15150 },
     { id: 'p2', name: 'YouTube Retainer Channel', description: 'Developer video tutorial series.', status: 'active', lastActive: Date.now() - 86400000 * 2, budgetLimit: 12000, spent: 3000 },
     { id: 'p3', name: 'Pinterest Creative Ads', description: 'Visual banner campaign creative boosts.', status: 'active', lastActive: Date.now() - 86400000 * 4, budgetLimit: 8000, spent: 400 },
@@ -276,6 +302,12 @@ const DEFAULT_TEAM: TeamMember[] = [
     { id: 'tm3', name: 'Richard Hendricks', role: 'Lead Developer', status: 'active', avatarColor: 'bg-emerald-500' },
     { id: 'tm4', name: 'Monica Hall', role: 'Agency Relations', status: 'vacation', avatarColor: 'bg-amber-500' }
 ];
+
+const DEFAULT_TEAMS: Team[] = [
+    { id: 't-1', name: 'Design & Copywriting', memberIds: ['tm1', 'tm3'], projectIds: ['p1'] },
+    { id: 't-2', name: 'Marketing Strategy', memberIds: ['tm2', 'tm4'], projectIds: ['p2'] }
+];
+
 
 const DEFAULT_CYCLES: Cycle[] = [
     { id: 'cy1', projectId: 'p1', name: 'Cycle 1: Alpha Launch', startDate: '2026-06-01', endDate: '2026-06-14', status: 'completed' },
@@ -413,6 +445,8 @@ export const state = {
     kanbanActiveModuleId: null as string | null,
     contacts: [] as Contact[],
     team: [] as TeamMember[],
+    teams: [] as Team[],
+    activityLogs: [] as ActivityLog[],
     
     cycles: [] as Cycle[],
     modules: [] as Module[],
@@ -502,6 +536,14 @@ function applyDbState(parsed: any) {
         const val = z.array(TeamMemberSchema).safeParse(parsed.team);
         if (val.success) state.team = val.data;
     }
+    if (parsed.teams) {
+        const val = z.array(TeamSchema).safeParse(parsed.teams);
+        if (val.success) state.teams = val.data;
+    }
+    if (parsed.activityLogs) {
+        const val = z.array(ActivityLogSchema).safeParse(parsed.activityLogs);
+        if (val.success) state.activityLogs = val.data;
+    }
     if (parsed.cycles) {
         const val = z.array(CycleSchema).safeParse(parsed.cycles);
         if (val.success) state.cycles = val.data;
@@ -538,6 +580,8 @@ function loadLocalState() {
             publishSchedules: JSON.parse(localStorage.getItem('meidallm_schedules') || 'null'),
             contacts: JSON.parse(localStorage.getItem('meidallm_contacts') || 'null'),
             team: JSON.parse(localStorage.getItem('meidallm_team') || 'null'),
+            teams: JSON.parse(localStorage.getItem('meidallm_teams') || 'null'),
+            activityLogs: JSON.parse(localStorage.getItem('meidallm_activity') || 'null'),
             cycles: JSON.parse(localStorage.getItem('meidallm_cycles') || 'null'),
             modules: JSON.parse(localStorage.getItem('meidallm_modules') || 'null'),
             tables: JSON.parse(localStorage.getItem('meidallm_tables') || 'null'),
@@ -564,6 +608,8 @@ function loadLocalState() {
     if (state.connections.length === 0) state.connections = DEFAULT_CONNECTIONS;
     if (state.contacts.length === 0) state.contacts = DEFAULT_CONTACTS;
     if (state.team.length === 0) state.team = DEFAULT_TEAM;
+    if (state.teams.length === 0) state.teams = DEFAULT_TEAMS;
+    if (state.activityLogs.length === 0) state.activityLogs = [];
     if (state.cycles.length === 0) state.cycles = DEFAULT_CYCLES;
     if (state.modules.length === 0) state.modules = DEFAULT_MODULES;
     if (state.tables.length === 0) state.tables = DEFAULT_TABLES;
@@ -628,6 +674,8 @@ export function saveState() {
         localStorage.setItem('meidallm_schedules', JSON.stringify(state.publishSchedules));
         localStorage.setItem('meidallm_contacts', JSON.stringify(state.contacts));
         localStorage.setItem('meidallm_team', JSON.stringify(state.team));
+        localStorage.setItem('meidallm_teams', JSON.stringify(state.teams));
+        localStorage.setItem('meidallm_activity', JSON.stringify(state.activityLogs));
         localStorage.setItem('meidallm_cycles', JSON.stringify(state.cycles));
         localStorage.setItem('meidallm_modules', JSON.stringify(state.modules));
         localStorage.setItem('meidallm_tables', JSON.stringify(state.tables));
@@ -658,6 +706,8 @@ export function saveState() {
                     publishSchedules: state.publishSchedules,
                     contacts: state.contacts,
                     team: state.team,
+                    teams: state.teams,
+                    activityLogs: state.activityLogs,
                     cycles: state.cycles,
                     modules: state.modules,
                     tables: state.tables,
@@ -729,6 +779,82 @@ export function deleteContact(cid: string) {
         state.contacts = state.contacts.filter(c => c.id !== cid);
         notifyStateChange();
     }
+}
+
+export function addTeam(name: string) {
+    const newTeam: Team = {
+        id: 't-' + Math.random().toString(36).substr(2, 9),
+        name: name.trim(),
+        memberIds: [],
+        projectIds: [],
+        isArchived: false
+    };
+    state.teams.push(newTeam);
+    logActivity(undefined, newTeam.id, 'Team Created', `Team "${newTeam.name}" was successfully registered.`, 'team_created');
+    notifyStateChange();
+    return newTeam.id;
+}
+
+export function toggleTeamMember(teamId: string, memberId: string) {
+    const team = state.teams.find(t => t.id === teamId);
+    const member = state.team.find(m => m.id === memberId);
+    if (team && member) {
+        if (team.memberIds.includes(memberId)) {
+            team.memberIds = team.memberIds.filter(id => id !== memberId);
+            logActivity(undefined, teamId, 'Member Removed', `Removed ${member.name} from team ${team.name}.`);
+        } else {
+            team.memberIds.push(memberId);
+            logActivity(undefined, teamId, 'Member Added', `Added ${member.name} to team ${team.name}.`);
+        }
+        notifyStateChange();
+    }
+}
+
+export function toggleTeamProjectAccess(teamId: string, projectId: string) {
+    const team = state.teams.find(t => t.id === teamId);
+    const proj = state.projects.find(p => p.id === projectId);
+    if (team && proj) {
+        if (team.projectIds.includes(projectId)) {
+            team.projectIds = team.projectIds.filter(id => id !== projectId);
+            logActivity(projectId, teamId, 'Access Revoked', `Revoked workspace access of team ${team.name} for ${proj.name}.`);
+        } else {
+            team.projectIds.push(projectId);
+            logActivity(projectId, teamId, 'Access Granted', `Granted workspace access of team ${team.name} for ${proj.name}.`);
+        }
+        notifyStateChange();
+    }
+}
+
+export function archiveTeam(teamId: string, isArchived: boolean) {
+    const team = state.teams.find(t => t.id === teamId);
+    if (team) {
+        team.isArchived = isArchived;
+        logActivity(undefined, teamId, isArchived ? 'Team Archived' : 'Team Restored', `Team ${team.name} was ${isArchived ? 'archived' : 'restored'}.`);
+        notifyStateChange();
+    }
+}
+
+export function deleteTeam(teamId: string) {
+    const team = state.teams.find(t => t.id === teamId);
+    if (team) {
+        logActivity(undefined, teamId, 'Team Deleted', `Team ${team.name} was permanently dissolved.`);
+        state.teams = state.teams.filter(t => t.id !== teamId);
+        notifyStateChange();
+    }
+}
+
+export function logActivity(projectId?: string, teamId?: string, action?: string, details?: string, kpiMetric?: ActivityLog['kpiMetric']) {
+    const newLog: ActivityLog = {
+        id: 'act-' + Math.random().toString(36).substr(2, 9),
+        projectId,
+        teamId,
+        action: action || 'Event',
+        details: details || '',
+        timestamp: Date.now(),
+        kpiMetric
+    };
+    state.activityLogs.push(newLog);
+    notifyStateChange();
 }
 
 export function addProject(name: string, description: string) {

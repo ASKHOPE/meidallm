@@ -1,4 +1,4 @@
-import { state, addDbTable, deleteDbTable, addDbField, deleteDbField, addDbRow, updateDbRow, deleteDbRow } from "../state";
+import { state, addDbTable, deleteDbTable, addDbField, deleteDbField, addDbRow, updateDbRow, deleteDbRow, notifyStateChange } from "../state";
 import { sanitizeHTML } from "../utils";
 
 export function renderDatabaseView(pid?: string): string {
@@ -303,12 +303,12 @@ if (typeof window !== 'undefined') {
 
     w.switchActiveTable = (tid: string) => {
         state.activeTableId = tid;
-        state.notifyStateChange();
+        notifyStateChange();
     };
 
     w.toggleDatabaseViewMode = (mode: 'grid' | 'gallery') => {
         state.databaseViewMode = mode;
-        state.notifyStateChange();
+        notifyStateChange();
     };
 
     w.showCreateTableModal = () => {

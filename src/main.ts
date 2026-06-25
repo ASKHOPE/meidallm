@@ -30,7 +30,13 @@ import {
     archiveTask,
     binTask,
     resetAppState,
-    toggleProjectStar
+    toggleProjectStar,
+    addTeam,
+    toggleTeamMember,
+    toggleTeamProjectAccess,
+    deleteTeam,
+    archiveTeam,
+    logActivity
 } from "./state";
 import { renderLayoutHTML, renderProjectDropdownOptions } from "./views/layout";
 import { renderPostDetailHTML } from "./views/analytics";
@@ -69,32 +75,16 @@ function updateSidebarUI() {
 }
 
 function updateThemeButtonsUI() {
-    const themeBtnDay = document.getElementById('theme-btn-day');
-    const themeBtnNight = document.getElementById('theme-btn-night');
-    const themeBtnAuto = document.getElementById('theme-btn-auto');
-    
-    const activeClass = ['bg-text-main', 'text-bg-dark', 'font-semibold'];
-    const inactiveClass = ['text-text-muted', 'hover:text-text-main'];
-    
-    [themeBtnDay, themeBtnNight, themeBtnAuto].forEach(btn => {
-        if (btn) {
-            activeClass.forEach(c => btn.classList.remove(c));
-            inactiveClass.forEach(c => btn.classList.remove(c));
-        }
-    });
-    
-    if (state.theme === 'day' && themeBtnDay) {
-        activeClass.forEach(c => themeBtnDay.classList.add(c));
-        inactiveClass.forEach(c => themeBtnNight?.classList.add(c));
-        inactiveClass.forEach(c => themeBtnAuto?.classList.add(c));
-    } else if (state.theme === 'night' && themeBtnNight) {
-        activeClass.forEach(c => themeBtnNight.classList.add(c));
-        inactiveClass.forEach(c => themeBtnDay?.classList.add(c));
-        inactiveClass.forEach(c => themeBtnAuto?.classList.add(c));
-    } else if (state.theme === 'auto' && themeBtnAuto) {
-        activeClass.forEach(c => themeBtnAuto.classList.add(c));
-        inactiveClass.forEach(c => themeBtnDay?.classList.add(c));
-        inactiveClass.forEach(c => themeBtnNight?.classList.add(c));
+    const container = document.getElementById('theme-switcher-container');
+    if (container) {
+        container.innerHTML = `
+            <span class="text-text-muted pl-1.5 font-bold uppercase tracking-wider font-inter">Theme</span>
+            <div class="flex gap-0.5">
+                <button onclick="window.setTheme('day')" class="theme-btn px-2 py-0.5 rounded transition-all font-bold ${state.theme === 'day' ? 'bg-text-main text-background' : 'text-text-muted hover:text-text-main'}" id="theme-btn-day">Day</button>
+                <button onclick="window.setTheme('night')" class="theme-btn px-2 py-0.5 rounded transition-all font-bold ${state.theme === 'night' ? 'bg-text-main text-background' : 'text-text-muted hover:text-text-main'}" id="theme-btn-night">Night</button>
+                <button onclick="window.setTheme('auto')" class="theme-btn px-2 py-0.5 rounded transition-all font-bold ${state.theme === 'auto' ? 'bg-text-main text-background' : 'text-text-muted hover:text-text-main'}" id="theme-btn-auto">Auto</button>
+            </div>
+        `;
     }
 }
 
@@ -579,6 +569,31 @@ w.binTaskToggle = (taskId: string, isBinned: boolean) => {
     binTask(taskId, isBinned);
 };
 
+w.createTeamPrompt = () => {
+    const name = prompt("Enter new team name:");
+    if (name && name.trim()) {
+        addTeam(name);
+    }
+};
+
+w.toggleTeamMemberAccess = (teamId: string, memberId: string) => {
+    toggleTeamMember(teamId, memberId);
+};
+
+w.toggleTeamWorkspaceAccess = (teamId: string, projectId: string) => {
+    toggleTeamProjectAccess(teamId, projectId);
+};
+
+w.deleteTeamAction = (teamId: string) => {
+    if (confirm("Permanently dissolve this team? Access settings will be removed.")) {
+        deleteTeam(teamId);
+    }
+};
+
+w.archiveTeamToggle = (teamId: string, isArchived: boolean) => {
+    archiveTeam(teamId, isArchived);
+};
+
 w.resetAppState = () => {
     if (confirm("This will clear all custom campaigns, tasks, and notes, restoring setup defaults. Continue?")) {
         resetAppState();
@@ -786,6 +801,10 @@ w.signOut = async () => {
 
 // Application Main Render Mount
 function renderMainApp() {
+    if (!state.currentProject && state.projects.length > 0) {
+        const welcome = state.projects.find(p => p.id === 'p-welcome' && !p.isBinned && !p.isArchived);
+        state.currentProject = welcome ? welcome.id : state.projects.filter(p => !p.isBinned && !p.isArchived)[0]?.id || null;
+    }
     const appContainer = document.getElementById('app');
     if (appContainer) {
         appContainer.innerHTML = renderLayoutHTML();

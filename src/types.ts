@@ -167,3 +167,23 @@ export interface Goal {
     dueDate: string;
     status: 'on-track' | 'behind' | 'achieved';
 }
+
+export interface Team {
+    id: string;
+    name: string;
+    memberIds: string[];
+    projectIds: string[];
+    isArchived?: boolean;
+}
+
+export interface ActivityLog {
+    id: string;
+    projectId?: string;
+    teamId?: string;
+    action: string;
+    details: string;
+    timestamp: number;
+    kpiMetric?: 'task_completed' | 'deal_won' | 'budget_spent' | 'team_created' | 'post_published';
+}
+
+
