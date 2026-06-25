@@ -40,7 +40,9 @@ import {
     archiveContact,
     binContact,
     updateContactTag,
-    notifyStateChange
+    notifyStateChange,
+    switchOrganization,
+    switchRole
 } from "./state";
 import { renderLayoutHTML, renderProjectDropdownOptions } from "./views/layout";
 import { renderPostDetailHTML } from "./views/analytics";
@@ -188,6 +190,14 @@ w.toggleProjectStar = (pid: string) => {
 };
 
 w.createProjectPrompt = () => {
+    // Check if on Creator Tier and exceed limit of 3 campaigns
+    const brand = state.agencyBrand || { subscriptionTier: 'pro' };
+    const activeProjectsCount = state.projects.filter(p => !p.isArchived && !p.isBinned).length;
+    if (brand.subscriptionTier === 'creator' && activeProjectsCount >= 3) {
+        alert("Upgrade Required: Creator Tier is limited to 3 active campaigns. Please upgrade to Agency Pro in Settings to create more.");
+        return;
+    }
+
     const name = prompt("Enter project/campaign name (max 40 chars):");
     if (!name) return;
     if (name.length > 40) {
@@ -201,6 +211,14 @@ w.createProjectPrompt = () => {
     }
     const newId = addProject(name, description);
     renderView('project-workspace', newId);
+};
+
+w.switchOrganization = (orgId: string) => {
+    switchOrganization(orgId);
+};
+
+w.switchRole = (role: any) => {
+    switchRole(role);
 };
 
 w.toggleProjectDropdown = (e: Event) => {

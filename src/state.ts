@@ -200,6 +200,85 @@ export const DbTableSchema = z.object({
     rows: z.array(DbRowSchema)
 });
 
+export const SalesInvoiceSchema = z.object({
+    id: z.string(),
+    projectId: z.string(),
+    contactId: z.string(),
+    clientName: z.string(),
+    dealValue: z.number(),
+    quoteStatus: z.enum(['draft', 'approved']),
+    orderStatus: z.enum(['draft', 'confirmed']),
+    invoiceStatus: z.enum(['unpaid', 'paid']),
+    created: z.number()
+});
+
+export const P2PTransactionSchema = z.object({
+    id: z.string(),
+    projectId: z.string(),
+    vendorName: z.string(),
+    poDescription: z.string(),
+    poAmount: z.number(),
+    requisitionStatus: z.enum(['pending', 'approved', 'rejected']),
+    poStatus: z.enum(['draft', 'issued']),
+    receiptStatus: z.enum(['pending', 'received']),
+    invoiceStatus: z.enum(['pending', 'received']),
+    invoiceAmount: z.number(),
+    matchStatus: z.enum(['unchecked', 'matched', 'mismatched']),
+    paymentStatus: z.enum(['unpaid', 'paid']),
+    created: z.number()
+});
+
+export const InventoryItemSchema = z.object({
+    id: z.string(),
+    projectId: z.string(),
+    name: z.string(),
+    type: z.enum(['gear', 'license', 'api']),
+    qty: z.number(),
+    safetyStock: z.number(),
+    unitPrice: z.number(),
+    preferredSupplier: z.string(),
+    lastChecked: z.number()
+});
+
+export const SupportCaseSchema = z.object({
+    id: z.string(),
+    projectId: z.string(),
+    contactId: z.string(),
+    title: z.string(),
+    description: z.string(),
+    priority: z.enum(['low', 'medium', 'high', 'critical']),
+    status: z.enum(['new', 'working', 'escalated', 'resolved']),
+    slaDeadline: z.number(),
+    comments: z.array(z.object({
+        author: z.string(),
+        text: z.string(),
+        timestamp: z.number()
+    })),
+    created: z.number()
+});
+
+export const EmployeeRecordSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    role: z.string(),
+    salary: z.number(),
+    taxRate: z.number(),
+    paymentStatus: z.enum(['unpaid', 'paid']),
+    onboardingTasks: z.array(z.object({
+        task: z.string(),
+        completed: z.boolean()
+    })),
+    joinedDate: z.string()
+});
+
+export const CandidateRecordSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    role: z.string(),
+    email: z.string(),
+    status: z.enum(['applied', 'interviewing', 'offered', 'hired', 'rejected'])
+});
+
 // --- Default Initial State Fallbacks ---
 const DEFAULT_KANBAN: KanbanTask[] = [
     { id: 't-welcome-1', projectId: 'p-welcome', title: 'Explore the Idea Canvas to map campaign thoughts', tag: 'Brainstorm', status: 'progress', created: Date.now(), updated: Date.now(), priority: 'medium', points: 3 },
@@ -424,6 +503,32 @@ const DEFAULT_GOALS: Goal[] = [
     { id: 'g3', projectId: 'p1', title: 'Organic Signups Target', targetValue: 1500, currentValue: 240, unit: 'Users', dueDate: '2026-08-01', status: 'behind' }
 ];
 
+const DEFAULT_INVENTORY: InventoryItem[] = [
+    { id: 'i1', projectId: 'p-welcome', name: 'Microphone Kit (Rode)', type: 'gear', qty: 3, safetyStock: 2, unitPrice: 250, preferredSupplier: 'B&H Photo', lastChecked: Date.now() },
+    { id: 'i2', projectId: 'p-welcome', name: 'SD Cards (128GB)', type: 'gear', qty: 10, safetyStock: 12, unitPrice: 35, preferredSupplier: 'Amazon Business', lastChecked: Date.now() },
+    { id: 'i3', projectId: 'p-welcome', name: 'Adobe Creative Cloud Seats', type: 'license', qty: 5, safetyStock: 6, unitPrice: 85, preferredSupplier: 'Adobe Systems', lastChecked: Date.now() }
+];
+
+const DEFAULT_SUPPORT: SupportCase[] = [
+    { id: 'sc1', projectId: 'p-welcome', contactId: 'c1', title: 'Adobe rendering crash on export', description: 'When exporting the brand sponsor reel, Adobe Premiere crashes at 80% with GPU error.', priority: 'high', status: 'new', slaDeadline: Date.now() + 3600 * 1000 * 2, comments: [], created: Date.now() },
+    { id: 'sc2', projectId: 'p-welcome', contactId: 'c2', title: 'Sponsor logo revision requested', description: 'The sponsor requested to update the logo in the middle card to their new Q3 brand design.', priority: 'medium', status: 'working', slaDeadline: Date.now() + 3600 * 1000 * 4, comments: [
+        { author: 'Sarah (Admin)', text: 'Contacted the editor to swap out the PNG.', timestamp: Date.now() - 1800 * 1000 }
+    ], created: Date.now() - 3600 * 1000 }
+];
+
+const DEFAULT_EMPLOYEES: EmployeeRecord[] = [
+    { id: 'e1', name: 'Alex Rivera', role: 'Lead Video Editor', salary: 4500, taxRate: 0.15, paymentStatus: 'unpaid', onboardingTasks: [
+        { task: 'Sign Freelancer Agreement / NDA', completed: true },
+        { task: 'Configure Google Workspace Channel Access', completed: true },
+        { task: 'Submit W-9 / Bank Details', completed: true }
+    ], joinedDate: '2026-01-10' }
+];
+
+const DEFAULT_CANDIDATES: CandidateRecord[] = [
+    { id: 'cand1', name: 'David Kim', role: 'Motion Designer', email: 'david@designer.io', status: 'offered' },
+    { id: 'cand2', name: 'Elena Rostova', role: 'Social Media Writer', email: 'elena@copywrite.net', status: 'interviewing' }
+];
+
 export const state = {
     currentUser: null as string | null,
     activeOrgId: null as string | null,
@@ -439,6 +544,16 @@ export const state = {
     mediaAssets: [] as MediaAsset[],
     drafts: [] as Draft[],
     goals: [] as Goal[],
+    
+    // Enterprise Adapters
+    activeRole: 'admin' as 'admin' | 'manager' | 'accountant' | 'sales' | 'support',
+    salesInvoices: [] as SalesInvoice[],
+    p2pTransactions: [] as P2PTransaction[],
+    inventoryItems: [] as InventoryItem[],
+    supportCases: [] as SupportCase[],
+    employees: [] as EmployeeRecord[],
+    candidates: [] as CandidateRecord[],
+    agencyBrand: { logo: 'Meidallm Agency', primaryColor: '#000000', subscriptionTier: 'pro' as 'creator' | 'pro' },
     
     // Extended States
     theme: 'day' as 'night' | 'day' | 'auto',
@@ -569,6 +684,32 @@ function applyDbState(parsed: any) {
         const val = z.array(GoalSchema).safeParse(parsed.goals);
         if (val.success) state.goals = val.data;
     }
+    if (parsed.salesInvoices) {
+        const val = z.array(SalesInvoiceSchema).safeParse(parsed.salesInvoices);
+        if (val.success) state.salesInvoices = val.data;
+    }
+    if (parsed.p2pTransactions) {
+        const val = z.array(P2PTransactionSchema).safeParse(parsed.p2pTransactions);
+        if (val.success) state.p2pTransactions = val.data;
+    }
+    if (parsed.inventoryItems) {
+        const val = z.array(InventoryItemSchema).safeParse(parsed.inventoryItems);
+        if (val.success) state.inventoryItems = val.data;
+    }
+    if (parsed.supportCases) {
+        const val = z.array(SupportCaseSchema).safeParse(parsed.supportCases);
+        if (val.success) state.supportCases = val.data;
+    }
+    if (parsed.employees) {
+        const val = z.array(EmployeeRecordSchema).safeParse(parsed.employees);
+        if (val.success) state.employees = val.data;
+    }
+    if (parsed.candidates) {
+        const val = z.array(CandidateRecordSchema).safeParse(parsed.candidates);
+        if (val.success) state.candidates = val.data;
+    }
+    if (parsed.activeRole) state.activeRole = parsed.activeRole;
+    if (parsed.agencyBrand) state.agencyBrand = parsed.agencyBrand;
     if (parsed.theme) state.theme = parsed.theme;
     if (parsed.kanbanViewMode) state.kanbanViewMode = parsed.kanbanViewMode;
     if (parsed.activeTableId) state.activeTableId = parsed.activeTableId;
@@ -595,6 +736,14 @@ function loadLocalState() {
             modules: JSON.parse(localStorage.getItem('meidallm_modules') || 'null'),
             tables: JSON.parse(localStorage.getItem('meidallm_tables') || 'null'),
             goals: JSON.parse(localStorage.getItem('meidallm_goals') || 'null'),
+            salesInvoices: JSON.parse(localStorage.getItem('meidallm_sales_invoices') || 'null'),
+            p2pTransactions: JSON.parse(localStorage.getItem('meidallm_p2p_transactions') || 'null'),
+            inventoryItems: JSON.parse(localStorage.getItem('meidallm_inventory_items') || 'null'),
+            supportCases: JSON.parse(localStorage.getItem('meidallm_support_cases') || 'null'),
+            employees: JSON.parse(localStorage.getItem('meidallm_employees') || 'null'),
+            candidates: JSON.parse(localStorage.getItem('meidallm_candidates') || 'null'),
+            activeRole: localStorage.getItem('meidallm_active_role'),
+            agencyBrand: JSON.parse(localStorage.getItem('meidallm_agency_brand') || 'null'),
             theme: localStorage.getItem('meidallm_theme'),
             kanbanViewMode: localStorage.getItem('meidallm_kanban_viewmode'),
             activeTableId: localStorage.getItem('meidallm_active_tableid'),
@@ -623,6 +772,15 @@ function loadLocalState() {
     if (state.modules.length === 0) state.modules = DEFAULT_MODULES;
     if (state.tables.length === 0) state.tables = DEFAULT_TABLES;
     if (state.goals.length === 0) state.goals = DEFAULT_GOALS;
+    
+    // Creator SaaS Enterprise Defaults
+    if (state.inventoryItems.length === 0) state.inventoryItems = DEFAULT_INVENTORY;
+    if (state.supportCases.length === 0) state.supportCases = DEFAULT_SUPPORT;
+    if (state.employees.length === 0) state.employees = DEFAULT_EMPLOYEES;
+    if (state.candidates.length === 0) state.candidates = DEFAULT_CANDIDATES;
+    if (!state.activeRole) state.activeRole = 'admin';
+    if (!state.agencyBrand || !state.agencyBrand.logo) state.agencyBrand = { logo: 'Meidallm Agency', primaryColor: '#000000', subscriptionTier: 'pro' };
+    if (!state.agencyBrand.subscriptionTier) state.agencyBrand.subscriptionTier = 'pro';
     
     applyThemeClass(state.theme);
 }
@@ -689,6 +847,14 @@ export function saveState() {
         localStorage.setItem('meidallm_modules', JSON.stringify(state.modules));
         localStorage.setItem('meidallm_tables', JSON.stringify(state.tables));
         localStorage.setItem('meidallm_goals', JSON.stringify(state.goals));
+        localStorage.setItem('meidallm_sales_invoices', JSON.stringify(state.salesInvoices));
+        localStorage.setItem('meidallm_p2p_transactions', JSON.stringify(state.p2pTransactions));
+        localStorage.setItem('meidallm_inventory_items', JSON.stringify(state.inventoryItems));
+        localStorage.setItem('meidallm_support_cases', JSON.stringify(state.supportCases));
+        localStorage.setItem('meidallm_employees', JSON.stringify(state.employees));
+        localStorage.setItem('meidallm_candidates', JSON.stringify(state.candidates));
+        localStorage.setItem('meidallm_active_role', state.activeRole);
+        localStorage.setItem('meidallm_agency_brand', JSON.stringify(state.agencyBrand));
         localStorage.setItem('meidallm_kanban_viewmode', state.kanbanViewMode);
         if (state.activeTableId) localStorage.setItem('meidallm_active_tableid', state.activeTableId);
         localStorage.setItem('meidallm_database_viewmode', state.databaseViewMode);
@@ -721,6 +887,14 @@ export function saveState() {
                     modules: state.modules,
                     tables: state.tables,
                     goals: state.goals,
+                    salesInvoices: state.salesInvoices,
+                    p2pTransactions: state.p2pTransactions,
+                    inventoryItems: state.inventoryItems,
+                    supportCases: state.supportCases,
+                    employees: state.employees,
+                    candidates: state.candidates,
+                    activeRole: state.activeRole,
+                    agencyBrand: state.agencyBrand,
                     kanbanViewMode: state.kanbanViewMode,
                     activeTableId: state.activeTableId,
                     databaseViewMode: state.databaseViewMode
@@ -1392,6 +1566,384 @@ export function deleteDbRow(tableId: string, rowId: string) {
     if (tbl) {
         tbl.rows = tbl.rows.filter(r => r.id !== rowId);
         notifyStateChange();
+    }
+}
+
+export async function switchOrganization(orgId: string) {
+    if (typeof window === 'undefined') return;
+    
+    // Save current org's state before switching
+    saveState();
+    
+    state.activeOrgId = orgId;
+    localStorage.setItem('meidallm_active_orgid', orgId);
+    
+    // Switch Postgres state by calling reload API
+    if (state.currentUser) {
+        try {
+            const res = await fetch(`/api/state?email=${encodeURIComponent(state.currentUser)}&orgId=${encodeURIComponent(orgId)}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.orgState) {
+                    applyDbState(data.orgState);
+                    notifyStateChange(true); // skip save on initial load
+                }
+            }
+        } catch (e) {
+            console.error("Failed to switch database org context:", e);
+        }
+    }
+}
+
+export function switchRole(role: typeof state.activeRole) {
+    state.activeRole = role;
+    notifyStateChange();
+}
+
+export function updateAgencyBrand(logo: string, primaryColor: string, subscriptionTier?: 'creator' | 'pro') {
+    state.agencyBrand = { logo: logo.trim(), primaryColor, subscriptionTier: subscriptionTier || 'pro' };
+    notifyStateChange();
+}
+
+export function generateSponsorInvoice(contactId: string) {
+    const contact = state.contacts.find(c => c.id === contactId);
+    if (!contact) return null;
+    
+    if (!contact.email) {
+        alert("Lead must have a valid email before generating an invoice!");
+        return null;
+    }
+    if (contact.dealValue <= 0) {
+        alert("Lead must have a deal value greater than $0!");
+        return null;
+    }
+    
+    const existing = state.salesInvoices.find(inv => inv.contactId === contactId);
+    if (existing) {
+        alert("Sponsor campaign invoice has already been generated!");
+        return existing.id;
+    }
+    
+    const invoiceId = 'inv-' + Math.random().toString(36).substr(2, 9);
+    const newInvoice: SalesInvoice = {
+        id: invoiceId,
+        projectId: contact.projectId,
+        contactId: contactId,
+        clientName: contact.name,
+        dealValue: contact.dealValue,
+        quoteStatus: 'approved',
+        orderStatus: 'confirmed',
+        invoiceStatus: 'unpaid',
+        created: Date.now()
+    };
+    
+    state.salesInvoices.push(newInvoice);
+    
+    logActivity(contact.projectId, undefined, `Sponsor Billing`, `Quote & Sales Order generated for ${contact.name} (${contact.company}) - Value: $${contact.dealValue.toLocaleString()}`);
+    
+    if (!contact.history) contact.history = [];
+    contact.history.push({ action: `Quote, Sales Order, and Unpaid Invoice Generated`, timestamp: Date.now() });
+    
+    notifyStateChange();
+    alert(`Success: Quote, Order, and Unpaid Invoice #${invoiceId} generated for ${contact.name}!`);
+    return invoiceId;
+}
+
+export function paySponsorInvoice(invoiceId: string) {
+    const inv = state.salesInvoices.find(i => i.id === invoiceId);
+    if (!inv) return;
+    
+    if (inv.invoiceStatus === 'paid') return;
+    inv.invoiceStatus = 'paid';
+    
+    let budgetTable = state.tables.find(t => t.projectId === inv.projectId && t.id.includes('budget'));
+    if (!budgetTable) {
+        budgetTable = state.tables.find(t => t.id === 'tbl-budget');
+    }
+    
+    if (budgetTable) {
+        const rowId = 'row-' + Math.random().toString(36).substr(2, 9);
+        budgetTable.rows.push({
+            id: rowId,
+            cells: {
+                'f-desc': `Revenue: Sponsor Retainer (${inv.clientName})`,
+                'f-category': 'General',
+                'f-amount': -inv.dealValue,
+                'f-date': new Date().toISOString().split('T')[0]
+            }
+        });
+    }
+    
+    const contact = state.contacts.find(c => c.id === inv.contactId);
+    if (contact) {
+        contact.dealStage = 'active';
+        contact.updated = Date.now();
+        if (!contact.history) contact.history = [];
+        contact.history.push({ action: `Invoice Paid - Sponsorship Active`, timestamp: Date.now() });
+    }
+    
+    logActivity(inv.projectId, undefined, `Order-to-Cash Reconciled`, `Sponsorship Invoice #${invoiceId} paid. Campaign budget credited by $${inv.dealValue.toLocaleString()}`);
+    
+    notifyStateChange();
+    alert(`Success: Invoice #${invoiceId} paid! Campaign budget credited.`);
+}
+
+export function createP2PTransaction(pid: string, vendorName: string, poDescription: string, poAmount: number) {
+    const newTx: P2PTransaction = {
+        id: 'p2p-' + Math.random().toString(36).substr(2, 9),
+        projectId: pid,
+        vendorName: vendorName.trim(),
+        poDescription: poDescription.trim(),
+        poAmount,
+        requisitionStatus: 'pending',
+        poStatus: 'draft',
+        receiptStatus: 'pending',
+        invoiceStatus: 'pending',
+        invoiceAmount: poAmount,
+        matchStatus: 'unchecked',
+        paymentStatus: 'unpaid',
+        created: Date.now()
+    };
+    state.p2pTransactions.push(newTx);
+    notifyStateChange();
+    return newTx.id;
+}
+
+export function approveP2PRequisition(p2pId: string) {
+    const tx = state.p2pTransactions.find(t => t.id === p2pId);
+    if (tx) {
+        tx.requisitionStatus = 'approved';
+        tx.poStatus = 'issued';
+        notifyStateChange();
+    }
+}
+
+export function deliverP2PGoods(p2pId: string) {
+    const tx = state.p2pTransactions.find(t => t.id === p2pId);
+    if (tx) {
+        tx.receiptStatus = 'received';
+        notifyStateChange();
+    }
+}
+
+export function receiveP2PInvoice(p2pId: string, invoiceAmount: number) {
+    const tx = state.p2pTransactions.find(t => t.id === p2pId);
+    if (tx) {
+        tx.invoiceStatus = 'received';
+        tx.invoiceAmount = invoiceAmount;
+        tx.matchStatus = 'unchecked';
+        notifyStateChange();
+    }
+}
+
+export function run3WayMatch(p2pId: string) {
+    const tx = state.p2pTransactions.find(t => t.id === p2pId);
+    if (tx) {
+        const isMatched = tx.poStatus === 'issued' && 
+                          tx.receiptStatus === 'received' && 
+                          tx.invoiceStatus === 'received' && 
+                          tx.poAmount === tx.invoiceAmount;
+        
+        tx.matchStatus = isMatched ? 'matched' : 'mismatched';
+        notifyStateChange();
+        
+        if (isMatched) {
+            alert(`Success: 3-Way Match verified for PO ${tx.id}! Payments released.`);
+        } else {
+            alert(`Discrepancy: Contract amount ($${tx.poAmount}) does not match Invoice amount ($${tx.invoiceAmount}) or deliverable receipt is missing!`);
+        }
+    }
+}
+
+export function payP2PInvoice(p2pId: string) {
+    const tx = state.p2pTransactions.find(t => t.id === p2pId);
+    if (tx && tx.matchStatus === 'matched' && tx.paymentStatus === 'unpaid') {
+        tx.paymentStatus = 'paid';
+        
+        let budgetTable = state.tables.find(tbl => tbl.projectId === tx.projectId && tbl.id.includes('budget'));
+        if (!budgetTable) {
+            budgetTable = state.tables.find(tbl => tbl.id === 'tbl-budget');
+        }
+        
+        if (budgetTable) {
+            const rowId = 'row-' + Math.random().toString(36).substr(2, 9);
+            budgetTable.rows.push({
+                id: rowId,
+                cells: {
+                    'f-desc': `Contractor Pay: ${tx.poDescription} (${tx.vendorName})`,
+                    'f-category': 'Contractors',
+                    'f-amount': tx.invoiceAmount,
+                    'f-date': new Date().toISOString().split('T')[0]
+                }
+            });
+        }
+        
+        logActivity(tx.projectId, undefined, `Procure-to-Pay Verified`, `Contractor payment of $${tx.invoiceAmount.toLocaleString()} released to ${tx.vendorName}`);
+        
+        notifyStateChange();
+        alert(`Success: Contractor invoice paid! Expense posted to campaign ledger.`);
+    }
+}
+
+export function replenishInventory(itemId: string, qty: number) {
+    const item = state.inventoryItems.find(i => i.id === itemId);
+    if (item) {
+        item.qty += qty;
+        item.lastChecked = Date.now();
+        
+        const cost = qty * item.unitPrice;
+        let budgetTable = state.tables.find(tbl => tbl.projectId === item.projectId && tbl.id.includes('budget'));
+        if (!budgetTable) {
+            budgetTable = state.tables.find(tbl => tbl.id === 'tbl-budget');
+        }
+        
+        if (budgetTable) {
+            const rowId = 'row-' + Math.random().toString(36).substr(2, 9);
+            budgetTable.rows.push({
+                id: rowId,
+                cells: {
+                    'f-desc': `Replenishment: ${item.name} x${qty}`,
+                    'f-category': item.type === 'license' ? 'Tooling & APIs' : 'General',
+                    'f-amount': cost,
+                    'f-date': new Date().toISOString().split('T')[0]
+                }
+            });
+        }
+        
+        logActivity(item.projectId, undefined, `Inventory Restocked`, `Restocked ${qty} units of ${item.name}. Spend incurred: $${cost.toLocaleString()}`);
+        notifyStateChange();
+        alert(`Success: Restocked ${qty} units of ${item.name}. Cost: $${cost.toLocaleString()}`);
+    }
+}
+
+export function adjustInventoryCount(itemId: string, newCount: number) {
+    const item = state.inventoryItems.find(i => i.id === itemId);
+    if (item) {
+        const diff = newCount - item.qty;
+        item.qty = newCount;
+        item.lastChecked = Date.now();
+        logActivity(item.projectId, undefined, `Inventory Audit`, `Cycle Count Adjustment on ${item.name}: count changed by ${diff > 0 ? '+' : ''}${diff} units.`);
+        notifyStateChange();
+    }
+}
+
+export function closeFinancialMonth(pid: string, month: string) {
+    logActivity(pid, undefined, `Financial Close`, `Campaign ledger closed for ${month}. Campaign accounts locked.`);
+    notifyStateChange();
+    alert(`Success: Campaign accounts for ${month} have been closed and locked!`);
+}
+
+export function addCandidate(name: string, role: string, email: string) {
+    const newCand = {
+        id: 'cand-' + Math.random().toString(36).substr(2, 9),
+        name: name.trim(),
+        role: role.trim(),
+        email: email.trim(),
+        status: 'applied' as const
+    };
+    state.candidates.push(newCand);
+    logActivity(undefined, undefined, `HR recruiting`, `Logged application for ${name} as ${role}.`);
+    notifyStateChange();
+    alert(`Success: Candidate application registered!`);
+}
+
+export function hireCreator(candidateId: string) {
+    const cand = state.candidates.find(c => c.id === candidateId);
+    if (cand) {
+        cand.status = 'hired';
+        
+        const newEmp: EmployeeRecord = {
+            id: 'emp-' + Math.random().toString(36).substr(2, 9),
+            name: cand.name,
+            role: cand.role,
+            salary: cand.role.includes('Editor') ? 4000 : 3200,
+            taxRate: 0.12,
+            paymentStatus: 'unpaid',
+            onboardingTasks: [
+                { task: 'Sign NDA / Contractor Agreement', completed: false },
+                { task: 'Configure Google Workspace Channel Access', completed: false },
+                { task: 'Verify Bank Routing Details', completed: false }
+            ],
+            joinedDate: new Date().toISOString().split('T')[0]
+        };
+        state.employees.push(newEmp);
+        logActivity(undefined, undefined, `HR Hiring`, `Hired candidate ${cand.name} as ${cand.role}. Onboarding checklist triggered.`);
+        notifyStateChange();
+        alert(`Success: Hired ${cand.name}! Creator onboarding checklist initialized.`);
+    }
+}
+
+export function completeOnboardingTask(empId: string, taskIndex: number, completed: boolean) {
+    const emp = state.employees.find(e => e.id === empId);
+    if (emp && emp.onboardingTasks[taskIndex]) {
+        emp.onboardingTasks[taskIndex].completed = completed;
+        notifyStateChange();
+    }
+}
+
+export function runMonthlyPayroll(empId: string) {
+    const emp = state.employees.find(e => e.id === empId);
+    if (emp) {
+        emp.paymentStatus = 'paid';
+        const netPay = emp.salary * (1 - emp.taxRate);
+        
+        let budgetTable = state.tables.find(t => t.id === 'tbl-budget');
+        if (budgetTable) {
+            const rowId = 'row-' + Math.random().toString(36).substr(2, 9);
+            budgetTable.rows.push({
+                id: rowId,
+                cells: {
+                    'f-desc': `Payroll Run: ${emp.name} (${emp.role})`,
+                    'f-category': 'Contractors',
+                    'f-amount': emp.salary,
+                    'f-date': new Date().toISOString().split('T')[0]
+                }
+            });
+        }
+        
+        logActivity(undefined, undefined, `HR Payroll`, `Payroll executed for ${emp.name}. Total Gross: $${emp.salary.toLocaleString()}, Net: $${netPay.toLocaleString()}`);
+        notifyStateChange();
+        alert(`Success: Payroll processed for ${emp.name}. Gross paid: $${emp.salary.toLocaleString()}`);
+    }
+}
+
+export function createSupportCase(pid: string, contactId: string, title: string, description: string, priority: SupportCase['priority']) {
+    const newCase: SupportCase = {
+        id: 'sc-' + Math.random().toString(36).substr(2, 9),
+        projectId: pid,
+        contactId,
+        title: title.trim(),
+        description: description.trim(),
+        priority,
+        status: 'new',
+        slaDeadline: Date.now() + (priority === 'critical' ? 2 * 3600 * 1000 : priority === 'high' ? 4 * 3600 * 1000 : 12 * 3600 * 1000),
+        comments: [],
+        created: Date.now()
+    };
+    state.supportCases.push(newCase);
+    notifyStateChange();
+    return newCase.id;
+}
+
+export function addCaseComment(caseId: string, text: string) {
+    const cs = state.supportCases.find(c => c.id === caseId);
+    if (cs) {
+        cs.comments.push({
+            author: state.currentUser ? state.currentUser.split('@')[0] : 'Agent',
+            text: text.trim(),
+            timestamp: Date.now()
+        });
+        cs.status = 'working';
+        notifyStateChange();
+    }
+}
+
+export function resolveSupportCase(caseId: string) {
+    const cs = state.supportCases.find(c => c.id === caseId);
+    if (cs) {
+        cs.status = 'resolved';
+        notifyStateChange();
+        alert("Case resolved successfully!");
     }
 }
 

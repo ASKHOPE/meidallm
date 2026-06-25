@@ -33,6 +33,7 @@ export function renderProjectDropdownOptions(): string {
 }
 
 export function renderSidebarNavigation(): string {
+    const role = state.activeRole || 'admin';
     return sidebarGroups.map(group => {
         let groupContent = "";
         
@@ -42,6 +43,24 @@ export function renderSidebarNavigation(): string {
                 const isProjectScoped = item.scope === 'project';
                 const pidAttr = isProjectScoped && state.currentProject ? `data-pid="${state.currentProject}"` : '';
                 const iconSVG = getIconSVG(item.key as IconName, 'w-4 h-4 text-text-muted group-hover:text-text-main transition-colors');
+                
+                // RBAC Rules
+                let isLocked = false;
+                if (item.key === 'project-erp' && (role === 'sales' || role === 'support')) isLocked = true;
+                if (item.key === 'crm' && role === 'accountant') isLocked = true;
+                if (item.key === 'publish' && (role === 'accountant' || role === 'support')) isLocked = true;
+                if (item.key === 'drafts' && (role === 'accountant' || role === 'support')) isLocked = true;
+
+                if (isLocked) {
+                    return `
+                    <button onclick="if(window.showToast) { window.showToast('Permission Denied: Role [${role.toUpperCase()}] cannot access this view.', 'error'); } else { alert('Access Denied'); }" 
+                            class="opacity-50 w-full text-left px-3 py-2 rounded-md transition-all font-medium text-xs text-text-muted/60 flex items-center gap-2.5 border border-transparent cursor-not-allowed">
+                        <span class="shrink-0 flex items-center justify-center">${iconSVG}</span> 
+                        <span class="truncate">${item.title}</span>
+                        <span class="text-[9px] font-bold text-rose-500 font-mono ml-auto">🔒 LOCK</span>
+                    </button>
+                    `;
+                }
                 
                 return `
                 <button class="nav-btn group w-full text-left px-3 py-2 rounded-md transition-all font-medium text-xs text-text-muted hover:bg-text-main/5 hover:text-text-main flex items-center gap-2.5 border border-transparent" 
@@ -55,6 +74,23 @@ export function renderSidebarNavigation(): string {
             const groupTools = views.filter(v => v.group === group.key && v.icon && v.scope !== 'project');
             groupContent = groupTools.map(item => {
                 const iconSVG = getIconSVG(item.key as IconName, 'w-4 h-4 text-text-muted group-hover:text-text-main transition-colors');
+                
+                // Hide Settings/Team Office for Support and Sales if locked
+                let isLocked = false;
+                if (item.key === 'settings' && (role !== 'admin' && role !== 'manager')) isLocked = true;
+                if (item.key === 'team' && (role !== 'admin' && role !== 'manager' && role !== 'accountant')) isLocked = true;
+
+                if (isLocked) {
+                    return `
+                    <button onclick="if(window.showToast) { window.showToast('Permission Denied: Role [${role.toUpperCase()}] cannot access Settings.', 'error'); } else { alert('Access Denied'); }" 
+                            class="opacity-50 w-full text-left px-3 py-2 rounded-md transition-all font-medium text-xs text-text-muted/60 flex items-center gap-2.5 border border-transparent cursor-not-allowed">
+                        <span class="shrink-0 flex items-center justify-center">${iconSVG}</span> 
+                        <span class="truncate">${item.title}</span>
+                        <span class="text-[9px] font-bold text-rose-500 font-mono ml-auto">🔒 LOCK</span>
+                    </button>
+                    `;
+                }
+
                 return `
                 <button class="nav-btn group w-full text-left px-3 py-2 rounded-md transition-all font-medium text-xs text-text-muted hover:bg-text-main/5 hover:text-text-main flex items-center gap-2.5 border border-transparent" data-view="${item.key}">
                     <span class="shrink-0 flex items-center justify-center">${iconSVG}</span> 
@@ -91,8 +127,8 @@ export function renderLayoutHTML(): string {
     <aside class="w-64 bg-background border-r border-text-main/15 flex flex-col p-5">
         <!-- Brand Header -->
         <div class="flex items-center gap-3 mb-6 cursor-pointer" onclick="window.navigateTo('workspaces')">
-            <div class="w-8 h-8 bg-text-main text-background rounded-lg flex items-center justify-center font-bold text-base shadow-sm">M</div>
-            <h2 class="text-base font-bold font-outfit uppercase tracking-wider text-text-main">Meidallm</h2>
+            <div class="w-8 h-8 text-background rounded-lg flex items-center justify-center font-bold text-base shadow-sm" style="background-color: ${state.agencyBrand?.primaryColor || 'var(--color-text-main)'}">M</div>
+            <h2 class="text-base font-bold font-outfit uppercase tracking-wider text-text-main">${sanitizeHTML(state.agencyBrand?.logo || "Meidallm")}</h2>
         </div>
 
         <!-- Project Selector Dropdown -->
@@ -113,6 +149,17 @@ export function renderLayoutHTML(): string {
             </div>
         </div>
 
+        <!-- Tenant Switcher Dropdown -->
+        <div class="relative mb-5">
+            <label class="text-[9px] font-bold text-text-muted uppercase tracking-wider block mb-1">Tenant Organization</label>
+            <select onchange="window.switchOrganization(this.value)" class="w-full bg-background border border-text-main/15 hover:border-text-main/40 rounded-lg px-3 py-2 text-xs font-semibold text-text-main focus:outline-none cursor-pointer">
+                <option value="personal" ${state.activeOrgId === 'personal' || !state.activeOrgId ? 'selected' : ''}>💼 Personal Workspace</option>
+                <option value="nike" ${state.activeOrgId === 'nike' ? 'selected' : ''}>⚡ Nike Campaign Hub</option>
+                <option value="stripe" ${state.activeOrgId === 'stripe' ? 'selected' : ''}>💳 Stripe Creator Hub</option>
+                <option value="spacex" ${state.activeOrgId === 'spacex' ? 'selected' : ''}>🚀 SpaceX Media Office</option>
+            </select>
+        </div>
+
         <!-- Navigation -->
         <nav class="flex flex-col gap-2 flex-grow overflow-y-auto pr-1">
             ${renderSidebarNavigation()}
@@ -125,19 +172,31 @@ export function renderLayoutHTML(): string {
                     ${displayName.substring(0, 2).toUpperCase()}
                 </div>
                 <div>
-                    <div id="user-display-name" class="font-bold text-xs">${sanitizeHTML(displayName)}</div>
+                    <div id="user-display-name" class="font-bold text-xs">${sanitizeHTML(state.agencyBrand?.logo || displayName)}</div>
                     <div class="text-[9px] text-text-muted font-mono uppercase tracking-wider">Tenant: ${sanitizeHTML(state.activeOrgId || 'personal')}</div>
                 </div>
             </div>
 
             <!-- Theme Switcher -->
             <div id="theme-switcher-container" class="flex items-center justify-between bg-text-main/5 p-1 rounded-lg border border-text-main/10 text-[9px] my-0.5">
-                <span class="text-text-muted pl-1.5 font-bold uppercase tracking-wider">Theme</span>
+                <span class="text-text-muted pl-1.5 font-bold uppercase tracking-wider font-inter">Theme</span>
                 <div class="flex gap-0.5">
                     <button onclick="window.setTheme('day')" class="theme-btn px-2 py-0.5 rounded transition-all font-bold ${state.theme === 'day' ? 'bg-text-main text-background' : 'text-text-muted hover:text-text-main'}" id="theme-btn-day">Day</button>
                     <button onclick="window.setTheme('night')" class="theme-btn px-2 py-0.5 rounded transition-all font-bold ${state.theme === 'night' ? 'bg-text-main text-background' : 'text-text-muted hover:text-text-main'}" id="theme-btn-night">Night</button>
                     <button onclick="window.setTheme('auto')" class="theme-btn px-2 py-0.5 rounded transition-all font-bold ${state.theme === 'auto' ? 'bg-text-main text-background' : 'text-text-muted hover:text-text-main'}" id="theme-btn-auto">Auto</button>
                 </div>
+            </div>
+
+            <!-- User Role Switcher -->
+            <div class="flex items-center justify-between bg-text-main/5 p-1 rounded-lg border border-text-main/10 text-[9px] my-0.5">
+                <span class="text-text-muted pl-1.5 font-bold uppercase tracking-wider font-inter">User Role</span>
+                <select onchange="window.switchRole(this.value)" class="bg-background border border-text-main/20 text-text-main text-[9px] font-bold py-0.5 rounded focus:outline-none cursor-pointer">
+                    <option value="admin" ${state.activeRole === 'admin' ? 'selected' : ''}>Admin</option>
+                    <option value="manager" ${state.activeRole === 'manager' ? 'selected' : ''}>Manager</option>
+                    <option value="accountant" ${state.activeRole === 'accountant' ? 'selected' : ''}>Accountant</option>
+                    <option value="sales" ${state.activeRole === 'sales' ? 'selected' : ''}>Sales Rep</option>
+                    <option value="support" ${state.activeRole === 'support' ? 'selected' : ''}>Support Rep</option>
+                </select>
             </div>
 
             <button onclick="window.signOut()" class="w-full py-2 border border-text-main/15 hover:border-text-main/40 text-xs rounded-lg transition-colors font-bold cursor-pointer">

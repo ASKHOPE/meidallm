@@ -191,4 +191,77 @@ export interface ActivityLog {
     kpiMetric?: 'task_completed' | 'deal_won' | 'budget_spent' | 'team_created' | 'post_published';
 }
 
+export interface SalesInvoice {
+    id: string;
+    projectId: string;
+    contactId: string;
+    clientName: string;
+    dealValue: number;
+    quoteStatus: 'draft' | 'approved';
+    orderStatus: 'draft' | 'confirmed';
+    invoiceStatus: 'unpaid' | 'paid';
+    created: number;
+}
+
+export interface P2PTransaction {
+    id: string;
+    projectId: string;
+    vendorName: string;
+    poDescription: string;
+    poAmount: number;
+    requisitionStatus: 'pending' | 'approved' | 'rejected';
+    poStatus: 'draft' | 'issued';
+    receiptStatus: 'pending' | 'received';
+    invoiceStatus: 'pending' | 'received';
+    invoiceAmount: number;
+    matchStatus: 'unchecked' | 'matched' | 'mismatched';
+    paymentStatus: 'unpaid' | 'paid';
+    created: number;
+}
+
+export interface InventoryItem {
+    id: string;
+    projectId: string;
+    name: string;
+    type: 'gear' | 'license' | 'api';
+    qty: number;
+    safetyStock: number;
+    unitPrice: number;
+    preferredSupplier: string;
+    lastChecked: number;
+}
+
+export interface SupportCase {
+    id: string;
+    projectId: string;
+    contactId: string;
+    title: string;
+    description: string;
+    priority: 'low' | 'medium' | 'high' | 'critical';
+    status: 'new' | 'working' | 'escalated' | 'resolved';
+    slaDeadline: number;
+    comments: { author: string; text: string; timestamp: number }[];
+    created: number;
+}
+
+export interface EmployeeRecord {
+    id: string;
+    name: string;
+    role: string;
+    salary: number;
+    taxRate: number;
+    paymentStatus: 'unpaid' | 'paid';
+    onboardingTasks: { task: string; completed: boolean }[];
+    joinedDate: string;
+}
+
+export interface CandidateRecord {
+    id: string;
+    name: string;
+    role: string;
+    email: string;
+    status: 'applied' | 'interviewing' | 'offered' | 'hired' | 'rejected';
+}
+
+
 

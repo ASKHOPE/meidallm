@@ -39,18 +39,29 @@ function getDefaultOrg(email: string): string {
 export const GET: APIRoute = async ({ request }) => {
   const url = new URL(request.url);
   const email = url.searchParams.get("email");
+  const queryOrgId = url.searchParams.get("orgId");
   
   if (!email) {
     return new Response(JSON.stringify({ error: "Missing email parameter" }), { status: 400 });
   }
 
   try {
-    // 1. Get user preferences
+    // 1. Get user preferences or set via queryOrgId
     let prefsRes = await dbPool.query("SELECT active_org_id, theme FROM user_preferences WHERE email = $1", [email]);
     let activeOrgId = "";
-    let theme = "night";
+    let theme = "day";
 
-    if (prefsRes.rows.length > 0) {
+    if (queryOrgId) {
+      activeOrgId = queryOrgId;
+      theme = prefsRes.rows.length > 0 ? prefsRes.rows[0].theme : "day";
+      await dbPool.query(
+        `INSERT INTO user_preferences (email, active_org_id, theme, updated_at) 
+         VALUES ($1, $2, $3, CURRENT_TIMESTAMP) 
+         ON CONFLICT (email) 
+         DO UPDATE SET active_org_id = EXCLUDED.active_org_id, updated_at = CURRENT_TIMESTAMP`,
+        [email, queryOrgId, theme]
+      );
+    } else if (prefsRes.rows.length > 0) {
       activeOrgId = prefsRes.rows[0].active_org_id;
       theme = prefsRes.rows[0].theme;
     } else {

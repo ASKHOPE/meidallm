@@ -188,9 +188,130 @@ export function renderCRMView(pid: string): string {
             </div>
 
             <!-- Details & Activity history sidebar panel -->
-            <div class="bg-background border border-text-main/15 p-5 rounded-2xl flex flex-col gap-4">
+            <div class="bg-background border border-text-main/15 p-5 rounded-2xl flex flex-col gap-4 max-h-[700px] overflow-y-auto">
                 <h3 class="font-bold text-sm font-outfit">Deal History & Activity</h3>
-                ${selectedContact ? `
+                ${(() => {
+                    if (!selectedContact) {
+                        return `
+                        <div class="text-center py-16 text-xs text-text-muted leading-relaxed">
+                            ${getIconSVG('info', 'w-8 h-8 mx-auto mb-2 text-text-muted/60')}
+                            Select a deal card to view time tracking, Order-to-Cash stepper, support cases, and logs.
+                        </div>
+                        `;
+                    }
+
+                    // OTC Invoice check
+                    const inv = state.salesInvoices.find(invoice => invoice.contactId === selectedContact.id);
+                    let invoiceBlock = "";
+                    if (!inv) {
+                        invoiceBlock = `
+                        <div class="border-t border-text-main/10 pt-3">
+                            <span class="text-[10px] text-text-muted font-bold block uppercase mb-2">Campaign Retainer Order-to-Cash</span>
+                            <button onclick="window.generateSponsorInvoice('${selectedContact.id}')" class="w-full py-2 bg-text-main text-background hover:bg-text-main/80 font-bold text-[11px] rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
+                                💼 Convert to Quote, Order & Invoice
+                            </button>
+                        </div>
+                        `;
+                    } else {
+                        const isPaid = inv.invoiceStatus === 'paid';
+                        invoiceBlock = `
+                        <div class="border-t border-text-main/10 pt-3 flex flex-col gap-2">
+                            <span class="text-[10px] text-text-muted font-bold block uppercase">Campaign Billing Status</span>
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-semibold text-text-main">Invoice #${inv.id}</span>
+                                <span class="px-2 py-0.5 border rounded-full text-[9px] font-bold uppercase ${isPaid ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' : 'text-amber-500 bg-amber-500/10 border-amber-500/20'}">${inv.invoiceStatus}</span>
+                            </div>
+                            <!-- OTC Stepper visual -->
+                            <div class="flex items-center gap-1 justify-between text-[9px] text-text-muted bg-text-main/5 p-2 rounded-lg border border-text-main/5 my-1">
+                                <div class="flex flex-col items-center">
+                                    <span class="text-emerald-500 font-bold">🟢 Quote</span>
+                                    <span class="text-[8px] opacity-70">Approved</span>
+                                </div>
+                                <div class="w-4 border-t border-text-main/20"></div>
+                                <div class="flex flex-col items-center">
+                                    <span class="text-emerald-500 font-bold">🟢 Order</span>
+                                    <span class="text-[8px] opacity-70">Confirmed</span>
+                                </div>
+                                <div class="w-4 border-t border-text-main/20"></div>
+                                <div class="flex flex-col items-center">
+                                    <span class="${isPaid ? 'text-emerald-500 font-bold' : 'text-amber-500'} font-bold">${isPaid ? '🟢' : '🟡'} Invoice</span>
+                                    <span class="text-[8px] opacity-70">${isPaid ? 'Paid' : 'Unpaid'}</span>
+                                </div>
+                            </div>
+                            ${!isPaid ? `
+                                <button onclick="window.paySponsorInvoice('${inv.id}')" class="w-full py-2 bg-emerald-500 text-white hover:bg-emerald-600 font-bold text-[11px] rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
+                                    💵 Process Sponsor Retainer Payment
+                                </button>
+                            ` : `<p class="text-[10px] text-emerald-500 font-bold text-center mt-1">✓ Sponsorship revenue reconciled to Campaign Budget!</p>`}
+                        </div>
+                        `;
+                    }
+
+                    // Support tickets check
+                    const cases = state.supportCases.filter(c => c.contactId === selectedContact.id);
+                    const casesBlock = `
+                    <div class="border-t border-text-main/10 pt-3 flex flex-col gap-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-text-muted font-bold block uppercase">Creator Support Tickets</span>
+                            <button onclick="window.createSupportCasePrompt('${pid}', '${selectedContact.id}')" class="text-[9px] font-bold text-text-main hover:underline cursor-pointer">+ Log Ticket</button>
+                        </div>
+                        <div class="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-1">
+                            ${cases.map(c => {
+                                const now = Date.now();
+                                const timeLeft = c.slaDeadline - now;
+                                const hoursLeft = Math.ceil(timeLeft / (3600 * 1000));
+                                const slaText = timeLeft > 0 
+                                    ? `SLA: ${hoursLeft}h response limit` 
+                                    : `SLA Violation! (${Math.abs(hoursLeft)}h overdue)`;
+                                const slaColor = timeLeft > 0 
+                                    ? (c.priority === 'critical' || timeLeft < 3600 * 1000 * 2) ? 'text-rose-500 font-bold' : 'text-amber-500' 
+                                    : 'text-rose-500 font-extrabold animate-pulse';
+
+                                let priorityColor = 'text-blue-500 bg-blue-500/10 border-blue-500/20';
+                                if (c.priority === 'high') priorityColor = 'text-amber-500 bg-amber-500/10 border-amber-500/20';
+                                if (c.priority === 'critical') priorityColor = 'text-rose-500 bg-rose-500/10 border-rose-500/20';
+
+                                let statusColor = 'text-amber-500';
+                                if (c.status === 'resolved') statusColor = 'text-emerald-500';
+                                if (c.status === 'new') statusColor = 'text-blue-500';
+
+                                return `
+                                <div class="bg-text-main/5 p-3 rounded-xl border border-text-main/10 flex flex-col gap-2">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h5 class="font-bold text-xs text-text-main leading-tight">${sanitizeHTML(c.title)}</h5>
+                                            <span class="text-[8px] font-bold px-1 py-0.5 rounded border uppercase mt-1 inline-block ${priorityColor}">${c.priority}</span>
+                                        </div>
+                                        <span class="text-[9px] font-bold capitalize ${statusColor}">${c.status}</span>
+                                    </div>
+                                    <p class="text-[10px] text-text-muted mt-1 leading-relaxed">${sanitizeHTML(c.description)}</p>
+                                    
+                                    <div class="text-[9px] border-t border-text-main/5 pt-2 flex flex-col gap-1.5">
+                                        <span class="${slaColor}">${slaText}</span>
+                                        <div class="flex flex-col gap-1 max-h-[80px] overflow-y-auto pl-1.5 border-l border-text-main/15">
+                                            ${c.comments.map(comm => `
+                                                <div class="text-[9px] text-text-main">
+                                                    <strong>${comm.author}:</strong> ${sanitizeHTML(comm.text)}
+                                                </div>
+                                            `).join('') || '<span class="italic text-[8px] text-text-muted">No comments yet.</span>'}
+                                        </div>
+                                        
+                                        ${c.status !== 'resolved' ? `
+                                            <div class="flex gap-1.5 mt-1.5">
+                                                <input type="text" id="comment-input-${c.id}" placeholder="Reply to ticket..." class="flex-grow bg-background border border-text-main/20 focus:border-text-main rounded px-2 py-1 text-[9px] focus:outline-none">
+                                                <button onclick="window.submitCaseComment('${c.id}')" class="px-2 py-1 bg-text-main text-background hover:bg-text-main/80 text-[9px] font-bold rounded cursor-pointer">Reply</button>
+                                                <button onclick="window.resolveSupportCase('${c.id}')" class="px-2 py-1 bg-emerald-500 text-white hover:bg-emerald-600 text-[9px] font-bold rounded cursor-pointer">Resolve</button>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                `;
+                            }).join('') || `<div class="text-center py-6 text-[10px] text-text-muted italic">No support tickets logged.</div>`}
+                        </div>
+                    </div>
+                    `;
+
+                    return `
                     <div class="flex flex-col gap-4">
                         <div>
                             <span class="text-[10px] text-text-muted font-bold block uppercase">Client Info</span>
@@ -198,6 +319,10 @@ export function renderCRMView(pid: string): string {
                             <p class="text-xs text-text-muted">${sanitizeHTML(selectedContact.email || 'No email provided')}</p>
                             <span class="text-[10px] bg-text-main/5 px-2 py-1 border border-text-main/10 rounded font-bold inline-block mt-2">${sanitizeHTML(selectedContact.company)}</span>
                         </div>
+
+                        ${invoiceBlock}
+
+                        ${casesBlock}
 
                         <div class="border-t border-text-main/10 pt-3">
                             <span class="text-[10px] text-text-muted font-bold block uppercase mb-1">Time Logged</span>
@@ -209,7 +334,7 @@ export function renderCRMView(pid: string): string {
 
                         <div class="border-t border-text-main/10 pt-3">
                             <span class="text-[10px] text-text-muted font-bold block uppercase mb-3">Activity Stream</span>
-                            <div class="flex flex-col gap-3 max-h-[250px] overflow-y-auto pr-1">
+                            <div class="flex flex-col gap-3 max-h-[150px] overflow-y-auto pr-1">
                                 ${(selectedContact.history || []).slice().reverse().map(h => `
                                     <div class="flex flex-col gap-1 border-l-2 border-text-main/20 pl-2.5 py-0.5 text-xs">
                                         <span class="text-text-main font-semibold">${sanitizeHTML(h.action)}</span>
@@ -219,12 +344,8 @@ export function renderCRMView(pid: string): string {
                             </div>
                         </div>
                     </div>
-                ` : `
-                    <div class="text-center py-16 text-xs text-text-muted leading-relaxed">
-                        ${getIconSVG('info', 'w-8 h-8 mx-auto mb-2 text-text-muted/60')}
-                        Select a deal card to view time tracking and historical activity logs.
-                    </div>
-                `}
+                    `;
+                })()}
             </div>
         </div>
     </div>
