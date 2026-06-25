@@ -15,7 +15,10 @@ import { renderTeamView } from "./views/team";
 import { renderDatabaseView } from "./views/database";
 import { renderCyclesView } from "./views/cycles";
 import { renderGoalsView } from "./views/goals";
-import { renderAdminTenantsView, renderAdminRBACView, renderAdminPoliciesView } from "./views/admin";
+import { renderAdminTenantsView, renderAdminRBACView, renderAdminPoliciesView, renderAdminAnalyticsView } from "./views/admin";
+import { renderClientPortalView } from "./views/client-portal";
+import { renderHelpdeskView } from "./views/helpdesk";
+import { renderTimeTrackingView } from "./views/time-tracking";
 
 export interface NavGroup {
     key: string;
@@ -41,6 +44,14 @@ export const sidebarGroups: NavGroup[] = [
 
 // Global registry of application views
 export const views: ViewConfig[] = [
+    {
+        key: 'admin-analytics',
+        title: 'Usage & Analytics',
+        icon: '📈',
+        scope: 'global',
+        group: 'admin',
+        render: () => renderAdminAnalyticsView()
+    },
     {
         key: 'admin-tenants',
         title: 'Tenants',
@@ -185,6 +196,14 @@ export const views: ViewConfig[] = [
         render: (pid) => renderERPView(pid || '')
     },
     {
+        key: 'time-tracking',
+        title: 'Time Tracking',
+        icon: '⏰',
+        scope: 'global',
+        group: 'workflow',
+        render: () => renderTimeTrackingView()
+    },
+    {
         key: 'team',
         title: 'Team Office',
         icon: '👥',
@@ -197,7 +216,23 @@ export const views: ViewConfig[] = [
         title: 'Settings',
         icon: '⚙️',
         scope: 'system',
-        group: 'system',
+        group: 'footer',
         render: () => renderSettingsView()
+    },
+    {
+        key: 'client-portal',
+        title: 'Client Portal',
+        icon: '🔗',
+        scope: 'project',
+        group: 'workflow',
+        render: () => renderClientPortalView()
+    },
+    {
+        key: 'helpdesk',
+        title: 'Helpdesk',
+        icon: '🎫',
+        scope: 'project',
+        group: 'workflow',
+        render: () => renderHelpdeskView()
     }
 ];

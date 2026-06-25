@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember, Cycle, Module, DbField, DbRow, DbTable, Goal, Tenant, Organization, Team, CustomRole, Policy, SalesInvoice, P2PTransaction, InventoryItem, SupportCase, EmployeeRecord, CandidateRecord, ActivityLog } from "./types";
+import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember, Cycle, Module, DbField, DbRow, DbTable, Goal, Tenant, Organization, Team, CustomRole, Policy, SalesInvoice, P2PTransaction, InventoryItem, SupportCase, EmployeeRecord, CandidateRecord, ActivityLog, Ticket, ClientFeedback } from "./types";
 
 export const GoalSchema = z.object({
     id: z.string(),
@@ -15,6 +15,7 @@ export const GoalSchema = z.object({
 export const CustomRoleSchema = z.object({
     id: z.string(),
     tenantId: z.string(),
+    orgId: z.string().optional(),
     name: z.string(),
     description: z.string(),
     permissions: z.array(z.string())
@@ -27,6 +28,28 @@ export const PolicySchema = z.object({
     description: z.string(),
     type: z.enum(['security', 'access', 'compliance', 'billing']),
     enforced: z.boolean()
+});
+
+export const TicketSchema = z.object({
+    id: z.string(),
+    projectId: z.string(),
+    clientId: z.string(),
+    title: z.string(),
+    description: z.string(),
+    status: z.enum(['open', 'in-progress', 'waiting', 'resolved']),
+    priority: z.enum(['low', 'medium', 'high', 'urgent']),
+    created: z.number(),
+    updated: z.number()
+});
+
+export const ClientFeedbackSchema = z.object({
+    id: z.string(),
+    projectId: z.string(),
+    clientId: z.string(),
+    content: z.string(),
+    assetId: z.string().optional(),
+    status: z.enum(['pending', 'addressed']),
+    created: z.number()
 });
 
 // --- Zod Validation Schemas ---
@@ -156,6 +179,7 @@ export const TeamMemberSchema = z.object({
     name: z.string(),
     email: z.string(),
     role: z.string(),
+    systemRole: z.enum(['super_admin', 'tenant_owner', 'tenant_admin', 'org_admin', 'user']).optional(),
     status: z.enum(['active', 'meeting', 'offline', 'vacation']),
     avatarColor: z.string()
 });
@@ -414,10 +438,12 @@ const DEFAULT_CONTACTS: Contact[] = [
 ];
 
 const DEFAULT_TEAM: TeamMember[] = [
-    { id: 'tm1', name: 'Hosanna (You)', email: 'hosanna@example.com', role: 'Product Architect', status: 'active', avatarColor: 'bg-indigo-500' },
-    { id: 'tm2', name: 'Gavin Belson', email: 'gavin@example.com', role: 'Campaign Strategist', status: 'meeting', avatarColor: 'bg-rose-500' },
-    { id: 'tm3', name: 'Richard Hendricks', email: 'richard@example.com', role: 'Lead Developer', status: 'active', avatarColor: 'bg-emerald-500' },
-    { id: 'tm4', name: 'Monica Hall', email: 'monica@example.com', role: 'Agency Relations', status: 'vacation', avatarColor: 'bg-amber-500' }
+    { id: 'tm0', name: 'Bablu Katru (Admin)', email: 'bablu.katru@gmail.com', role: 'Super Admin', systemRole: 'super_admin', status: 'active', avatarColor: 'bg-rose-600' },
+    { id: 'tm1', name: 'Hosanna (You)', email: 'hosanna@example.com', role: 'Product Architect', systemRole: 'tenant_owner', status: 'active', avatarColor: 'bg-indigo-500' },
+    { id: 'tm2', name: 'Gavin Belson', email: 'gavin@example.com', role: 'Campaign Strategist', systemRole: 'org_admin', status: 'meeting', avatarColor: 'bg-rose-500' },
+    { id: 'tm3', name: 'Richard Hendricks', email: 'richard@example.com', role: 'Lead Developer', systemRole: 'user', status: 'active', avatarColor: 'bg-emerald-500' },
+    { id: 'tm4', name: 'Monica Hall', email: 'monica@example.com', role: 'Agency Relations', systemRole: 'user', status: 'vacation', avatarColor: 'bg-amber-500' },
+    { id: 'tm5', name: 'Acme Corp (Client)', email: 'client@example.com', role: 'External Client', systemRole: 'external_client', status: 'active', avatarColor: 'bg-blue-500' }
 ];
 
 const DEFAULT_TENANTS: Tenant[] = [
@@ -637,6 +663,8 @@ export const state = {
     tenants: [] as Tenant[],
     organizations: [] as Organization[],
     activityLogs: [] as ActivityLog[],
+    tickets: [] as Ticket[],
+    clientFeedback: [] as ClientFeedback[],
     
     cycles: [] as Cycle[],
     modules: [] as Module[],

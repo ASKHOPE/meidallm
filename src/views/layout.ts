@@ -2,6 +2,8 @@ import { state } from "../state";
 import { sanitizeHTML } from "../utils";
 import { views, sidebarGroups } from "../router";
 import { getIconSVG } from "./icons";
+import { renderAIAssistantDrawer } from "./ai-assistant";
+import { renderCreativeWizardModal } from "./creative-wizard";
 import type { IconName } from "./icons";
 
 export function renderProjectDropdownOptions(): string {
@@ -122,6 +124,8 @@ export function renderSidebarNavigation(): string {
 }
 
 export function renderLayoutHTML(): string {
+    const currentUserProfile = state.team.find(m => m.email === state.currentUser) || state.team[0];
+    const systemRole = currentUserProfile?.systemRole || 'user';
     const displayName = state.currentUser ? state.currentUser.split('@')[0] || 'Admin' : 'Admin';
     const currentProject = state.projects.find(p => p.id === state.currentProject);
     const activeProjectName = currentProject ? sanitizeHTML(currentProject.name) : "Select Campaign...";
@@ -132,36 +136,20 @@ export function renderLayoutHTML(): string {
     <aside class="w-64 bg-background border-r border-text-main/15 flex flex-col p-5">
         <!-- Brand Header -->
         <div class="flex items-center gap-3 mb-6 cursor-pointer" onclick="window.navigateTo('workspaces')">
-            <div class="w-8 h-8 text-background rounded-lg flex items-center justify-center font-bold text-base shadow-sm" style="background-color: ${state.agencyBrand?.primaryColor || 'var(--color-text-main)'}">M</div>
-            <h2 class="text-base font-bold font-outfit uppercase tracking-wider text-text-main">${sanitizeHTML(state.agencyBrand?.logo || "Meidallm")}</h2>
-        </div>
-
-        <!-- Project Selector Dropdown -->
-        <div class="relative mb-5">
-            <label class="text-[9px] font-bold text-text-muted uppercase tracking-wider block mb-1">Active Workspace</label>
-            <button id="project-selector-btn" onclick="window.toggleProjectDropdown(event)" class="w-full bg-background border border-text-main/15 hover:border-text-main/40 rounded-lg px-3 py-2 text-left text-xs font-semibold text-text-main flex justify-between items-center transition-all cursor-pointer">
-                <span id="active-project-name-display" class="truncate flex items-center gap-2">${getIconSVG('folder', 'w-3.5 h-3.5')} ${activeProjectName}</span>
-                <span class="text-text-muted transition-transform" id="project-selector-arrow">${getIconSVG('chevron-down', 'w-3 h-3')}</span>
-            </button>
-            <div id="project-selector-dropdown" class="hidden relative mt-1.5 w-full bg-background border border-text-main/20 rounded-lg shadow-sm py-1.5 z-10 flex flex-col animate-[fadeIn_0.15s_ease-out] p-1">
-                <div id="project-dropdown-list" class="flex flex-col max-h-48 overflow-y-auto gap-0.5">
-                    ${renderProjectDropdownOptions()}
-                </div>
-                <div class="border-t border-text-main/10 my-1"></div>
-                <button onclick="window.createProjectPrompt(); window.closeProjectDropdown();" class="w-full text-left px-3 py-2 text-xs text-text-main hover:bg-text-main/5 rounded-md transition-colors flex items-center gap-2 font-bold">
-                    ${getIconSVG('plus', 'w-3.5 h-3.5')} New Project
-                </button>
-            </div>
+            <div class="w-8 h-8 text-background rounded-lg flex items-center justify-center font-bold text-base shadow-sm" style="background-color: var(--color-text-main)">M</div>
+            <h2 class="text-base font-bold font-outfit uppercase tracking-wider text-text-main">MeidaLLM</h2>
         </div>
 
         <!-- SaaS Hierarchy Dropdowns -->
         <div class="flex flex-col gap-2 mb-5">
+            ${(systemRole === 'super_admin' || systemRole === 'tenant_owner' || systemRole === 'tenant_admin') ? `
             <div class="relative">
                 <label class="text-[9px] font-bold text-text-muted uppercase tracking-wider block mb-1">Tenant</label>
                 <select onchange="window.switchTenant(this.value)" class="w-full bg-background border border-text-main/15 hover:border-text-main/40 rounded-lg px-3 py-2 text-xs font-semibold text-text-main focus:outline-none cursor-pointer">
                     ${state.tenants.map(t => `<option value="${t.id}" ${t.id === state.activeTenantId ? 'selected' : ''}>${sanitizeHTML(t.name)}</option>`).join('')}
                 </select>
             </div>
+            ` : ''}
             <div class="relative">
                 <label class="text-[9px] font-bold text-text-muted uppercase tracking-wider block mb-1">Organization</label>
                 <select onchange="window.switchOrganization(this.value)" class="w-full bg-background border border-text-main/15 hover:border-text-main/40 rounded-lg px-3 py-2 text-xs font-semibold text-text-main focus:outline-none cursor-pointer">
@@ -173,6 +161,24 @@ export function renderLayoutHTML(): string {
                 <select onchange="window.switchTeam(this.value)" class="w-full bg-background border border-text-main/15 hover:border-text-main/40 rounded-lg px-3 py-2 text-xs font-semibold text-text-main focus:outline-none cursor-pointer">
                     ${state.teams.filter(t => t.orgId === state.activeOrgId).map(t => `<option value="${t.id}" ${t.id === state.activeTeamId ? 'selected' : ''}>${sanitizeHTML(t.name)}</option>`).join('') || '<option value="">No Teams</option>'}
                 </select>
+            </div>
+            
+            <!-- Project Selector Dropdown (Active Workspace) -->
+            <div class="relative mt-2">
+                <label class="text-[9px] font-bold text-text-muted uppercase tracking-wider block mb-1">Active Workspace</label>
+                <button id="project-selector-btn" onclick="window.toggleProjectDropdown(event)" class="w-full bg-background border border-text-main/15 hover:border-text-main/40 rounded-lg px-3 py-2 text-left text-xs font-semibold text-text-main flex justify-between items-center transition-all cursor-pointer">
+                    <span id="active-project-name-display" class="truncate flex items-center gap-2">${getIconSVG('folder', 'w-3.5 h-3.5')} ${activeProjectName}</span>
+                    <span class="text-text-muted transition-transform" id="project-selector-arrow">${getIconSVG('chevron-down', 'w-3 h-3')}</span>
+                </button>
+                <div id="project-selector-dropdown" class="hidden absolute top-full left-0 mt-1.5 w-full bg-background border border-text-main/20 rounded-lg shadow-sm py-1.5 z-10 flex flex-col animate-[fadeIn_0.15s_ease-out] p-1">
+                    <div id="project-dropdown-list" class="flex flex-col max-h-48 overflow-y-auto gap-0.5">
+                        ${renderProjectDropdownOptions()}
+                    </div>
+                    <div class="border-t border-text-main/10 my-1"></div>
+                    <button onclick="window.createProjectPrompt(); window.closeProjectDropdown();" class="w-full text-left px-3 py-2 text-xs text-text-main hover:bg-text-main/5 rounded-md transition-colors flex items-center gap-2 font-bold">
+                        ${getIconSVG('plus', 'w-3.5 h-3.5')} New Project
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -202,6 +208,12 @@ export function renderLayoutHTML(): string {
                     <button onclick="window.setTheme('auto')" class="theme-btn px-2 py-0.5 rounded transition-all font-bold ${state.theme === 'auto' ? 'bg-text-main text-background' : 'text-text-muted hover:text-text-main'}" id="theme-btn-auto">Auto</button>
                 </div>
             </div>
+
+            <!-- Settings Route -->
+            <button class="nav-btn flex items-center justify-between bg-text-main/5 hover:bg-text-main/10 p-1 rounded-lg border border-text-main/10 text-[10px] my-0.5 font-bold uppercase tracking-wider font-inter cursor-pointer transition-colors" data-view="settings">
+                <span class="pl-1.5 text-text-main">Settings</span>
+                <span class="text-text-muted pr-1">${getIconSVG('settings', 'w-3 h-3')}</span>
+            </button>
 
             <!-- User Role Switcher -->
             <div class="flex items-center justify-between bg-text-main/5 p-1 rounded-lg border border-text-main/10 text-[9px] my-0.5">
@@ -240,32 +252,8 @@ export function renderLayoutHTML(): string {
         <div id="app-content" class="flex-grow flex flex-col"></div>
     </main>
     
-    <!-- Collapsible AI Assistant slide-out drawer -->
-    <aside id="ai-assistant-drawer" class="w-80 bg-background border-l border-text-main/15 flex flex-col p-5 transition-all duration-300 transform translate-x-full fixed right-0 top-0 bottom-0 z-40 shadow-xl">
-        <div class="flex justify-between items-center mb-5 pb-3 border-b border-text-main/10">
-            <div class="flex items-center gap-2 text-text-main">
-                ${getIconSVG('bot', 'w-5 h-5')}
-                <h3 class="font-bold font-outfit text-sm">AI Assistant</h3>
-            </div>
-            <button onclick="window.toggleAiAssistant(false)" class="text-text-muted hover:text-text-main transition-colors text-sm">${getIconSVG('close', 'w-4 h-4')}</button>
-        </div>
-        
-        <div id="ai-chat-thread" class="flex-grow overflow-y-auto flex flex-col gap-4 text-xs pr-1">
-            <div class="bg-text-main/5 p-3 rounded-lg border border-text-main/10 text-text-muted leading-relaxed">
-                Hello! I am your AI assistant. I have full context of your database tables, tasks, cycles, and CRM. Try asking:
-                <ul class="list-disc pl-4 mt-2 flex flex-col gap-1.5">
-                    <li><button onclick="window.sendAiMessage('Show tasks at risk')" class="text-left text-text-main underline hover:text-text-main/80">Show tasks at risk</button></li>
-                    <li><button onclick="window.sendAiMessage('Summarize current cycle progress')" class="text-left text-text-main underline hover:text-text-main/80">Summarize current cycle progress</button></li>
-                    <li><button onclick="window.sendAiMessage('Recommend copywriting tone')" class="text-left text-text-main underline hover:text-text-main/80">Recommend copywriting tone</button></li>
-                </ul>
-            </div>
-        </div>
-        
-        <form id="ai-chat-form" onsubmit="event.preventDefault(); window.submitAiChat();" class="mt-4 pt-4 border-t border-text-main/10 flex gap-2">
-            <input type="text" id="ai-chat-input" placeholder="Ask AI assistant..." class="flex-grow bg-background border border-text-main/15 p-2.5 rounded-lg text-text-main text-xs focus:outline-none focus:border-text-main">
-            <button type="submit" class="px-3 bg-text-main text-background font-bold text-xs rounded-lg hover:bg-text-main/90 transition-colors">Send</button>
-        </form>
-    </aside>
+    ${renderAIAssistantDrawer()}
+    ${renderCreativeWizardModal()}
 </div>
 
 <!-- Toast Notification Container -->

@@ -111,7 +111,10 @@ export function renderAdminRBACView(): string {
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="p-3 font-mono text-[11px] text-text-muted uppercase">${sanitizeHTML(user.role)}</td>
+                                    <td class="p-3 font-mono text-[11px] text-text-muted uppercase">
+                                        <div class="font-bold text-purple-500">${sanitizeHTML(user.systemRole || 'user')}</div>
+                                        <div class="text-[9px] mt-0.5">${sanitizeHTML(user.role)}</div>
+                                    </td>
                                     <td class="p-3">
                                         <div class="flex flex-wrap gap-1.5">
                                             ${assignedRoles.length > 0 
@@ -174,6 +177,93 @@ export function renderAdminPoliciesView(): string {
                 </div>
             </div>
             `).join('')}
+        </div>
+    </div>
+    `;
+}
+
+export function renderAdminAnalyticsView(): string {
+    return `
+    <div class="fade-in flex flex-col gap-6 max-w-6xl mx-auto">
+        <div class="border-b border-text-main/10 pb-4">
+            <h2 class="text-xl font-bold font-outfit text-text-main flex items-center gap-2">
+                ${getIconSVG('analytics', 'w-6 h-6 text-indigo-500')} Usage & Analytics
+            </h2>
+            <p class="text-xs text-text-muted mt-1">Monitor system-wide resource consumption, active sessions, and tenant metrics.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-background border border-text-main/15 p-4 rounded-xl flex flex-col justify-between">
+                <span class="text-[10px] text-text-muted font-bold uppercase tracking-wider mb-2">Total Tenants</span>
+                <div class="flex items-end justify-between">
+                    <span class="text-3xl font-bold text-text-main font-mono">${state.tenants.length}</span>
+                    <span class="text-xs font-bold text-emerald-500">+2 this month</span>
+                </div>
+            </div>
+            <div class="bg-background border border-text-main/15 p-4 rounded-xl flex flex-col justify-between">
+                <span class="text-[10px] text-text-muted font-bold uppercase tracking-wider mb-2">Active Users</span>
+                <div class="flex items-end justify-between">
+                    <span class="text-3xl font-bold text-text-main font-mono">${state.team.filter(t => t.status === 'active').length}</span>
+                    <span class="text-xs font-bold text-emerald-500 font-mono">14.2%</span>
+                </div>
+            </div>
+            <div class="bg-background border border-text-main/15 p-4 rounded-xl flex flex-col justify-between">
+                <span class="text-[10px] text-text-muted font-bold uppercase tracking-wider mb-2">LLM Tokens Used</span>
+                <div class="flex items-end justify-between">
+                    <span class="text-3xl font-bold text-text-main font-mono">2.4M</span>
+                    <span class="text-[10px] text-text-muted block text-right">~$12.00 est.</span>
+                </div>
+            </div>
+            <div class="bg-background border border-text-main/15 p-4 rounded-xl flex flex-col justify-between">
+                <span class="text-[10px] text-text-muted font-bold uppercase tracking-wider mb-2">Cloud Storage</span>
+                <div class="flex items-end justify-between">
+                    <span class="text-3xl font-bold text-text-main font-mono">48GB</span>
+                    <div class="w-16 bg-text-main/10 h-1.5 rounded-full mt-2 self-center overflow-hidden">
+                        <div class="bg-indigo-500 h-full" style="width: 48%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
+            <!-- Mock Chart Area 1 -->
+            <div class="bg-background border border-text-main/15 p-5 rounded-xl h-64 flex flex-col">
+                <h3 class="font-bold text-xs text-text-main mb-4">Token Consumption Over Time</h3>
+                <div class="flex-grow flex items-end justify-between gap-2 px-2 pb-2 border-b border-text-main/10">
+                    <!-- Fake Bars -->
+                    <div class="w-full bg-indigo-500/80 rounded-t hover:bg-indigo-400 transition-colors" style="height: 40%"></div>
+                    <div class="w-full bg-indigo-500/80 rounded-t hover:bg-indigo-400 transition-colors" style="height: 55%"></div>
+                    <div class="w-full bg-indigo-500/80 rounded-t hover:bg-indigo-400 transition-colors" style="height: 45%"></div>
+                    <div class="w-full bg-indigo-500/80 rounded-t hover:bg-indigo-400 transition-colors" style="height: 70%"></div>
+                    <div class="w-full bg-indigo-500/80 rounded-t hover:bg-indigo-400 transition-colors" style="height: 60%"></div>
+                    <div class="w-full bg-indigo-500/80 rounded-t hover:bg-indigo-400 transition-colors" style="height: 90%"></div>
+                    <div class="w-full bg-indigo-500/80 rounded-t hover:bg-indigo-400 transition-colors" style="height: 85%"></div>
+                </div>
+                <div class="flex justify-between text-[9px] text-text-muted font-mono mt-2 px-2">
+                    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                </div>
+            </div>
+
+            <!-- Tenant Cost Breakdown -->
+            <div class="bg-background border border-text-main/15 p-5 rounded-xl h-64 flex flex-col">
+                <h3 class="font-bold text-xs text-text-main mb-4">Storage Usage by Tenant</h3>
+                <div class="flex-grow overflow-y-auto pr-2 flex flex-col gap-3">
+                    ${state.tenants.map((t, idx) => {
+                        const usage = [30, 12, 4, 2][idx % 4] || 1;
+                        return `
+                        <div class="flex flex-col gap-1.5">
+                            <div class="flex justify-between text-[10px]">
+                                <span class="font-bold text-text-main">${sanitizeHTML(t.name)}</span>
+                                <span class="font-mono text-text-muted">${usage} GB</span>
+                            </div>
+                            <div class="w-full bg-text-main/10 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-emerald-500 h-full" style="width: ${(usage / 48) * 100}%"></div>
+                            </div>
+                        </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
         </div>
     </div>
     `;

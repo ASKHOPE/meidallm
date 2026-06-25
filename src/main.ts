@@ -1077,6 +1077,77 @@ w.toggleAiAssistant = (open: boolean) => {
     }
 };
 
+let currentWizardStep = 1;
+w.openCreativeWizard = () => {
+    currentWizardStep = 1;
+    const modal = document.getElementById('creative-wizard-modal');
+    if (modal) modal.classList.remove('hidden');
+    w.updateWizardUI();
+    w.toggleAiAssistant(false); // Close AI drawer if open
+};
+
+w.closeCreativeWizard = () => {
+    const modal = document.getElementById('creative-wizard-modal');
+    if (modal) modal.classList.add('hidden');
+};
+
+w.wizardStep = (dir: number) => {
+    currentWizardStep += dir;
+    if (currentWizardStep > 3) currentWizardStep = 3;
+    if (currentWizardStep < 1) currentWizardStep = 1;
+    w.updateWizardUI();
+
+    // If moving to step 2 (AI generating), auto advance to step 3 after a delay
+    if (currentWizardStep === 2) {
+        setTimeout(() => {
+            currentWizardStep = 3;
+            w.updateWizardUI();
+        }, 3000);
+    }
+};
+
+w.updateWizardUI = () => {
+    document.getElementById('wizard-step-1')?.classList.add('hidden');
+    document.getElementById('wizard-step-1')?.classList.remove('flex');
+    document.getElementById('wizard-step-2')?.classList.add('hidden');
+    document.getElementById('wizard-step-2')?.classList.remove('flex');
+    document.getElementById('wizard-step-3')?.classList.add('hidden');
+    document.getElementById('wizard-step-3')?.classList.remove('flex');
+    
+    document.getElementById(`wizard-step-${currentWizardStep}`)?.classList.remove('hidden');
+    document.getElementById(`wizard-step-${currentWizardStep}`)?.classList.add('flex');
+
+    const btnBack = document.getElementById('wizard-btn-back');
+    const btnNext = document.getElementById('wizard-btn-next');
+    const btnFinish = document.getElementById('wizard-btn-finish');
+
+    if (btnBack && btnNext && btnFinish) {
+        if (currentWizardStep === 1) {
+            btnBack.classList.add('hidden');
+            btnNext.classList.remove('hidden');
+            btnFinish.classList.add('hidden');
+        } else if (currentWizardStep === 2) {
+            btnBack.classList.add('hidden');
+            btnNext.classList.add('hidden');
+            btnFinish.classList.add('hidden');
+        } else if (currentWizardStep === 3) {
+            btnBack.classList.remove('hidden');
+            btnNext.classList.add('hidden');
+            btnFinish.classList.remove('hidden');
+        }
+    }
+};
+
+w.finishWizard = () => {
+    const nameInput = document.getElementById('wizard-campaign-name') as HTMLInputElement;
+    const name = nameInput && nameInput.value.trim() !== '' ? nameInput.value : 'AI Generated Campaign';
+    
+    addProject(name, 'Auto-generated via MeidaLLM Brain');
+    
+    w.closeCreativeWizard();
+    alert('Creative Brief and Workspace generated successfully!');
+};
+
 w.sendAiMessage = (text: string) => {
     if (!text.trim()) return;
     state.aiMessages.push({ sender: 'user', text: text });

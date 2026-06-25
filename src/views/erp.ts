@@ -114,7 +114,7 @@ export function renderERPView(pid: string): string {
                         <span class="text-[10px] text-text-muted font-bold">Active Workspace</span>
                     </div>
                     
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div class="bg-panel-hover/10 border border-text-main/10 p-4 rounded-xl">
                             <span class="text-[10px] text-text-muted font-bold block uppercase mb-1">Limit</span>
                             <span class="text-xl font-bold font-mono text-text-main">$${budgetLimit.toLocaleString()}</span>
@@ -123,9 +123,13 @@ export function renderERPView(pid: string): string {
                             <span class="text-[10px] text-text-muted font-bold block uppercase mb-1">Spent</span>
                             <span class="text-xl font-bold font-mono text-text-main">$${spent.toLocaleString()}</span>
                         </div>
-                        <div class="bg-panel-hover/10 border border-text-main/10 p-4 rounded-xl col-span-2 md:col-span-1">
+                        <div class="bg-panel-hover/10 border border-text-main/10 p-4 rounded-xl">
                             <span class="text-[10px] text-text-muted font-bold block uppercase mb-1">Remaining</span>
                             <span class="text-xl font-bold font-mono ${(budgetLimit - spent) < 0 ? 'text-rose-500' : 'text-text-main'}">$${(budgetLimit - spent).toLocaleString()}</span>
+                        </div>
+                        <div class="bg-panel-hover/10 border border-text-main/10 p-4 rounded-xl">
+                            <span class="text-[10px] text-text-muted font-bold block uppercase mb-1">Total Billable Hours</span>
+                            <span class="text-xl font-bold font-mono text-emerald-500">24h 30m</span>
                         </div>
                     </div>
 

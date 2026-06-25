@@ -116,11 +116,14 @@ export interface Contact {
     history?: { action: string; timestamp: number }[];
 }
 
+export type SystemRole = 'super_admin' | 'tenant_owner' | 'tenant_admin' | 'org_admin' | 'user' | 'external_client';
+
 export interface TeamMember {
     id: string;
     name: string;
     email: string;
     role: string;
+    systemRole?: SystemRole;
     status: 'active' | 'meeting' | 'offline' | 'vacation';
     avatarColor: string;
     customRoleIds?: string[]; // Array of role IDs for RBAC
@@ -129,6 +132,7 @@ export interface TeamMember {
 export interface CustomRole {
     id: string;
     tenantId: string;
+    orgId?: string;
     name: string;
     description: string;
     permissions: string[]; // e.g. ['read:tenants', 'write:users', 'manage:billing']
@@ -141,6 +145,28 @@ export interface Policy {
     description: string;
     type: 'security' | 'access' | 'compliance' | 'billing';
     enforced: boolean;
+}
+
+export interface Ticket {
+    id: string;
+    projectId: string;
+    clientId: string;
+    title: string;
+    description: string;
+    status: 'open' | 'in-progress' | 'waiting' | 'resolved';
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    created: number;
+    updated: number;
+}
+
+export interface ClientFeedback {
+    id: string;
+    projectId: string;
+    clientId: string;
+    content: string;
+    assetId?: string;
+    status: 'pending' | 'addressed';
+    created: number;
 }
 
 export interface Cycle {

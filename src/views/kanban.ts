@@ -352,6 +352,9 @@ function renderTaskCard(t: KanbanTask, filter: string, cycles: any[], modules: a
                     <span class="px-2 py-0.5 text-[9px] font-semibold bg-panel-hover text-text-muted rounded">${sanitizeHTML(t.tag)}</span>
                 </div>
                 <div class="flex gap-2 opacity-0 group-hover/kanban-item:opacity-100 transition-opacity">
+                    <button onclick="event.stopPropagation(); alert('Start timer for task: ${t.id}')" class="text-emerald-500 hover:text-emerald-600 transition-colors" title="Start Timer">
+                        ▶️
+                    </button>
                     ${actionHTML}
                 </div>
             </div>

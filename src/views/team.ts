@@ -472,6 +472,52 @@ export function renderTeamView(): string {
             </div>
         </div>
         `;
+    } else if (teamsSession.activeTab === 'capacity') {
+        const teamMembers = state.team;
+        tabContentHTML = `
+        <div class="flex flex-col gap-6">
+            <div class="bg-background border border-text-main/15 p-5 rounded-2xl flex flex-col gap-4">
+                <h3 class="font-bold text-sm font-outfit">Resource Capacity Planning</h3>
+                <p class="text-[11px] text-text-muted">Manage workload across the team to prevent burnout and ensure timely delivery.</p>
+                <div class="grid grid-cols-1 gap-4 mt-2">
+                    ${teamMembers.map(member => {
+                        // Mock capacity calculation
+                        const assignedTasks = state.kanbanState.filter(t => t.assignee === member.id && t.status !== 'done');
+                        const totalPoints = assignedTasks.reduce((sum, t) => sum + (t.points || 2), 0);
+                        const capacityLimit = 40; // 40 points per sprint/week
+                        const utilization = Math.min(100, Math.round((totalPoints / capacityLimit) * 100));
+                        
+                        let barColor = 'bg-emerald-500';
+                        if (utilization > 85) barColor = 'bg-rose-500';
+                        else if (utilization > 65) barColor = 'bg-amber-500';
+
+                        return `
+                        <div class="border border-text-main/10 p-4 rounded-xl bg-text-main/5 flex flex-col gap-3">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full ${member.avatarColor} flex items-center justify-center font-bold text-white text-xs shrink-0">
+                                        ${member.name.substring(0, 2).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-text-main text-xs">${sanitizeHTML(member.name)}</h4>
+                                        <span class="text-[9px] text-text-muted">${sanitizeHTML(member.role)}</span>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs font-bold font-mono ${utilization > 85 ? 'text-rose-500' : 'text-text-main'}">${utilization}% Utilized</div>
+                                    <div class="text-[9px] text-text-muted">${totalPoints} / ${capacityLimit} Points</div>
+                                </div>
+                            </div>
+                            <div class="w-full bg-text-main/10 h-2 rounded-full overflow-hidden mt-1">
+                                <div class="${barColor} h-full rounded-full transition-all duration-500" style="width: ${utilization}%"></div>
+                            </div>
+                        </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        </div>
+        `;
     }
 
     return `
@@ -499,6 +545,7 @@ export function renderTeamView(): string {
                     <button onclick="window.switchTeamViewTab('directory')" class="pb-1 text-xs font-bold uppercase tracking-wider ${teamsSession.activeTab === 'directory' ? 'text-text-main border-b-2 border-text-main' : 'text-text-muted hover:text-text-main'}">Directory Presence</button>
                     <button onclick="window.switchTeamViewTab('recruiting')" class="pb-1 text-xs font-bold uppercase tracking-wider ${teamsSession.activeTab === 'recruiting' ? 'text-text-main border-b-2 border-text-main' : 'text-text-muted hover:text-text-main'}">Talent Acquisition (${state.candidates ? state.candidates.length : 0})</button>
                     <button onclick="window.switchTeamViewTab('onboarding')" class="pb-1 text-xs font-bold uppercase tracking-wider ${teamsSession.activeTab === 'onboarding' ? 'text-text-main border-b-2 border-text-main' : 'text-text-muted hover:text-text-main'}">Onboarding & Payroll (${state.employees ? state.employees.length : 0})</button>
+                    <button onclick="window.switchTeamViewTab('capacity')" class="pb-1 text-xs font-bold uppercase tracking-wider ${teamsSession.activeTab === 'capacity' ? 'text-text-main border-b-2 border-text-main' : 'text-text-muted hover:text-text-main'}">Capacity</button>
                 </div>
 
                 <!-- Tab Content Panel -->
