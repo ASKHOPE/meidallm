@@ -213,7 +213,7 @@ export function renderLayoutHTML(): string {
                 <button class="w-9 h-9 bg-background border border-text-main/15 rounded-lg flex items-center justify-center hover:border-text-main/45 transition-all cursor-pointer text-text-main" onclick="window.toggleCommandMenu(true)" title="Command Menu (⌘K)">
                     ${getIconSVG('search', 'w-4 h-4')}
                 </button>
-                <button class="w-9 h-9 bg-background border border-text-main/15 rounded-lg flex items-center justify-center hover:border-text-main/45 transition-all cursor-pointer text-text-main" onclick="window.toggleAiAssistant(true)" title="ClickUp Brain AI">
+                <button class="w-9 h-9 bg-background border border-text-main/15 rounded-lg flex items-center justify-center hover:border-text-main/45 transition-all cursor-pointer text-text-main" onclick="window.toggleAiAssistant(true)" title="AI Assistant">
                     ${getIconSVG('bot', 'w-4 h-4')}
                 </button>
                 <button class="w-9 h-9 bg-background border border-text-main/15 rounded-lg flex items-center justify-center hover:border-text-main/45 transition-all cursor-pointer text-text-main" onclick="alert('No new notifications')">
@@ -229,7 +229,7 @@ export function renderLayoutHTML(): string {
         <div class="flex justify-between items-center mb-5 pb-3 border-b border-text-main/10">
             <div class="flex items-center gap-2 text-text-main">
                 ${getIconSVG('bot', 'w-5 h-5')}
-                <h3 class="font-bold font-outfit text-sm">ClickUp AI Brain</h3>
+                <h3 class="font-bold font-outfit text-sm">AI Assistant</h3>
             </div>
             <button onclick="window.toggleAiAssistant(false)" class="text-text-muted hover:text-text-main transition-colors text-sm">${getIconSVG('close', 'w-4 h-4')}</button>
         </div>

@@ -48,41 +48,41 @@ export function renderKanbanView(pid: string): string {
     <div class="flex flex-col gap-4 mb-6">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <h2 class="text-2xl font-outfit text-white">${sanitizeHTML(p.name)} Task Center</h2>
+                <h2 class="text-2xl font-outfit text-text-main">${sanitizeHTML(p.name)} Task Center</h2>
                 <p class="text-xs text-text-muted">High-velocity issue tracking with collaborative sprints, modules, and database views.</p>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <!-- Search -->
                 <div class="relative w-40">
-                    <input type="text" id="kanban-search-input" oninput="window.filterKanbanTasks()" placeholder="Search tasks..." class="w-full bg-panel-hover border border-glass-border rounded-xl pl-3 pr-8 py-2 text-xs text-white focus:outline-none focus:border-primary transition-all">
+                    <input type="text" id="kanban-search-input" oninput="window.filterKanbanTasks()" placeholder="Search tasks..." class="w-full bg-panel-hover border border-glass-border rounded-xl pl-3 pr-8 py-2 text-xs text-text-main focus:outline-none focus:border-text-main transition-all">
                     <span class="absolute right-3 top-2 text-text-muted text-[10px]">🔍</span>
                 </div>
                 <!-- Cycle Filter -->
-                <select onchange="window.setKanbanCycleFilter(this.value)" class="bg-panel-hover border border-glass-border text-xs text-white p-2 rounded-xl cursor-pointer">
+                <select onchange="window.setKanbanCycleFilter(this.value)" class="bg-panel-hover border border-glass-border text-xs text-text-main p-2 rounded-xl cursor-pointer">
                     <option value="">All Cycles</option>
                     ${projectCycles.map(c => `<option value="${c.id}" ${state.kanbanActiveCycleId === c.id ? 'selected' : ''}>⚡ ${sanitizeHTML(c.name)}</option>`).join('')}
                 </select>
                 <!-- Module Filter -->
-                <select onchange="window.setKanbanModuleFilter(this.value)" class="bg-panel-hover border border-glass-border text-xs text-white p-2 rounded-xl cursor-pointer">
+                <select onchange="window.setKanbanModuleFilter(this.value)" class="bg-panel-hover border border-glass-border text-xs text-text-main p-2 rounded-xl cursor-pointer">
                     <option value="">All Modules</option>
                     ${projectModules.map(m => `<option value="${m.id}" ${state.kanbanActiveModuleId === m.id ? 'selected' : ''}>🎯 ${sanitizeHTML(m.name)}</option>`).join('')}
                 </select>
                 <!-- Layout Mode -->
                 <div class="flex bg-panel-hover p-1 rounded-xl border border-glass-border">
-                    <button onclick="window.setKanbanViewMode('board')" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold hover:text-white transition-colors cursor-pointer ${viewMode === 'board' ? 'bg-primary text-white' : 'text-text-muted'}">📋 Board</button>
-                    <button onclick="window.setKanbanViewMode('list')" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold hover:text-white transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-primary text-white' : 'text-text-muted'}">📝 List</button>
-                    <button onclick="window.setKanbanViewMode('spreadsheet')" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold hover:text-white transition-colors cursor-pointer ${viewMode === 'spreadsheet' ? 'bg-primary text-white' : 'text-text-muted'}">📊 Table</button>
+                    <button onclick="window.setKanbanViewMode('board')" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold hover:text-text-main transition-colors cursor-pointer ${viewMode === 'board' ? 'bg-text-main text-background' : 'text-text-muted'}">📋 Board</button>
+                    <button onclick="window.setKanbanViewMode('list')" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold hover:text-text-main transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-text-main text-background' : 'text-text-muted'}">📝 List</button>
+                    <button onclick="window.setKanbanViewMode('spreadsheet')" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold hover:text-text-main transition-colors cursor-pointer ${viewMode === 'spreadsheet' ? 'bg-text-main text-background' : 'text-text-muted'}">📊 Table</button>
                 </div>
                 <button onclick="window.navigateTo('project-workspace', '${p.id}')" class="px-3 py-2 bg-panel-hover border border-glass-border rounded-xl text-xs font-medium hover:bg-glass-border transition-colors cursor-pointer">Workspace</button>
-                <button onclick="window.showAddTaskModal()" class="px-3 py-2 bg-primary rounded-xl text-xs font-medium hover:bg-indigo-600 transition-colors shadow-[0_0_15px_var(--color-primary-glow)] cursor-pointer">+ Add Task</button>
+                <button onclick="window.showAddTaskModal()" class="px-3 py-2 bg-text-main text-background rounded-xl text-xs font-medium hover:bg-indigo-600 transition-colors shadow-[0_0_15px_var(--color-primary-glow)] cursor-pointer">+ Add Task</button>
             </div>
         </div>
 
         <!-- Kanban Filter Status Tabs -->
         <div class="flex gap-4 border-b border-glass-border/30 pb-2 mt-2">
-            <button onclick="window.setKanbanFilter('active')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'active' ? 'text-primary border-b-2 border-primary font-bold' : 'text-text-muted hover:text-white'}">Active Tasks</button>
-            <button onclick="window.setKanbanFilter('archived')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'archived' ? 'text-primary border-b-2 border-primary font-bold' : 'text-text-muted hover:text-white'}">Archived</button>
-            <button onclick="window.setKanbanFilter('bin')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'bin' ? 'text-primary border-b-2 border-primary font-bold' : 'text-text-muted hover:text-white'}">Bin / Trash</button>
+            <button onclick="window.setKanbanFilter('active')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'active' ? 'text-primary border-b-2 border-text-main font-bold' : 'text-text-muted hover:text-text-main'}">Active Tasks</button>
+            <button onclick="window.setKanbanFilter('archived')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'archived' ? 'text-primary border-b-2 border-text-main font-bold' : 'text-text-muted hover:text-text-main'}">Archived</button>
+            <button onclick="window.setKanbanFilter('bin')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'bin' ? 'text-primary border-b-2 border-text-main font-bold' : 'text-text-muted hover:text-text-main'}">Bin / Trash</button>
         </div>
     </div>
     `;
@@ -96,11 +96,11 @@ export function renderKanbanView(pid: string): string {
             ${cols.map(c => {
                 const tasks = projectTasks.filter(t => t.status === c.key);
                 return `
-                <div class="bg-[rgba(15,23,42,0.6)] border border-glass-border rounded-2xl p-4 flex flex-col min-h-[400px]"
+                <div class="bg-glass-bg/50 border border-glass-border rounded-2xl p-4 flex flex-col min-h-[400px]"
                      ondragover="event.preventDefault();"
                      ondrop="window.handleDropTask(event, '${c.key}')">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-medium text-white text-sm">${c.label}</h3>
+                        <h3 class="font-medium text-text-main text-sm">${c.label}</h3>
                         <span class="bg-panel-hover text-text-muted px-2 py-0.5 rounded text-[10px]">${tasks.length}</span>
                     </div>
                     <div class="flex flex-col gap-3 flex-grow overflow-y-auto min-h-[300px]">
@@ -123,8 +123,8 @@ export function renderKanbanView(pid: string): string {
             ${cols.map(c => {
                 const tasks = projectTasks.filter(t => t.status === c.key);
                 return `
-                <details class="bg-[rgba(15,23,42,0.4)] border border-glass-border rounded-2xl overflow-hidden" open>
-                    <summary class="flex justify-between items-center px-5 py-3.5 bg-panel-hover/30 cursor-pointer select-none text-sm font-semibold text-white">
+                <details class="bg-glass-bg/50 border border-glass-border rounded-2xl overflow-hidden" open>
+                    <summary class="flex justify-between items-center px-5 py-3.5 bg-panel-hover/30 cursor-pointer select-none text-sm font-semibold text-text-main">
                         <div class="flex items-center gap-3">
                             <span class="text-text-muted">▾</span>
                             <span>${c.label}</span>
@@ -143,7 +143,7 @@ export function renderKanbanView(pid: string): string {
     } else {
         // --- 3. SPREADSHEET TABLE VIEW ---
         viewHTML = `
-        <div class="w-full overflow-x-auto bg-[rgba(15,23,42,0.5)] border border-glass-border rounded-2xl">
+        <div class="w-full overflow-x-auto bg-glass-bg/50 border border-glass-border rounded-2xl">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
                     <tr class="border-b border-glass-border/40 bg-panel-hover/40 text-text-muted font-mono uppercase tracking-wider text-[10px]">
@@ -183,7 +183,7 @@ export function renderKanbanView(pid: string): string {
 
         <!-- History Logs Drawer -->
         <div class="w-full xl:w-80 bg-glass-bg border border-glass-border rounded-2xl p-6 flex flex-col shrink-0 max-h-[600px] xl:max-h-none overflow-hidden">
-            <h3 class="text-lg font-semibold text-white font-outfit mb-4">Timeline & Updates</h3>
+            <h3 class="text-lg font-semibold text-text-main font-outfit mb-4">Timeline & Updates</h3>
             <div class="flex-grow overflow-y-auto flex flex-col gap-4 pr-1">
                 ${projectLogs.map(l => {
                     let logMsg = "";
@@ -206,13 +206,13 @@ export function renderKanbanView(pid: string): string {
                     }
 
                     return `
-                    <div class="border-l-2 border-primary pl-4 py-1 relative">
-                        <div class="w-2 h-2 rounded-full bg-primary absolute -left-[5px] top-2"></div>
+                    <div class="border-l-2 border-text-main pl-4 py-1 relative">
+                        <div class="w-2 h-2 rounded-full bg-text-main text-background absolute -left-[5px] top-2"></div>
                         <div class="text-xs text-text-muted mb-0.5 flex justify-between">
                             <span>${formatExactTime(l.timestamp)}</span>
                             <span>${formatTime(l.timestamp)}</span>
                         </div>
-                        <p class="text-xs text-white leading-normal">
+                        <p class="text-xs text-text-main leading-normal">
                             ${logMsg}
                         </p>
                     </div>
@@ -226,19 +226,19 @@ export function renderKanbanView(pid: string): string {
     <!-- Add Task Modal -->
     <div id="add-task-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden z-50 animate-[fadeIn_0.2s_ease-out]">
         <div class="bg-glass-bg border border-glass-border p-6 rounded-2xl w-full max-w-md flex flex-col gap-4">
-            <h3 class="text-xl font-semibold text-white">Add Pipeline Task</h3>
+            <h3 class="text-xl font-semibold text-text-main">Add Pipeline Task</h3>
             <div>
                 <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Task Title</label>
-                <input id="modal-task-title" type="text" maxlength="80" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary" placeholder="Enter task name...">
+                <input id="modal-task-title" type="text" maxlength="80" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main" placeholder="Enter task name...">
             </div>
             <div>
                 <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Tag</label>
-                <input id="modal-task-tag" type="text" maxlength="20" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary" placeholder="e.g. Marketing, DevOps, Design">
+                <input id="modal-task-tag" type="text" maxlength="20" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main" placeholder="e.g. Marketing, DevOps, Design">
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Priority</label>
-                    <select id="modal-task-priority" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary cursor-pointer">
+                    <select id="modal-task-priority" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main cursor-pointer">
                         <option value="none">None</option>
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -248,12 +248,12 @@ export function renderKanbanView(pid: string): string {
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Story Points</label>
-                    <input id="modal-task-points" type="number" min="0" max="100" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary" placeholder="0">
+                    <input id="modal-task-points" type="number" min="0" max="100" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main" placeholder="0">
                 </div>
             </div>
             <div class="flex justify-end gap-2 mt-2">
                 <button onclick="window.hideAddTaskModal()" class="px-4 py-2 bg-panel-hover border border-glass-border rounded-xl text-sm font-medium hover:bg-glass-border transition-colors cursor-pointer">Cancel</button>
-                <button onclick="window.submitTaskForm('${pid}')" class="px-4 py-2 bg-primary rounded-xl text-sm font-medium hover:bg-indigo-600 transition-colors cursor-pointer">Create Task</button>
+                <button onclick="window.submitTaskForm('${pid}')" class="px-4 py-2 bg-text-main text-background rounded-xl text-sm font-medium hover:bg-indigo-600 transition-colors cursor-pointer">Create Task</button>
             </div>
         </div>
     </div>
@@ -261,20 +261,20 @@ export function renderKanbanView(pid: string): string {
     <!-- Edit Task Details Modal -->
     <div id="edit-task-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden z-50 animate-[fadeIn_0.2s_ease-out]">
         <div class="bg-glass-bg border border-glass-border p-6 rounded-2xl w-full max-w-lg flex flex-col gap-4 overflow-y-auto max-h-[90vh]">
-            <h3 class="text-xl font-semibold text-white font-outfit">Task Details & Records</h3>
+            <h3 class="text-xl font-semibold text-text-main font-outfit">Task Details & Records</h3>
             
             <div class="grid grid-cols-2 gap-4">
                 <div class="col-span-2">
                     <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Title</label>
-                    <input id="edit-modal-task-title" type="text" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary">
+                    <input id="edit-modal-task-title" type="text" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Tag / Phase</label>
-                    <input id="edit-modal-task-tag" type="text" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary">
+                    <input id="edit-modal-task-tag" type="text" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Complexity</label>
-                    <select id="edit-modal-task-complexity" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary cursor-pointer">
+                    <select id="edit-modal-task-complexity" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main cursor-pointer">
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
                         <option value="high">High</option>
@@ -283,15 +283,15 @@ export function renderKanbanView(pid: string): string {
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Assignee</label>
-                    <input id="edit-modal-task-assignee" type="text" placeholder="Assignee Name" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary">
+                    <input id="edit-modal-task-assignee" type="text" placeholder="Assignee Name" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Due Date</label>
-                    <input id="edit-modal-task-duedate" type="date" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary cursor-pointer">
+                    <input id="edit-modal-task-duedate" type="date" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main cursor-pointer">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Priority</label>
-                    <select id="edit-modal-task-priority" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary cursor-pointer">
+                    <select id="edit-modal-task-priority" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main cursor-pointer">
                         <option value="none">None</option>
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -301,18 +301,18 @@ export function renderKanbanView(pid: string): string {
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Story Points</label>
-                    <input id="edit-modal-task-points" type="number" min="0" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary">
+                    <input id="edit-modal-task-points" type="number" min="0" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Sprint / Cycle</label>
-                    <select id="edit-modal-task-cycle" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary cursor-pointer">
+                    <select id="edit-modal-task-cycle" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main cursor-pointer">
                         <option value="">Unassigned</option>
                         ${projectCycles.map(c => `<option value="${c.id}">${sanitizeHTML(c.name)}</option>`).join('')}
                     </select>
                 </div>
                 <div class="col-span-2">
                     <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Epic / Module</label>
-                    <select id="edit-modal-task-module" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-sm focus:outline-none focus:border-primary cursor-pointer">
+                    <select id="edit-modal-task-module" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main cursor-pointer">
                         <option value="">Unassigned</option>
                         ${projectModules.map(m => `<option value="${m.id}">${sanitizeHTML(m.name)}</option>`).join('')}
                     </select>
@@ -321,12 +321,12 @@ export function renderKanbanView(pid: string): string {
 
             <div>
                 <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Detailed Description & Notes</label>
-                <textarea id="edit-modal-task-description" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-white text-xs focus:outline-none focus:border-primary resize-none h-28 leading-relaxed" placeholder="Type records, reference assets, or detailed action plans here..."></textarea>
+                <textarea id="edit-modal-task-description" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-xs focus:outline-none focus:border-text-main resize-none h-28 leading-relaxed" placeholder="Type records, reference assets, or detailed action plans here..."></textarea>
             </div>
 
             <div class="flex justify-end gap-2 mt-2 border-t border-glass-border/30 pt-3">
                 <button onclick="window.closeEditTaskModal()" class="px-4 py-2 bg-panel-hover border border-glass-border rounded-xl text-sm font-medium hover:bg-glass-border transition-colors cursor-pointer">Cancel</button>
-                <button id="edit-modal-save-btn" class="px-5 py-2 bg-primary rounded-xl text-sm font-semibold hover:bg-indigo-600 transition-colors shadow-[0_0_15px_var(--color-primary-glow)] cursor-pointer">Save Changes</button>
+                <button id="edit-modal-save-btn" class="px-5 py-2 bg-text-main text-background rounded-xl text-sm font-semibold hover:bg-indigo-600 transition-colors shadow-[0_0_15px_var(--color-primary-glow)] cursor-pointer">Save Changes</button>
             </div>
         </div>
     </div>
@@ -383,12 +383,12 @@ function renderTaskListRow(t: KanbanTask, filter: string, cycles: any[], modules
 
     return `
     <div onclick="window.openEditTaskModal('${t.id}')"
-         class="kanban-col-item bg-glass-bg border border-glass-border hover:border-primary p-3 rounded-xl cursor-pointer transition-all flex items-center justify-between gap-4 group/kanban-item"
+         class="kanban-col-item bg-glass-bg border border-glass-border hover:border-text-main p-3 rounded-xl cursor-pointer transition-all flex items-center justify-between gap-4 group/kanban-item"
          data-title="${sanitizeHTML(t.title)}"
          data-tag="${sanitizeHTML(t.tag)}">
         <div class="flex items-center gap-3 min-w-0">
             <span class="px-2 py-0.5 text-[9px] font-semibold bg-panel-hover text-text-muted rounded shrink-0">${sanitizeHTML(t.tag)}</span>
-            <h4 class="font-medium text-white text-xs truncate max-w-sm md:max-w-md">${sanitizeHTML(t.title)}</h4>
+            <h4 class="font-medium text-text-main text-xs truncate max-w-sm md:max-w-md">${sanitizeHTML(t.title)}</h4>
         </div>
         <div class="flex items-center gap-3 shrink-0">
             ${t.priority && t.priority !== 'none' ? `<span class="text-[9px] text-orange-400 font-semibold">⚠️ ${t.priority}</span>` : ''}
@@ -411,16 +411,16 @@ function renderTaskSpreadsheetRow(t: KanbanTask, filter: string, cycles: any[], 
         <td class="p-2.5">
             <input type="text" value="${sanitizeHTML(t.title)}" 
                    onchange="window.updateSpreadsheetTask('${t.id}', 'title', this.value)" 
-                   class="bg-transparent border-0 focus:bg-panel-hover focus:ring-1 focus:ring-primary rounded px-2 py-1 text-white text-xs w-full">
+                   class="bg-transparent border-0 focus:bg-panel-hover focus:ring-1 focus:ring-primary rounded px-2 py-1 text-text-main text-xs w-full">
         </td>
         <td class="p-2.5">
             <input type="text" value="${sanitizeHTML(t.tag)}" 
                    onchange="window.updateSpreadsheetTask('${t.id}', 'tag', this.value)" 
-                   class="bg-transparent border-0 focus:bg-panel-hover focus:ring-1 focus:ring-primary rounded px-2 py-1 text-white text-xs w-20">
+                   class="bg-transparent border-0 focus:bg-panel-hover focus:ring-1 focus:ring-primary rounded px-2 py-1 text-text-main text-xs w-20">
         </td>
         <td class="p-2.5">
             <select onchange="window.updateSpreadsheetTask('${t.id}', 'status', this.value)" 
-                    class="bg-transparent border-0 hover:bg-panel-hover focus:bg-panel-hover text-white text-[11px] rounded p-1 cursor-pointer">
+                    class="bg-transparent border-0 hover:bg-panel-hover focus:bg-panel-hover text-text-main text-[11px] rounded p-1 cursor-pointer">
                 <option value="backlog" ${t.status === 'backlog' ? 'selected' : ''}>Backlog</option>
                 <option value="progress" ${t.status === 'progress' ? 'selected' : ''}>In Progress</option>
                 <option value="review" ${t.status === 'review' ? 'selected' : ''}>Review</option>
@@ -429,7 +429,7 @@ function renderTaskSpreadsheetRow(t: KanbanTask, filter: string, cycles: any[], 
         </td>
         <td class="p-2.5">
             <select onchange="window.updateSpreadsheetTask('${t.id}', 'priority', this.value)" 
-                    class="bg-transparent border-0 hover:bg-panel-hover focus:bg-panel-hover text-white text-[11px] rounded p-1 cursor-pointer">
+                    class="bg-transparent border-0 hover:bg-panel-hover focus:bg-panel-hover text-text-main text-[11px] rounded p-1 cursor-pointer">
                 <option value="none" ${t.priority === 'none' ? 'selected' : ''}>None</option>
                 <option value="low" ${t.priority === 'low' ? 'selected' : ''}>Low</option>
                 <option value="medium" ${t.priority === 'medium' ? 'selected' : ''}>Medium</option>
@@ -440,11 +440,11 @@ function renderTaskSpreadsheetRow(t: KanbanTask, filter: string, cycles: any[], 
         <td class="p-2.5">
             <input type="number" min="0" value="${t.points || 0}" 
                    onchange="window.updateSpreadsheetTask('${t.id}', 'points', this.value)" 
-                   class="bg-transparent border-0 focus:bg-panel-hover focus:ring-1 focus:ring-primary rounded px-2 py-1 text-white text-xs w-12 text-center">
+                   class="bg-transparent border-0 focus:bg-panel-hover focus:ring-1 focus:ring-primary rounded px-2 py-1 text-text-main text-xs w-12 text-center">
         </td>
         <td class="p-2.5">
             <select onchange="window.updateSpreadsheetTask('${t.id}', 'complexity', this.value)" 
-                    class="bg-transparent border-0 hover:bg-panel-hover focus:bg-panel-hover text-white text-[11px] rounded p-1 cursor-pointer">
+                    class="bg-transparent border-0 hover:bg-panel-hover focus:bg-panel-hover text-text-main text-[11px] rounded p-1 cursor-pointer">
                 <option value="low" ${t.complexity === 'low' ? 'selected' : ''}>Low</option>
                 <option value="medium" ${t.complexity === 'medium' ? 'selected' : ''}>Medium</option>
                 <option value="high" ${t.complexity === 'high' ? 'selected' : ''}>High</option>
@@ -454,18 +454,18 @@ function renderTaskSpreadsheetRow(t: KanbanTask, filter: string, cycles: any[], 
         <td class="p-2.5">
             <input type="text" value="${sanitizeHTML(t.assignee || '')}" placeholder="None"
                    onchange="window.updateSpreadsheetTask('${t.id}', 'assignee', this.value)" 
-                   class="bg-transparent border-0 focus:bg-panel-hover focus:ring-1 focus:ring-primary rounded px-2 py-1 text-white text-xs w-24">
+                   class="bg-transparent border-0 focus:bg-panel-hover focus:ring-1 focus:ring-primary rounded px-2 py-1 text-text-main text-xs w-24">
         </td>
         <td class="p-2.5">
             <select onchange="window.updateSpreadsheetTask('${t.id}', 'cycleId', this.value)" 
-                    class="bg-transparent border-0 hover:bg-panel-hover focus:bg-panel-hover text-white text-[11px] rounded p-1 cursor-pointer max-w-[100px]">
+                    class="bg-transparent border-0 hover:bg-panel-hover focus:bg-panel-hover text-text-main text-[11px] rounded p-1 cursor-pointer max-w-[100px]">
                 <option value="">Unassigned</option>
                 ${cycles.map(c => `<option value="${c.id}" ${t.cycleId === c.id ? 'selected' : ''}>${sanitizeHTML(c.name)}</option>`).join('')}
             </select>
         </td>
         <td class="p-2.5">
             <select onchange="window.updateSpreadsheetTask('${t.id}', 'moduleId', this.value)" 
-                    class="bg-transparent border-0 hover:bg-panel-hover focus:bg-panel-hover text-white text-[11px] rounded p-1 cursor-pointer max-w-[100px]">
+                    class="bg-transparent border-0 hover:bg-panel-hover focus:bg-panel-hover text-text-main text-[11px] rounded p-1 cursor-pointer max-w-[100px]">
                 <option value="">Unassigned</option>
                 ${modules.map(m => `<option value="${m.id}" ${t.moduleId === m.id ? 'selected' : ''}>${sanitizeHTML(m.name)}</option>`).join('')}
             </select>
@@ -473,7 +473,7 @@ function renderTaskSpreadsheetRow(t: KanbanTask, filter: string, cycles: any[], 
         <td class="p-2.5">
             <input type="date" value="${t.dueDate || ''}" 
                    onchange="window.updateSpreadsheetTask('${t.id}', 'dueDate', this.value)" 
-                   class="bg-transparent border-0 hover:bg-panel-hover focus:ring-1 focus:ring-primary rounded p-1 text-white text-[11px] cursor-pointer">
+                   class="bg-transparent border-0 hover:bg-panel-hover focus:ring-1 focus:ring-primary rounded p-1 text-text-main text-[11px] cursor-pointer">
         </td>
         <td class="p-2.5 text-center">
             <div class="flex gap-2.5 justify-center opacity-40 group-hover/row:opacity-100 transition-opacity">
