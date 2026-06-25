@@ -159,99 +159,144 @@ export function renderTeamView(): string {
     // Tab content logic
     let tabContentHTML = "";
     if (teamsSession.activeTab === 'teams' || teamsSession.activeTab === 'archived') {
+        const tenantOrgs = state.organizations.filter(o => o.tenantId === state.activeTenantId);
+        
         tabContentHTML = `
-        <div class="flex flex-col gap-4">
-            ${(teamsSession.activeTab === 'teams' ? activeTeams : archivedTeams).map(team => {
-                const isArchived = team.isArchived;
+        <div class="flex flex-col gap-8">
+            ${tenantOrgs.map(org => {
+                const orgTeams = (teamsSession.activeTab === 'teams' ? activeTeams : archivedTeams).filter(t => t.orgId === org.id);
+                if (orgTeams.length === 0) return '';
+
                 return `
-                <div class="bg-background border border-text-main/15 p-5 rounded-2xl flex flex-col gap-4">
-                    <div class="flex justify-between items-start border-b border-text-main/10 pb-3">
-                        <div>
-                            <h4 class="font-bold text-text-main text-sm font-outfit">${sanitizeHTML(team.name)}</h4>
-                            <span class="text-[9px] text-text-muted font-mono uppercase">ID: ${team.id}</span>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="window.archiveTeamToggle('${team.id}', ${!isArchived})" class="text-text-muted hover:text-text-main p-1.5 border border-text-main/10 hover:border-text-main/20 rounded cursor-pointer animate-none" title="${isArchived ? 'Restore Team' : 'Archive Team'}">
-                                ${isArchived ? getIconSVG('external-link', 'w-3.5 h-3.5') : getIconSVG('archive', 'w-3.5 h-3.5')}
-                            </button>
-                            <button onclick="window.deleteTeamAction('${team.id}')" class="text-red-500 hover:text-red-600 p-1.5 border border-red-500/10 hover:border-red-500/20 rounded cursor-pointer" title="Dissolve Permanently">
-                                ${getIconSVG('trash', 'w-3.5 h-3.5')}
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Group People (Only editable if active) -->
-                    <div>
-                        <span class="text-[9px] text-text-muted font-bold block uppercase mb-2">Team Members</span>
-                        <div class="flex flex-wrap gap-1.5">
-                            ${list.map(member => {
-                                const isChecked = team.memberIds.includes(member.id);
-                                return `
-                                <button onclick="${isArchived ? '' : `window.toggleTeamMemberAccess('${team.id}', '${member.id}')`}" 
-                                        class="px-2.5 py-1.5 rounded-lg border text-[10px] font-semibold transition-all flex items-center gap-1.5 cursor-pointer
-                                        ${isChecked ? 'bg-text-main text-background border-text-main' : 'bg-background border-text-main/15 text-text-muted hover:border-text-main/35'}
-                                        ${isArchived ? 'opacity-70 cursor-not-allowed' : ''}">
-                                    <span class="w-1.5 h-1.5 rounded-full ${member.avatarColor}"></span>
-                                    <span>${sanitizeHTML(member.name)}</span>
-                                </button>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-
-                    <!-- Campaign Workspaces Access -->
-                    <div>
-                        <span class="text-[9px] text-text-muted font-bold block uppercase mb-2">Workspace Access Control</span>
-                        <div class="flex flex-col gap-1.5">
-                            ${activeProjects.map(proj => {
-                                const hasAccess = team.projectIds.includes(proj.id);
-                                return `
-                                <div class="flex justify-between items-center bg-text-main/5 p-2 rounded-lg border border-text-main/5 hover:border-text-main/10 transition-all text-xs">
-                                    <span class="font-semibold truncate flex items-center gap-2">${getIconSVG('folder', 'w-3.5 h-3.5 text-text-muted')} ${sanitizeHTML(proj.name)}</span>
-                                    <button onclick="${isArchived ? '' : `window.toggleTeamWorkspaceAccess('${team.id}', '${proj.id}')`}"
-                                            class="px-2 py-0.5 rounded border text-[9px] font-bold transition-all cursor-pointer
-                                            ${hasAccess ? 'bg-text-main text-background border-text-main' : 'bg-background border-text-main/15 text-text-muted hover:border-text-main/40'}
-                                            ${isArchived ? 'opacity-70 cursor-not-allowed' : ''}">
-                                        ${hasAccess ? 'Revoke' : 'Grant'}
-                                    </button>
+                <div class="flex flex-col gap-4">
+                    <h3 class="text-lg font-bold font-outfit border-b border-text-main/20 pb-2 pl-2">${sanitizeHTML(org.name)}</h3>
+                    <div class="grid grid-cols-1 gap-4">
+                        ${orgTeams.map(team => {
+                            const isArchived = team.isArchived;
+                            return `
+                            <div class="bg-background border border-text-main/15 p-5 rounded-2xl flex flex-col gap-4">
+                                <div class="flex justify-between items-start border-b border-text-main/10 pb-3">
+                                    <div>
+                                        <h4 class="font-bold text-text-main text-sm font-outfit">${sanitizeHTML(team.name)}</h4>
+                                        <span class="text-[9px] text-text-muted font-mono uppercase">ID: ${team.id}</span>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button onclick="window.archiveTeamToggle('${team.id}', ${!isArchived})" class="text-text-muted hover:text-text-main p-1.5 border border-text-main/10 hover:border-text-main/20 rounded cursor-pointer animate-none" title="${isArchived ? 'Restore Team' : 'Archive Team'}">
+                                            ${isArchived ? getIconSVG('external-link', 'w-3.5 h-3.5') : getIconSVG('archive', 'w-3.5 h-3.5')}
+                                        </button>
+                                        <button onclick="window.deleteTeamAction('${team.id}')" class="text-red-500 hover:text-red-600 p-1.5 border border-red-500/10 hover:border-red-500/20 rounded cursor-pointer" title="Dissolve Permanently">
+                                            ${getIconSVG('trash', 'w-3.5 h-3.5')}
+                                        </button>
+                                    </div>
                                 </div>
-                                `;
-                            }).join('')}
-                        </div>
+
+                                <!-- Group People (Only editable if active) -->
+                                <div>
+                                    <span class="text-[9px] text-text-muted font-bold block uppercase mb-2">Team Members</span>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        ${list.map(member => {
+                                            const isChecked = team.memberIds.includes(member.id);
+                                            return `
+                                            <button onclick="${isArchived ? '' : `window.toggleTeamMemberAccess('${team.id}', '${member.id}')`}" 
+                                                    class="px-2.5 py-1.5 rounded-lg border text-[10px] font-semibold transition-all flex items-center gap-1.5 cursor-pointer
+                                                    ${isChecked ? 'bg-text-main text-background border-text-main' : 'bg-background border-text-main/15 text-text-muted hover:border-text-main/35'}
+                                                    ${isArchived ? 'opacity-70 cursor-not-allowed' : ''}">
+                                                <span class="w-1.5 h-1.5 rounded-full ${member.avatarColor}"></span>
+                                                <span>${sanitizeHTML(member.name)}</span>
+                                            </button>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+
+                                <!-- Campaign Workspaces Access -->
+                                <div>
+                                    <span class="text-[9px] text-text-muted font-bold block uppercase mb-2">Workspace Access Control</span>
+                                    <div class="flex flex-col gap-1.5">
+                                        ${activeProjects.map(proj => {
+                                            const hasAccess = team.projectIds.includes(proj.id);
+                                            return `
+                                            <div class="flex justify-between items-center bg-text-main/5 p-2 rounded-lg border border-text-main/5 hover:border-text-main/10 transition-all text-xs">
+                                                <span class="font-semibold truncate flex items-center gap-2">${getIconSVG('folder', 'w-3.5 h-3.5 text-text-muted')} ${sanitizeHTML(proj.name)}</span>
+                                                <button onclick="${isArchived ? '' : `window.toggleTeamWorkspaceAccess('${team.id}', '${proj.id}')`}"
+                                                        class="px-2 py-0.5 rounded border text-[9px] font-bold transition-all cursor-pointer
+                                                        ${hasAccess ? 'bg-text-main text-background border-text-main' : 'bg-background border-text-main/15 text-text-muted hover:border-text-main/40'}
+                                                        ${isArchived ? 'opacity-70 cursor-not-allowed' : ''}">
+                                                    ${hasAccess ? 'Revoke' : 'Grant'}
+                                                </button>
+                                            </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                            `;
+                        }).join('')}
                     </div>
                 </div>
                 `;
             }).join('')}
 
-            ${(teamsSession.activeTab === 'teams' ? activeTeams : archivedTeams).length === 0 ? `
+            ${tenantOrgs.every(org => (teamsSession.activeTab === 'teams' ? activeTeams : archivedTeams).filter(t => t.orgId === org.id).length === 0) ? `
             <div class="border border-dashed border-text-main/15 p-12 text-center text-text-muted text-xs rounded-2xl flex flex-col items-center justify-center gap-2">
                 <span>${getIconSVG('info', 'w-8 h-8')}</span>
                 <h4 class="font-bold text-text-main">No records available</h4>
-                <p class="text-[11px] max-w-xs leading-normal">Teams in this tab status category are currently empty.</p>
+                <p class="text-[11px] max-w-xs leading-normal">Teams in this tab status category are currently empty for this Tenant.</p>
             </div>
             ` : ''}
         </div>
         `;
     } else if (teamsSession.activeTab === 'directory') {
+        const tenantOrgs = state.organizations.filter(o => o.tenantId === state.activeTenantId);
         tabContentHTML = `
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            ${list.map(tm => {
-                let statusDot = tm.status === 'active' ? 'bg-emerald-400 animate-pulse' : tm.status === 'meeting' ? 'bg-rose-500' : tm.status === 'vacation' ? 'bg-amber-400' : 'bg-slate-500';
+        <div class="flex flex-col gap-8">
+            ${tenantOrgs.map(org => {
+                const orgTeams = state.teams.filter(t => !t.isArchived && t.orgId === org.id);
+                if (orgTeams.length === 0) return '';
+                
                 return `
-                <div class="bg-background border border-text-main/15 p-4 rounded-xl flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full ${tm.avatarColor} flex items-center justify-center font-bold text-white text-sm relative">
-                        ${tm.name.substring(0, 2).toUpperCase()}
-                        <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-background border border-background flex items-center justify-center">
-                            <span class="w-2 h-2 rounded-full ${statusDot}"></span>
-                        </span>
-                    </div>
-                    <div>
-                        <span class="font-bold text-text-main block text-xs">${sanitizeHTML(tm.name)}</span>
-                        <span class="text-[10px] text-text-muted block">${sanitizeHTML(tm.role)}</span>
+                <div class="flex flex-col gap-4">
+                    <h3 class="text-lg font-bold font-outfit border-b border-text-main/20 pb-2 pl-2">${sanitizeHTML(org.name)} Directory</h3>
+                    <div class="flex flex-col gap-6">
+                        ${orgTeams.map(team => {
+                            const teamMembers = list.filter(tm => team.memberIds.includes(tm.id));
+                            if (teamMembers.length === 0) return '';
+                            return `
+                            <div class="bg-background border border-text-main/10 p-4 rounded-xl">
+                                <h4 class="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">${sanitizeHTML(team.name)}</h4>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    ${teamMembers.map(tm => {
+                                        let statusDot = tm.status === 'active' ? 'bg-emerald-400 animate-pulse' : tm.status === 'meeting' ? 'bg-rose-500' : tm.status === 'vacation' ? 'bg-amber-400' : 'bg-slate-500';
+                                        return `
+                                        <div class="bg-text-main/5 border border-text-main/10 p-3 rounded-lg flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full ${tm.avatarColor} flex items-center justify-center font-bold text-white text-xs relative shrink-0">
+                                                ${tm.name.substring(0, 2).toUpperCase()}
+                                                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-background border border-background flex items-center justify-center">
+                                                    <span class="w-1.5 h-1.5 rounded-full ${statusDot}"></span>
+                                                </span>
+                                            </div>
+                                            <div class="overflow-hidden">
+                                                <span class="font-bold text-text-main block text-[11px] truncate">${sanitizeHTML(tm.name)}</span>
+                                                <span class="text-[9px] text-text-muted block truncate">${sanitizeHTML(tm.role)}</span>
+                                            </div>
+                                        </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                            `;
+                        }).join('')}
                     </div>
                 </div>
                 `;
             }).join('')}
+            ${tenantOrgs.every(org => state.teams.filter(t => !t.isArchived && t.orgId === org.id).length === 0) ? `
+            <div class="border border-dashed border-text-main/15 p-12 text-center text-text-muted text-xs rounded-2xl flex flex-col items-center justify-center gap-2">
+                <span>${getIconSVG('users', 'w-8 h-8')}</span>
+                <h4 class="font-bold text-text-main">Directory Empty</h4>
+                <p class="text-[11px] max-w-xs leading-normal">No users found in active teams for this tenant.</p>
+            </div>
+            ` : ''}
         </div>
         `;
     } else if (teamsSession.activeTab === 'recruiting') {

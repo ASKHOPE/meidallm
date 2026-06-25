@@ -173,8 +173,20 @@ export interface Goal {
     status: 'on-track' | 'behind' | 'achieved';
 }
 
+export interface Tenant {
+    id: string;
+    name: string;
+}
+
+export interface Organization {
+    id: string;
+    tenantId: string;
+    name: string;
+}
+
 export interface Team {
     id: string;
+    orgId: string;
     name: string;
     memberIds: string[];
     projectIds: string[];

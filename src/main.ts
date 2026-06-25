@@ -42,6 +42,8 @@ import {
     updateContactTag,
     notifyStateChange,
     switchOrganization,
+    switchTenant,
+    switchTeam,
     switchRole
 } from "./state";
 import { renderLayoutHTML, renderProjectDropdownOptions } from "./views/layout";
@@ -215,6 +217,14 @@ w.createProjectPrompt = () => {
 
 w.switchOrganization = (orgId: string) => {
     switchOrganization(orgId);
+};
+
+w.switchTenant = (tenantId: string) => {
+    switchTenant(tenantId);
+};
+
+w.switchTeam = (teamId: string) => {
+    switchTeam(teamId);
 };
 
 w.switchRole = (role: any) => {

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember, Cycle, Module, DbField, DbRow, DbTable, Goal } from "./types";
+import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember, Cycle, Module, DbField, DbRow, DbTable, Goal, Tenant, Organization, Team } from "./types";
 
 export const GoalSchema = z.object({
     id: z.string(),
@@ -142,8 +142,20 @@ export const TeamMemberSchema = z.object({
     avatarColor: z.string()
 });
 
+export const TenantSchema = z.object({
+    id: z.string(),
+    name: z.string()
+});
+
+export const OrganizationSchema = z.object({
+    id: z.string(),
+    tenantId: z.string(),
+    name: z.string()
+});
+
 export const TeamSchema = z.object({
     id: z.string(),
+    orgId: z.string(),
     name: z.string(),
     memberIds: z.array(z.string()),
     projectIds: z.array(z.string()),
@@ -390,9 +402,26 @@ const DEFAULT_TEAM: TeamMember[] = [
     { id: 'tm4', name: 'Monica Hall', role: 'Agency Relations', status: 'vacation', avatarColor: 'bg-amber-500' }
 ];
 
+const DEFAULT_TENANTS: Tenant[] = [
+    { id: 't-meidallm', name: 'Meidallm Corp' },
+    { id: 't-global', name: 'Global Agency Partners' },
+    { id: 't-creative', name: 'Creative Studios LLC' },
+    { id: 't-personal', name: 'Personal Workspace' }
+];
+
+const DEFAULT_ORGS: Organization[] = [
+    { id: 'org-meidallm-core', tenantId: 't-meidallm', name: 'Meidallm Core Product' },
+    { id: 'org-meidallm-labs', tenantId: 't-meidallm', name: 'Meidallm AI Labs' },
+    { id: 'org-global-marketing', tenantId: 't-global', name: 'Global Marketing Team' },
+    { id: 'org-creative-media', tenantId: 't-creative', name: 'Creative Media Production' },
+    { id: 'personal', tenantId: 't-personal', name: 'My Workspace' }
+];
+
 const DEFAULT_TEAMS: Team[] = [
-    { id: 't-1', name: 'Design & Copywriting', memberIds: ['tm1', 'tm3'], projectIds: ['p1'] },
-    { id: 't-2', name: 'Marketing Strategy', memberIds: ['tm2', 'tm4'], projectIds: ['p2'] }
+    { id: 't-1', orgId: 'org-meidallm-core', name: 'Product Engineering', memberIds: ['tm1', 'tm3'], projectIds: ['p1'] },
+    { id: 't-2', orgId: 'org-meidallm-core', name: 'Design & Copywriting', memberIds: ['tm2', 'tm4'], projectIds: ['p2'] },
+    { id: 't-3', orgId: 'org-global-marketing', name: 'Campaign Strategy', memberIds: ['tm1', 'tm2'], projectIds: ['p-welcome', 'p3', 'p4', 'p5'] },
+    { id: 't-personal', orgId: 'personal', name: 'My Projects', memberIds: ['tm1'], projectIds: ['p6', 'p7', 'p8', 'p9'] }
 ];
 
 
@@ -531,7 +560,9 @@ const DEFAULT_CANDIDATES: CandidateRecord[] = [
 
 export const state = {
     currentUser: null as string | null,
+    activeTenantId: null as string | null,
     activeOrgId: null as string | null,
+    activeTeamId: null as string | null,
     currentProject: null as string | null,
     activeViewKey: 'workspaces',
     draggedTaskId: null as string | null,
@@ -570,6 +601,8 @@ export const state = {
     contacts: [] as Contact[],
     team: [] as TeamMember[],
     teams: [] as Team[],
+    tenants: [] as Tenant[],
+    organizations: [] as Organization[],
     activityLogs: [] as ActivityLog[],
     
     cycles: [] as Cycle[],
@@ -664,6 +697,14 @@ function applyDbState(parsed: any) {
         const val = z.array(TeamSchema).safeParse(parsed.teams);
         if (val.success) state.teams = val.data;
     }
+    if (parsed.tenants) {
+        const val = z.array(TenantSchema).safeParse(parsed.tenants);
+        if (val.success) state.tenants = val.data;
+    }
+    if (parsed.organizations) {
+        const val = z.array(OrganizationSchema).safeParse(parsed.organizations);
+        if (val.success) state.organizations = val.data;
+    }
     if (parsed.activityLogs) {
         const val = z.array(ActivityLogSchema).safeParse(parsed.activityLogs);
         if (val.success) state.activityLogs = val.data;
@@ -731,6 +772,8 @@ function loadLocalState() {
             contacts: JSON.parse(localStorage.getItem('meidallm_contacts') || 'null'),
             team: JSON.parse(localStorage.getItem('meidallm_team') || 'null'),
             teams: JSON.parse(localStorage.getItem('meidallm_teams') || 'null'),
+            tenants: JSON.parse(localStorage.getItem('meidallm_tenants') || 'null'),
+            organizations: JSON.parse(localStorage.getItem('meidallm_organizations') || 'null'),
             activityLogs: JSON.parse(localStorage.getItem('meidallm_activity') || 'null'),
             cycles: JSON.parse(localStorage.getItem('meidallm_cycles') || 'null'),
             modules: JSON.parse(localStorage.getItem('meidallm_modules') || 'null'),
@@ -751,7 +794,9 @@ function loadLocalState() {
         };
         applyDbState(local);
         
+        state.activeTenantId = localStorage.getItem('meidallm_active_tenantid');
         state.activeOrgId = localStorage.getItem('meidallm_active_orgid');
+        state.activeTeamId = localStorage.getItem('meidallm_active_teamid');
     } catch (e) {
         console.error("Local storage load fallback failed:", e);
     }
@@ -767,6 +812,8 @@ function loadLocalState() {
     if (state.contacts.length === 0) state.contacts = DEFAULT_CONTACTS;
     if (state.team.length === 0) state.team = DEFAULT_TEAM;
     if (state.teams.length === 0) state.teams = DEFAULT_TEAMS;
+    if (state.tenants.length === 0) state.tenants = DEFAULT_TENANTS;
+    if (state.organizations.length === 0) state.organizations = DEFAULT_ORGS;
     if (state.activityLogs.length === 0) state.activityLogs = [];
     if (state.cycles.length === 0) state.cycles = DEFAULT_CYCLES;
     if (state.modules.length === 0) state.modules = DEFAULT_MODULES;
@@ -826,8 +873,14 @@ export function saveState() {
         } else {
             localStorage.removeItem('meidallm_user');
         }
+        if (state.activeTenantId) {
+            localStorage.setItem('meidallm_active_tenantid', state.activeTenantId);
+        }
         if (state.activeOrgId) {
             localStorage.setItem('meidallm_active_orgid', state.activeOrgId);
+        }
+        if (state.activeTeamId) {
+            localStorage.setItem('meidallm_active_teamid', state.activeTeamId);
         }
         localStorage.setItem('meidallm_kanban', JSON.stringify(state.kanbanState));
         localStorage.setItem('meidallm_projects', JSON.stringify(state.projects));
@@ -842,6 +895,8 @@ export function saveState() {
         localStorage.setItem('meidallm_contacts', JSON.stringify(state.contacts));
         localStorage.setItem('meidallm_team', JSON.stringify(state.team));
         localStorage.setItem('meidallm_teams', JSON.stringify(state.teams));
+        localStorage.setItem('meidallm_tenants', JSON.stringify(state.tenants));
+        localStorage.setItem('meidallm_organizations', JSON.stringify(state.organizations));
         localStorage.setItem('meidallm_activity', JSON.stringify(state.activityLogs));
         localStorage.setItem('meidallm_cycles', JSON.stringify(state.cycles));
         localStorage.setItem('meidallm_modules', JSON.stringify(state.modules));
@@ -1569,16 +1624,53 @@ export function deleteDbRow(tableId: string, rowId: string) {
     }
 }
 
-export async function switchOrganization(orgId: string) {
+export async function switchTenant(tenantId: string) {
+    if (typeof window === 'undefined') return;
+    saveState();
+    state.activeTenantId = tenantId;
+    localStorage.setItem('meidallm_active_tenantid', tenantId);
+    
+    const firstOrg = state.organizations.find(o => o.tenantId === tenantId);
+    if (firstOrg) {
+        await switchOrganization(firstOrg.id, true);
+    } else {
+        state.activeOrgId = null;
+        state.activeTeamId = null;
+        notifyStateChange();
+    }
+}
+
+export async function switchTeam(teamId: string) {
+    if (typeof window === 'undefined') return;
+    saveState();
+    state.activeTeamId = teamId;
+    localStorage.setItem('meidallm_active_teamid', teamId);
+    notifyStateChange();
+}
+
+export async function switchOrganization(orgId: string, skipTenantCheck = false) {
     if (typeof window === 'undefined') return;
     
-    // Save current org's state before switching
     saveState();
-    
     state.activeOrgId = orgId;
     localStorage.setItem('meidallm_active_orgid', orgId);
     
-    // Switch Postgres state by calling reload API
+    if (!skipTenantCheck) {
+        const org = state.organizations.find(o => o.id === orgId);
+        if (org && org.tenantId !== state.activeTenantId) {
+            state.activeTenantId = org.tenantId;
+            localStorage.setItem('meidallm_active_tenantid', org.tenantId);
+        }
+    }
+
+    const firstTeam = state.teams.find(t => t.orgId === orgId);
+    if (firstTeam) {
+        state.activeTeamId = firstTeam.id;
+        localStorage.setItem('meidallm_active_teamid', firstTeam.id);
+    } else {
+        state.activeTeamId = null;
+    }
+    
     if (state.currentUser) {
         try {
             const res = await fetch(`/api/state?email=${encodeURIComponent(state.currentUser)}&orgId=${encodeURIComponent(orgId)}`);
@@ -1586,13 +1678,13 @@ export async function switchOrganization(orgId: string) {
                 const data = await res.json();
                 if (data.orgState) {
                     applyDbState(data.orgState);
-                    notifyStateChange(true); // skip save on initial load
                 }
             }
         } catch (e) {
             console.error("Failed to switch database org context:", e);
         }
     }
+    notifyStateChange();
 }
 
 export function switchRole(role: typeof state.activeRole) {

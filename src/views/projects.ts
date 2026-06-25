@@ -6,6 +6,12 @@ export function renderProjectsView(): string {
     let list = [...state.projects];
     const filter = state.workspacesFilter || 'active';
 
+    const activeTeam = state.teams.find(t => t.id === state.activeTeamId);
+    const validProjectIds = activeTeam ? activeTeam.projectIds : [];
+
+    // 0. Filter by active team assignment
+    list = list.filter(p => validProjectIds.includes(p.id) || p.id === 'p-welcome');
+
     // 1. Filter by status: active, archived, bin (soft-deleted)
     if (filter === 'active') {
         list = list.filter(p => !p.isBinned && !p.isArchived);

@@ -5,7 +5,10 @@ import { getIconSVG } from "./icons";
 import type { IconName } from "./icons";
 
 export function renderProjectDropdownOptions(): string {
-    const activeProjects = state.projects.filter(p => !p.isArchived && !p.isBinned && (p.isStarred || p.id === 'p-welcome'));
+    const activeTeam = state.teams.find(t => t.id === state.activeTeamId);
+    const validProjectIds = activeTeam ? activeTeam.projectIds : [];
+    const activeProjects = state.projects.filter(p => !p.isArchived && !p.isBinned && validProjectIds.includes(p.id) && (p.isStarred || p.id === 'p-welcome'));
+    
     const sorted = [...activeProjects].sort((a, b) => {
         if (a.id === 'p-welcome') return -1;
         if (b.id === 'p-welcome') return 1;
@@ -149,15 +152,26 @@ export function renderLayoutHTML(): string {
             </div>
         </div>
 
-        <!-- Tenant Switcher Dropdown -->
-        <div class="relative mb-5">
-            <label class="text-[9px] font-bold text-text-muted uppercase tracking-wider block mb-1">Tenant Organization</label>
-            <select onchange="window.switchOrganization(this.value)" class="w-full bg-background border border-text-main/15 hover:border-text-main/40 rounded-lg px-3 py-2 text-xs font-semibold text-text-main focus:outline-none cursor-pointer">
-                <option value="personal" ${state.activeOrgId === 'personal' || !state.activeOrgId ? 'selected' : ''}>💼 Personal Workspace</option>
-                <option value="nike" ${state.activeOrgId === 'nike' ? 'selected' : ''}>⚡ Nike Campaign Hub</option>
-                <option value="stripe" ${state.activeOrgId === 'stripe' ? 'selected' : ''}>💳 Stripe Creator Hub</option>
-                <option value="spacex" ${state.activeOrgId === 'spacex' ? 'selected' : ''}>🚀 SpaceX Media Office</option>
-            </select>
+        <!-- SaaS Hierarchy Dropdowns -->
+        <div class="flex flex-col gap-2 mb-5">
+            <div class="relative">
+                <label class="text-[9px] font-bold text-text-muted uppercase tracking-wider block mb-1">Tenant</label>
+                <select onchange="window.switchTenant(this.value)" class="w-full bg-background border border-text-main/15 hover:border-text-main/40 rounded-lg px-3 py-2 text-xs font-semibold text-text-main focus:outline-none cursor-pointer">
+                    ${state.tenants.map(t => `<option value="${t.id}" ${t.id === state.activeTenantId ? 'selected' : ''}>${sanitizeHTML(t.name)}</option>`).join('')}
+                </select>
+            </div>
+            <div class="relative">
+                <label class="text-[9px] font-bold text-text-muted uppercase tracking-wider block mb-1">Organization</label>
+                <select onchange="window.switchOrganization(this.value)" class="w-full bg-background border border-text-main/15 hover:border-text-main/40 rounded-lg px-3 py-2 text-xs font-semibold text-text-main focus:outline-none cursor-pointer">
+                    ${state.organizations.filter(o => o.tenantId === state.activeTenantId).map(o => `<option value="${o.id}" ${o.id === state.activeOrgId ? 'selected' : ''}>${sanitizeHTML(o.name)}</option>`).join('') || '<option value="">No Organizations</option>'}
+                </select>
+            </div>
+            <div class="relative">
+                <label class="text-[9px] font-bold text-text-muted uppercase tracking-wider block mb-1">Team</label>
+                <select onchange="window.switchTeam(this.value)" class="w-full bg-background border border-text-main/15 hover:border-text-main/40 rounded-lg px-3 py-2 text-xs font-semibold text-text-main focus:outline-none cursor-pointer">
+                    ${state.teams.filter(t => t.orgId === state.activeOrgId).map(t => `<option value="${t.id}" ${t.id === state.activeTeamId ? 'selected' : ''}>${sanitizeHTML(t.name)}</option>`).join('') || '<option value="">No Teams</option>'}
+                </select>
+            </div>
         </div>
 
         <!-- Navigation -->
@@ -173,7 +187,7 @@ export function renderLayoutHTML(): string {
                 </div>
                 <div>
                     <div id="user-display-name" class="font-bold text-xs">${sanitizeHTML(state.agencyBrand?.logo || displayName)}</div>
-                    <div class="text-[9px] text-text-muted font-mono uppercase tracking-wider">Tenant: ${sanitizeHTML(state.activeOrgId || 'personal')}</div>
+                    <div class="text-[9px] text-text-muted font-mono uppercase tracking-wider">Tenant: ${sanitizeHTML(state.tenants.find(t => t.id === state.activeTenantId)?.name || 'Personal')}</div>
                 </div>
             </div>
 
