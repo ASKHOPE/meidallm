@@ -7,6 +7,8 @@ import { renderMediaView } from "./views/media";
 import { renderDraftsView } from "./views/drafts";
 import { renderSettingsView } from "./views/settings";
 import { renderPublishView } from "./views/publish";
+import { renderReviewView } from "./views/review";
+import { renderSitRepView } from "./views/sitrep";
 import { renderAnalyticsView } from "./views/analytics";
 import { renderConnectionsView } from "./views/connections";
 import { renderCRMView } from "./views/crm";
@@ -155,6 +157,22 @@ export const views: ViewConfig[] = [
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderDraftsView(pid || '')
+    },
+    {
+        key: 'review',
+        title: 'Review',
+        icon: 'review',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderReviewView(pid || '')
+    },
+    {
+        key: 'sitrep',
+        title: 'Situation Report',
+        icon: 'sitrep',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderSitRepView(pid || '')
     },
     {
         key: 'publish',
