@@ -181,10 +181,10 @@ export function renderDraftsView(pid: string): string {
             </div>
             <div class="flex gap-2">
                 <button onclick="window.toggleDraftsSidebar()" class="px-3 py-2 bg-panel-hover border border-text-main/15 rounded-xl text-xs font-bold text-text-main hover:bg-panel-hover/80 transition-all cursor-pointer">
-                    ${draftsSidebarOpen ? '📁 Close List' : '📁 Open List'}
+                    ${draftsSidebarOpen ? 'Close List' : 'Open List'}
                 </button>
                 <button onclick="window.toggleMetadataSidebar()" class="px-3 py-2 bg-panel-hover border border-text-main/15 rounded-xl text-xs font-bold text-text-main hover:bg-panel-hover/80 transition-all cursor-pointer">
-                    ${metadataSidebarOpen ? '📝 Close Metadata' : '📝 Open Metadata'}
+                    ${metadataSidebarOpen ? 'Close Metadata' : 'Open Metadata'}
                 </button>
                 <button onclick="window.navigateTo('project-workspace', '${p.id}')" class="px-4 py-2 bg-panel-hover border border-text-main/15 rounded-xl text-xs font-semibold text-text-main hover:bg-panel-hover/80 transition-colors cursor-pointer">Workspace</button>
                 <button onclick="window.createNewDraft('${pid}')" class="px-4 py-2 bg-text-main text-background rounded-xl text-xs font-bold transition-colors cursor-pointer">+ New Draft</button>
@@ -208,9 +208,9 @@ export function renderDraftsView(pid: string): string {
                             ? 'bg-text-main/10 border-text-main text-text-main' 
                             : 'bg-transparent border-text-main/10 hover:bg-panel-hover text-text-muted';
                         
-                        let formatIcon = '📝';
-                        if (d.format === 'tweet') formatIcon = '🐦';
-                        if (d.format === 'email') formatIcon = '✉️';
+                        let formatIcon = getIconSVG('drafts', 'w-3.5 h-3.5 text-text-muted');
+                        if (d.format === 'tweet') formatIcon = getIconSVG('publish', 'w-3.5 h-3.5 text-text-muted');
+                        if (d.format === 'email') formatIcon = getIconSVG('client-portal', 'w-3.5 h-3.5 text-text-muted');
 
                         return `
                         <div class="draft-item-card border rounded-xl p-3 flex flex-col justify-between gap-3 cursor-pointer transition-all ${activeClasses} group/draft-card" 
@@ -242,7 +242,7 @@ export function renderDraftsView(pid: string): string {
                                    onkeyup="window.saveStructuredDraft('${activeDraft.id}')" 
                                    class="w-full bg-transparent text-text-main font-outfit text-xl font-bold focus:outline-none" placeholder="Draft Title...">
                             <div class="flex gap-2 shrink-0">
-                                <button onclick="window.copyDraftToClipboard('${activeDraft.id}')" class="px-3 py-1.5 bg-panel-hover border border-text-main/15 text-xs font-semibold rounded-lg hover:bg-panel-hover/80 text-text-main transition-all cursor-pointer">📋 Copy Copy</button>
+                                <button onclick="window.copyDraftToClipboard('${activeDraft.id}')" class="px-3 py-1.5 bg-panel-hover border border-text-main/15 text-xs font-semibold rounded-lg hover:bg-panel-hover/80 text-text-main transition-all cursor-pointer">Copy Copy</button>
                             </div>
                         </div>
 
@@ -251,9 +251,9 @@ export function renderDraftsView(pid: string): string {
                             <label class="block text-[9px] font-bold text-text-muted uppercase mb-1.5">Adapt Format Mode</label>
                             <div class="flex gap-2">
                                 ${[
-                                    { key: 'blog', label: 'Article / Blog', icon: '📝' },
-                                    { key: 'tweet', label: 'Social Post', icon: '🐦' },
-                                    { key: 'email', label: 'Newsletter Broadcast', icon: '✉️' }
+                                    { key: 'blog', label: 'Article / Blog', icon: getIconSVG('drafts', 'w-3.5 h-3.5') },
+                                    { key: 'tweet', label: 'Social Post', icon: getIconSVG('publish', 'w-3.5 h-3.5') },
+                                    { key: 'email', label: 'Newsletter Broadcast', icon: getIconSVG('client-portal', 'w-3.5 h-3.5') }
                                 ].map(item => {
                                     const active = activeDraft.format === item.key;
                                     const btnClass = active 
@@ -349,7 +349,9 @@ export function renderDraftsView(pid: string): string {
                 ` : `
                     <div class="flex-grow flex items-center justify-center text-center text-text-muted py-16">
                         <div>
-                            <span class="text-5xl block mb-4">✍️</span>
+                            <div class="flex justify-center mb-4">
+                                ${getIconSVG('drafts', 'w-12 h-12 text-text-muted')}
+                            </div>
                             Select or create a draft to open the Structured copywriting studio.
                         </div>
                     </div>
@@ -360,9 +362,9 @@ export function renderDraftsView(pid: string): string {
             <div class="${metadataSidebarOpen ? 'lg:col-span-4' : 'hidden'} bg-background border border-text-main/15 rounded-2xl p-4 flex flex-col gap-4 max-h-[400px] lg:max-h-none overflow-hidden">
                 <!-- Context tabs -->
                 <div class="flex gap-3 border-b border-text-main/10 pb-2">
-                    <button onclick="window.setDraftContextTab('metadata')" class="pb-1 text-xs font-bold uppercase tracking-wider cursor-pointer ${activeContextTab === 'metadata' ? 'text-text-main border-b-2 border-text-main' : 'text-text-muted hover:text-text-main'}">📝 Metadata</button>
-                    <button onclick="window.setDraftContextTab('research')" class="pb-1 text-xs font-bold uppercase tracking-wider cursor-pointer ${activeContextTab === 'research' ? 'text-text-main border-b-2 border-text-main' : 'text-text-muted hover:text-text-main'}">🔍 Knowledge</button>
-                    <button onclick="window.setDraftContextTab('media')" class="pb-1 text-xs font-bold uppercase tracking-wider cursor-pointer ${activeContextTab === 'media' ? 'text-text-main border-b-2 border-text-main' : 'text-text-muted hover:text-text-main'}">🖼️ Assets</button>
+                    <button onclick="window.setDraftContextTab('metadata')" class="pb-1 text-xs font-bold uppercase tracking-wider cursor-pointer ${activeContextTab === 'metadata' ? 'text-text-main border-b-2 border-text-main' : 'text-text-muted hover:text-text-main'}">Metadata</button>
+                    <button onclick="window.setDraftContextTab('research')" class="pb-1 text-xs font-bold uppercase tracking-wider cursor-pointer ${activeContextTab === 'research' ? 'text-text-main border-b-2 border-text-main' : 'text-text-muted hover:text-text-main'}">Knowledge</button>
+                    <button onclick="window.setDraftContextTab('media')" class="pb-1 text-xs font-bold uppercase tracking-wider cursor-pointer ${activeContextTab === 'media' ? 'text-text-main border-b-2 border-text-main' : 'text-text-muted hover:text-text-main'}">Assets</button>
                 </div>
 
                 <!-- Tab content viewport -->
@@ -381,7 +383,7 @@ export function renderDraftsView(pid: string): string {
                             <!-- Category 1: CMS & Editorial settings -->
                             <div class="flex flex-col gap-2.5 border border-text-main/10 p-3.5 rounded-xl bg-panel-hover/10">
                                 <h4 class="text-[10px] font-bold text-text-main uppercase tracking-wider border-b border-text-main/10 pb-1 flex items-center justify-between">
-                                    <span>⚙️ CMS & Editorial Settings</span>
+                                    <span>CMS & Editorial Settings</span>
                                 </h4>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
@@ -443,7 +445,7 @@ export function renderDraftsView(pid: string): string {
 
                             <!-- Category 2: SEO Suite -->
                             <div class="flex flex-col gap-2.5 border border-text-main/10 p-3.5 rounded-xl bg-panel-hover/10">
-                                <h4 class="text-[10px] font-bold text-text-main uppercase tracking-wider border-b border-text-main/10 pb-1">🔍 Search Engine Optimization (SEO)</h4>
+                                <h4 class="text-[10px] font-bold text-text-main uppercase tracking-wider border-b border-text-main/10 pb-1">Search Engine Optimization (SEO)</h4>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="block text-[8px] font-bold text-text-muted uppercase mb-0.5">Focus Keyword</label>
@@ -492,7 +494,7 @@ export function renderDraftsView(pid: string): string {
 
                             <!-- Category 3: Social captions -->
                             <div class="flex flex-col gap-2.5 border border-text-main/10 p-3.5 rounded-xl bg-panel-hover/10">
-                                <h4 class="text-[10px] font-bold text-text-main uppercase tracking-wider border-b border-text-main/10 pb-1">📣 Social Distribution & Hook Meta</h4>
+                                <h4 class="text-[10px] font-bold text-text-main uppercase tracking-wider border-b border-text-main/10 pb-1">Social Distribution & Hook Meta</h4>
                                 <div>
                                     <div class="flex justify-between items-center mb-0.5">
                                         <label class="block text-[8px] font-bold text-text-muted uppercase">X (Twitter) Custom Caption</label>
@@ -526,7 +528,7 @@ export function renderDraftsView(pid: string): string {
 
                             <!-- Category 4: Primary CTA settings -->
                             <div class="flex flex-col gap-2.5 border border-text-main/10 p-3.5 rounded-xl bg-panel-hover/10">
-                                <h4 class="text-[10px] font-bold text-text-main uppercase tracking-wider border-b border-text-main/10 pb-1">🎯 Action & Lead CTA</h4>
+                                <h4 class="text-[10px] font-bold text-text-main uppercase tracking-wider border-b border-text-main/10 pb-1">Action & Lead CTA</h4>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="block text-[8px] font-bold text-text-muted uppercase mb-0.5">CTA Button Text</label>

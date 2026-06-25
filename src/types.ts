@@ -1,3 +1,10 @@
+export interface TaskComment {
+    id: string;
+    author: string;
+    text: string;
+    timestamp: number;
+}
+
 export interface KanbanTask {
     id: string;
     projectId: string;
@@ -17,6 +24,10 @@ export interface KanbanTask {
     points?: number;
     cycleId?: string;
     moduleId?: string;
+    collaborators?: string[];
+    reviewers?: string[];
+    externalLinks?: string[];
+    comments?: TaskComment[];
 }
 
 export interface Project {
@@ -319,6 +330,17 @@ export interface CandidateRecord {
     role: string;
     email: string;
     status: 'applied' | 'interviewing' | 'offered' | 'hired' | 'rejected';
+}
+
+export interface TimeLog {
+    id: string;
+    projectId?: string;
+    taskId?: string;
+    taskTitle: string;
+    projectName: string;
+    durationMs: number;
+    timestamp: number;
+    billable: boolean;
 }
 
 

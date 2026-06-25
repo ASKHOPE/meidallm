@@ -50,16 +50,16 @@ export function renderResearchView(pid: string): string {
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 ${projectDocs.map(d => {
-                    let typeIcon = '📄';
-                    if (d.type === 'url') typeIcon = '🔗';
-                    if (d.type === 'text') typeIcon = '📝';
+                    let typeIcon = getIconSVG('paperclip', 'w-3 h-3 text-text-muted');
+                    if (d.type === 'url') typeIcon = getIconSVG('external-link', 'w-3 h-3 text-text-muted');
+                    if (d.type === 'text') typeIcon = getIconSVG('drafts', 'w-3 h-3 text-text-muted');
                     return `
                     <div class="research-doc-item bg-panel-hover border border-text-main/15 p-5 rounded-xl flex flex-col justify-between hover:border-text-main/40 transition-colors"
                          data-title="${sanitizeHTML(d.title)}">
                         <div>
                             <div class="flex justify-between items-start gap-2 mb-3">
                                 <span class="text-[9px] font-bold uppercase px-2 py-0.5 bg-text-main/5 text-text-muted rounded flex items-center gap-1 border border-text-main/10">
-                                    <span>${typeIcon}</span> ${d.type}
+                                    <span class="flex items-center justify-center">${typeIcon}</span> ${d.type}
                                 </span>
                                 <button onclick="window.deleteResearchDoc('${d.id}')" class="text-text-muted hover:text-rose-500 text-xs font-semibold cursor-pointer">✕ Delete</button>
                             </div>

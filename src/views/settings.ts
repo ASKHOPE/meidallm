@@ -1,5 +1,6 @@
 import { state, notifyStateChange, updateAgencyBrand } from "../state";
 import { sanitizeHTML } from "../utils";
+import { getIconSVG } from "./icons";
 
 // Custom override for alert to use premium toast notifications
 const alert = (msg: string) => {
@@ -66,8 +67,9 @@ export function renderSettingsView(): string {
             <div class="flex flex-col gap-4 border-t border-text-main/10 pt-6">
                 <h3 class="text-lg font-semibold text-text-main font-outfit">Agency Branding & Subscription Plan</h3>
                 ${!isAdmin ? `
-                    <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-xs text-amber-500 font-bold">
-                        ⚠️ View Only: Custom branding and subscription tier configurations require Tenant Admin privileges.
+                    <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-xs text-amber-500 font-bold flex items-center gap-2">
+                        ${getIconSVG('info', 'w-4 h-4 text-amber-500 shrink-0')}
+                        <span>View Only: Custom branding and subscription tier configurations require Tenant Admin privileges.</span>
                     </div>
                 ` : ''}
                 

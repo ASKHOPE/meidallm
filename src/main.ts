@@ -47,14 +47,17 @@ import {
     switchRole,
     togglePolicy,
     deleteContact,
-    hasPermission
+    hasPermission,
+    startTimer,
+    stopAndSaveTimer,
+    discardTimer
 } from "./state";
 import { renderLayoutHTML, renderProjectDropdownOptions } from "./views/layout";
 import { renderPostDetailHTML } from "./views/analytics";
 import { parseDraftContent } from "./views/drafts";
 import { views } from "./router";
 import { sanitizeHTML } from "./utils";
-import type { KanbanTask, ResearchDoc, MediaAsset, Draft } from "./types";
+import type { KanbanTask, ResearchDoc, MediaAsset, Draft, TimeLog } from "./types";
 
 // Custom override for alert to use premium toast notifications
 const alert = (msg: string) => {
@@ -345,6 +348,60 @@ w.convertIdeaToTask = (ideaId: string) => {
     } else {
         alert("Cannot convert empty idea note to a task.");
     }
+};
+
+w.createWorkspaceFromIdea = (ideaId: string) => {
+    const idea = state.ideasState.find(i => i.id === ideaId);
+    if (!idea) return;
+    
+    // Extract plain text for project name
+    const temp = document.createElement("div");
+    temp.innerHTML = idea.content;
+    const plainName = (temp.textContent || temp.innerText || "").trim();
+    
+    const projectName = plainName.substring(0, 40) || "New Campaign from Brainstorm";
+    const projectDesc = "Campaign workspace spawned from ideation board. Content: " + plainName.substring(0, 150);
+    
+    // Add the project
+    const newProjId = addProject(projectName, projectDesc);
+    
+    // Navigate to the newly created project workspace
+    renderView('project-workspace', newProjId);
+    
+    // Show a success message
+    alert("Successfully created workspace: " + projectName);
+};
+
+w.handleIdeaImgUpload = (ideaId: string, input: HTMLInputElement) => {
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const imgHtml = `<img src="${e.target?.result}" class="max-w-full h-auto rounded-lg my-2 border border-glass-border/30">`;
+        const editor = document.getElementById(`idea-editor-${ideaId}`);
+        if (editor) {
+            editor.focus();
+            document.execCommand('insertHTML', false, imgHtml);
+            updateStickyNote(ideaId, editor.innerHTML);
+        }
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+};
+
+w.handleIdeaFileUpload = (ideaId: string, input: HTMLInputElement) => {
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const fileHtml = `<div class="file-attachment bg-panel-hover/50 border border-glass-border p-2 rounded-xl flex items-center gap-2 my-2 text-xs select-none" contenteditable="false"><svg class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg><span>${sanitizeHTML(file.name)}</span></div><br>`;
+    const editor = document.getElementById(`idea-editor-${ideaId}`);
+    if (editor) {
+        editor.focus();
+        document.execCommand('insertHTML', false, fileHtml);
+        updateStickyNote(ideaId, editor.innerHTML);
+    }
+    input.value = '';
 };
 
 // --- Research Module Window Handlers ---
@@ -876,6 +933,168 @@ w.signOut = async () => {
     window.location.href = "/login";
 };
 
+// --- Active Timer Window Handlers ---
+let activeTimerInterval: any = null;
+
+function checkActiveTimerTick() {
+    const isRunning = state.activeTimer && state.activeTimer.startTime !== null;
+    const clock = document.getElementById('active-timer-clock');
+    
+    if (isRunning && clock) {
+        if (!activeTimerInterval) {
+            const updateClock = () => {
+                const el = document.getElementById('active-timer-clock');
+                if (el && state.activeTimer.startTime) {
+                    const elapsedMs = Date.now() - state.activeTimer.startTime + (state.activeTimer.secondsElapsed * 1000);
+                    const totalSecs = Math.floor(elapsedMs / 1000);
+                    const hours = Math.floor(totalSecs / 3600).toString().padStart(2, '0');
+                    const minutes = Math.floor((totalSecs % 3600) / 60).toString().padStart(2, '0');
+                    const seconds = Math.floor(totalSecs % 60).toString().padStart(2, '0');
+                    el.innerText = `${hours}:${minutes}:${seconds}`;
+                }
+            };
+            updateClock();
+            activeTimerInterval = setInterval(updateClock, 1000);
+        }
+    } else {
+        if (activeTimerInterval) {
+            clearInterval(activeTimerInterval);
+            activeTimerInterval = null;
+        }
+    }
+}
+
+w.handleTimerProjectChange = (pid: string) => {
+    const taskSelect = document.getElementById('timer-task-select') as HTMLSelectElement;
+    if (taskSelect) {
+        const tasks = state.kanbanState.filter(t => t.projectId === pid && !t.isBinned && !t.isArchived);
+        taskSelect.innerHTML = `<option value="">-- No Task / General --</option>` +
+            tasks.map(t => `<option value="${t.id}">${sanitizeHTML(t.title)}</option>`).join('');
+    }
+};
+
+w.handleManualProjectChange = (pid: string) => {
+    const taskSelect = document.getElementById('manual-task-select') as HTMLSelectElement;
+    if (taskSelect) {
+        const tasks = state.kanbanState.filter(t => t.projectId === pid && !t.isBinned && !t.isArchived);
+        taskSelect.innerHTML = `<option value="">-- No Task / General --</option>` +
+            tasks.map(t => `<option value="${t.id}">${sanitizeHTML(t.title)}</option>`).join('');
+    }
+};
+
+w.startActiveTimer = () => {
+    const projectSelect = document.getElementById('timer-project-select') as HTMLSelectElement;
+    const taskSelect = document.getElementById('timer-task-select') as HTMLSelectElement;
+    const descInput = document.getElementById('timer-description-input') as HTMLInputElement;
+    const billableCheckbox = document.getElementById('timer-billable-checkbox') as HTMLInputElement;
+
+    if (!projectSelect || !taskSelect) return;
+
+    const projectId = projectSelect.value;
+    const taskId = taskSelect.value;
+    const desc = descInput ? descInput.value.trim() : "";
+    const isBillable = billableCheckbox ? billableCheckbox.checked : true;
+
+    const project = state.projects.find(p => p.id === projectId);
+    const task = state.kanbanState.find(t => t.id === taskId);
+
+    const projectName = project ? project.name : "General Work";
+    const taskTitle = task ? task.title : (desc || "General Administrative Work");
+
+    startTimer(projectId, taskId, taskTitle, projectName, isBillable);
+};
+
+w.stopActiveTimer = () => {
+    const log = stopAndSaveTimer();
+    if (log) {
+        const totalSecs = Math.floor(log.durationMs / 1000);
+        const hours = Math.floor(totalSecs / 3600);
+        const minutes = Math.floor((totalSecs % 3600) / 60);
+        const durationStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+        alert(`Successfully logged ${durationStr} to timesheets.`);
+    }
+};
+
+w.discardActiveTimer = () => {
+    if (confirm("Are you sure you want to discard this running timer? Your elapsed hours will not be saved.")) {
+        discardTimer();
+    }
+};
+
+w.showManualLogModal = () => {
+    const modal = document.getElementById('manual-log-modal');
+    if (modal) modal.classList.remove('hidden');
+};
+
+w.hideManualLogModal = () => {
+    const modal = document.getElementById('manual-log-modal');
+    if (modal) modal.classList.add('hidden');
+};
+
+w.saveManualTimeLog = () => {
+    const projectSelect = document.getElementById('manual-project-select') as HTMLSelectElement;
+    const taskSelect = document.getElementById('manual-task-select') as HTMLSelectElement;
+    const descInput = document.getElementById('manual-description-input') as HTMLInputElement;
+    const hrsInput = document.getElementById('manual-hours-input') as HTMLInputElement;
+    const minsInput = document.getElementById('manual-minutes-input') as HTMLInputElement;
+    const billableCheckbox = document.getElementById('manual-billable-checkbox') as HTMLInputElement;
+
+    if (!projectSelect || !taskSelect || !hrsInput || !minsInput) return;
+
+    const projectId = projectSelect.value;
+    const taskId = taskSelect.value;
+    const desc = descInput ? descInput.value.trim() : "";
+    const hrs = parseInt(hrsInput.value) || 0;
+    const mins = parseInt(minsInput.value) || 0;
+    const isBillable = billableCheckbox ? billableCheckbox.checked : true;
+
+    if (hrs === 0 && mins === 0) {
+        alert("Please enter a duration greater than 0.");
+        return;
+    }
+
+    const project = state.projects.find(p => p.id === projectId);
+    const task = state.kanbanState.find(t => t.id === taskId);
+
+    const projectName = project ? project.name : "General Work";
+    const taskTitle = task ? task.title : (desc || "General Administrative Work");
+    const durationMs = (hrs * 3600 + mins * 60) * 1000;
+
+    const newLog: TimeLog = {
+        id: 'tl-' + Math.random().toString(36).substr(2, 9),
+        projectId: projectId || undefined,
+        taskId: taskId || undefined,
+        taskTitle,
+        projectName,
+        durationMs,
+        timestamp: Date.now(),
+        billable: isBillable
+    };
+
+    state.timeLogs.unshift(newLog);
+    notifyStateChange();
+    w.hideManualLogModal();
+    alert(`Successfully logged ${hrs}h ${mins}m to timesheets.`);
+};
+
+w.exportTimeLogs = () => {
+    if (state.timeLogs.length === 0) {
+        alert("No time logs to export.");
+        return;
+    }
+    let csv = "ID,Project,Task,Duration (Minutes),Billable,Date\n";
+    state.timeLogs.forEach(log => {
+        csv += `"${log.id}","${log.projectName.replace(/"/g, '""')}","${log.taskTitle.replace(/"/g, '""')}","${Math.floor(log.durationMs/60000)}","${log.billable}","${new Date(log.timestamp).toLocaleDateString()}"\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `meidallm-timesheet-${new Date().toISOString().slice(0,10)}.csv`);
+    a.click();
+};
+
 // Application Main Render Mount
 function renderMainApp() {
     if (!state.currentProject && state.projects.length > 0) {
@@ -889,6 +1108,7 @@ function renderMainApp() {
     updateSidebarUI();
     updateThemeButtonsUI();
     renderView(state.activeViewKey, state.currentProject || undefined);
+    checkActiveTimerTick();
 }
 
 // Register state-change listener to redraw active UI components
@@ -896,6 +1116,7 @@ registerStateListener(() => {
     updateSidebarUI();
     updateThemeButtonsUI();
     renderView(state.activeViewKey, state.currentProject || undefined);
+    checkActiveTimerTick();
 });
 
 // Initialization

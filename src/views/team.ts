@@ -560,13 +560,13 @@ export function renderTeamView(): string {
                     <div class="flex flex-col gap-2">
                         <label class="text-[9px] text-text-muted font-bold block uppercase">Select Inspector Feed</label>
                         <select onchange="window.switchTeamActivityInspector(this.value)" class="w-full bg-background border border-text-main/15 text-xs text-text-main p-2 rounded-lg cursor-pointer focus:outline-none focus:border-text-main">
-                            <option value="global" ${teamsSession.selectedEntityId === 'global' ? 'selected' : ''}>🌐 Global Workspace</option>
+                            <option value="global" ${teamsSession.selectedEntityId === 'global' ? 'selected' : ''}>Global Workspace</option>
                             <optgroup label="Work Teams">
-                                ${activeTeams.map(t => `<option value="${t.id}" ${teamsSession.selectedEntityId === t.id ? 'selected' : ''}>👥 ${sanitizeHTML(t.name)}</option>`).join('')}
-                                ${archivedTeams.map(t => `<option value="${t.id}" ${teamsSession.selectedEntityId === t.id ? 'selected' : ''}>📦 (Archived) ${sanitizeHTML(t.name)}</option>`).join('')}
+                                ${activeTeams.map(t => `<option value="${t.id}" ${teamsSession.selectedEntityId === t.id ? 'selected' : ''}>${sanitizeHTML(t.name)}</option>`).join('')}
+                                ${archivedTeams.map(t => `<option value="${t.id}" ${teamsSession.selectedEntityId === t.id ? 'selected' : ''}>(Archived) ${sanitizeHTML(t.name)}</option>`).join('')}
                             </optgroup>
                             <optgroup label="Campaign Folders">
-                                ${activeProjects.map(p => `<option value="${p.id}" ${teamsSession.selectedEntityId === p.id ? 'selected' : ''}>📁 ${sanitizeHTML(p.name)}</option>`).join('')}
+                                ${activeProjects.map(p => `<option value="${p.id}" ${teamsSession.selectedEntityId === p.id ? 'selected' : ''}>${sanitizeHTML(p.name)}</option>`).join('')}
                             </optgroup>
                         </select>
                     </div>

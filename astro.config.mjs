@@ -10,6 +10,26 @@ export default defineConfig({
     plugins: [tailwindcss()],
     ssr: {
       external: ['pg-native'] // Avoid issues compiling pg driver for serverless
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('zod')) {
+                return 'zod-vendor';
+              }
+              if (id.includes('better-auth')) {
+                return 'better-auth-vendor';
+              }
+              if (id.includes('pg')) {
+                return 'pg-vendor';
+              }
+              return 'vendor';
+            }
+          }
+        }
+      }
     }
   }
 });

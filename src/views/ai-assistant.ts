@@ -19,7 +19,7 @@ export function renderAIAssistantDrawer(): string {
                     <li><button onclick="window.sendAiMessage('Show tasks at risk')" class="text-left text-text-main underline hover:text-text-main/80">Show tasks at risk</button></li>
                     <li><button onclick="window.sendAiMessage('Summarize current cycle progress')" class="text-left text-text-main underline hover:text-text-main/80">Summarize current cycle progress</button></li>
                     <li><button onclick="window.sendAiMessage('Recommend copywriting tone')" class="text-left text-text-main underline hover:text-text-main/80">Recommend copywriting tone</button></li>
-                    <li><button onclick="window.openCreativeWizard()" class="text-left text-purple-500 font-bold underline hover:text-purple-400">Launch Creative Wizard ✨</button></li>
+                    <li><button onclick="window.openCreativeWizard()" class="text-left text-purple-500 font-bold underline hover:text-purple-400">Launch Creative Wizard</button></li>
                 </ul>
             </div>
         </div>

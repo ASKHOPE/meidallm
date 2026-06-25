@@ -32,31 +32,31 @@ export function renderPublishView(pid: string): string {
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <label class="flex items-center gap-2 bg-panel-hover border border-text-main/15 p-2.5 rounded-xl text-xs text-text-main cursor-pointer hover:border-text-main transition-all">
                         <input type="checkbox" name="channels" value="WhatsApp" class="rounded text-text-main focus:ring-text-main">
-                        <span>💬 WhatsApp</span>
+                        <span>WhatsApp</span>
                     </label>
                     <label class="flex items-center gap-2 bg-panel-hover border border-text-main/15 p-2.5 rounded-xl text-xs text-text-main cursor-pointer hover:border-text-main transition-all">
                         <input type="checkbox" name="channels" value="Pinterest" class="rounded text-text-main focus:ring-text-main">
-                        <span>📌 Pinterest</span>
+                        <span>Pinterest</span>
                     </label>
                     <label class="flex items-center gap-2 bg-panel-hover border border-text-main/15 p-2.5 rounded-xl text-xs text-text-main cursor-pointer hover:border-text-main transition-all">
                         <input type="checkbox" name="channels" value="YouTube" class="rounded text-text-main focus:ring-text-main">
-                        <span>🎥 YouTube</span>
+                        <span>YouTube</span>
                     </label>
                     <label class="flex items-center gap-2 bg-panel-hover border border-text-main/15 p-2.5 rounded-xl text-xs text-text-main cursor-pointer hover:border-text-main transition-all">
                         <input type="checkbox" name="channels" value="Facebook" class="rounded text-text-main focus:ring-text-main">
-                        <span>🔵 Facebook</span>
+                        <span>Facebook</span>
                     </label>
                     <label class="flex items-center gap-2 bg-panel-hover border border-text-main/15 p-2.5 rounded-xl text-xs text-text-main cursor-pointer hover:border-text-main transition-all">
                         <input type="checkbox" name="channels" value="Instagram" class="rounded text-text-main focus:ring-text-main">
-                        <span>📸 Instagram</span>
+                        <span>Instagram</span>
                     </label>
                     <label class="flex items-center gap-2 bg-panel-hover border border-text-main/15 p-2.5 rounded-xl text-xs text-text-main cursor-pointer hover:border-text-main transition-all">
                         <input type="checkbox" name="channels" value="Threads" class="rounded text-text-main focus:ring-text-main">
-                        <span>🌀 Threads</span>
+                        <span>Threads</span>
                     </label>
                     <label class="flex items-center gap-2 bg-panel-hover border border-text-main/15 p-2.5 rounded-xl text-xs text-text-main cursor-pointer hover:border-text-main transition-all">
                         <input type="checkbox" name="channels" value="X (Twitter)" class="rounded text-text-main focus:ring-text-main">
-                        <span>🐦 X (Twitter)</span>
+                        <span>X (Twitter)</span>
                     </label>
                 </div>
             </div>

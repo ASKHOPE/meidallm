@@ -30,8 +30,9 @@ export function renderCyclesView(pid?: string): string {
             const isCompleted = c.status === 'completed';
             const colorClass = isCompleted ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
             return `
-            <div class="border rounded px-1 py-0.5 text-[8px] font-bold leading-tight truncate ${colorClass}" title="${sanitizeHTML(c.name)}">
-                ⚡ ${sanitizeHTML(c.name)}
+            <div class="border rounded px-1 py-0.5 text-[8px] font-bold leading-tight truncate flex items-center gap-0.5 ${colorClass}" title="${sanitizeHTML(c.name)}">
+                ${getIconSVG('project-cycles', 'w-2 h-2 shrink-0')}
+                <span>${sanitizeHTML(c.name)}</span>
             </div>
             `;
         }).join('');
@@ -63,7 +64,7 @@ export function renderCyclesView(pid?: string): string {
         <!-- Explainer Section: What are Sprints & Cycles? -->
         <div class="bg-panel-hover/20 border border-text-main/10 rounded-2xl p-5 flex flex-col gap-2">
             <h3 class="font-bold text-sm font-outfit flex items-center gap-2">
-                <span>💡</span> What are Cycles & Sprints?
+                ${getIconSVG('idea-canvas', 'w-4 h-4 text-amber-500 shrink-0')} What are Cycles & Sprints?
             </h3>
             <p class="text-xs text-text-muted leading-relaxed">
                 <strong>Sprints (Cycles)</strong> are time-boxed iterations (usually 2 weeks) where team members commit to finishing a specific list of tasks. This keeps focus high and supports iterative development.
@@ -117,7 +118,7 @@ export function renderCyclesView(pid?: string): string {
                             <div class="flex justify-between items-start">
                                 <div>
                                     <div class="flex items-center gap-2">
-                                        <span class="text-xs">⚡</span>
+                                        ${getIconSVG('project-cycles', 'w-4 h-4 text-text-muted shrink-0')}
                                         <h4 class="font-bold text-text-main text-sm leading-none">${sanitizeHTML(cy.name)}</h4>
                                         <span class="text-[9px] px-2 py-0.5 rounded-full font-semibold ${
                                             cy.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
@@ -174,7 +175,7 @@ export function renderCyclesView(pid?: string): string {
                             <div class="flex flex-col gap-2">
                                 <div class="flex justify-between items-start">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="text-xs">🎯</span>
+                                        ${getIconSVG('project-goals', 'w-3.5 h-3.5 text-text-muted shrink-0')}
                                         <h4 class="font-bold text-text-main text-xs leading-none truncate max-w-[120px]">${sanitizeHTML(mod.name)}</h4>
                                     </div>
                                     <button onclick="window.deleteModulePrompt('${mod.id}')" class="text-text-muted hover:text-rose-500 text-[10px] font-bold cursor-pointer">

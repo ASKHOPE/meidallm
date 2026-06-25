@@ -41,73 +41,42 @@ export function renderSidebarNavigation(): string {
     const userProfile = state.team.find(t => t.id === state.currentUser) || state.team[0];
     const systemRole = userProfile?.systemRole || 'user';
     const role = state.activeRole || 'admin';
-    const isSuperAdmin = systemRole === 'super_admin';
     
     return sidebarGroups.filter(g => g.key !== 'admin' || ['super_admin', 'tenant_owner', 'tenant_admin'].includes(systemRole)).map(group => {
-        let groupContent = "";
-        
-        if (group.key === 'workflow') {
-            const workflowTools = views.filter(v => v.group === 'workflow' && v.icon && (!v.roles || v.roles.includes(systemRole)));
-            groupContent = workflowTools.map(item => {
-                const isProjectScoped = item.scope === 'project';
-                const pidAttr = isProjectScoped && state.currentProject ? `data-pid="${state.currentProject}"` : '';
-                const iconSVG = getIconSVG(item.key as IconName, 'w-4 h-4 text-text-muted group-hover:text-text-main transition-colors');
-                
-                // RBAC Rules
-                let isLocked = false;
-                if (item.key === 'project-erp' && (role === 'sales' || role === 'support')) isLocked = true;
-                if (item.key === 'crm' && role === 'accountant') isLocked = true;
-                if (item.key === 'publish' && (role === 'accountant' || role === 'support')) isLocked = true;
-                if (item.key === 'drafts' && (role === 'accountant' || role === 'support')) isLocked = true;
+        const groupTools = views.filter(v => v.group === group.key && v.icon && (!v.roles || v.roles.includes(systemRole)));
+        const groupContent = groupTools.map(item => {
+            const isProjectScoped = item.scope === 'project';
+            const pidAttr = isProjectScoped && state.currentProject ? `data-pid="${state.currentProject}"` : '';
+            const iconSVG = getIconSVG(item.key as IconName, 'w-4 h-4 text-text-muted group-hover:text-text-main transition-colors');
+            
+            // RBAC Lock Rules
+            let isLocked = false;
+            if (item.key === 'project-erp' && (role === 'sales' || role === 'support')) isLocked = true;
+            if (item.key === 'crm' && role === 'accountant') isLocked = true;
+            if (item.key === 'publish' && (role === 'accountant' || role === 'support')) isLocked = true;
+            if (item.key === 'drafts' && (role === 'accountant' || role === 'support')) isLocked = true;
+            if (item.key === 'settings' && (role !== 'admin' && role !== 'manager')) isLocked = true;
+            if (item.key === 'team' && (role !== 'admin' && role !== 'manager' && role !== 'accountant')) isLocked = true;
 
-                if (isLocked) {
-                    return `
-                    <button onclick="if(window.showToast) { window.showToast('Permission Denied: Role [${role.toUpperCase()}] cannot access this view.', 'error'); } else { alert('Access Denied'); }" 
-                            class="opacity-50 w-full text-left px-3 py-2 rounded-md transition-all font-medium text-xs text-text-muted/60 flex items-center gap-2.5 border border-transparent cursor-not-allowed">
-                        <span class="shrink-0 flex items-center justify-center">${iconSVG}</span> 
-                        <span class="truncate">${item.title}</span>
-                        <span class="text-[9px] font-bold text-rose-500 font-mono ml-auto">🔒 LOCK</span>
-                    </button>
-                    `;
-                }
-                
+            if (isLocked) {
                 return `
-                <button class="nav-btn group w-full text-left px-3 py-2 rounded-md transition-all font-medium text-xs text-text-muted hover:bg-text-main/5 hover:text-text-main flex items-center gap-2.5 border border-transparent" 
-                        data-view="${item.key}" ${pidAttr}>
+                <button onclick="if(window.showToast) { window.showToast('Permission Denied: Role [${role.toUpperCase()}] cannot access this view.', 'error'); } else { alert('Access Denied'); }" 
+                        class="opacity-50 w-full text-left px-3 py-2 rounded-md transition-all font-medium text-xs text-text-muted/60 flex items-center gap-2.5 border border-transparent cursor-not-allowed">
                     <span class="shrink-0 flex items-center justify-center">${iconSVG}</span> 
                     <span class="truncate">${item.title}</span>
+                    <span class="text-[9px] font-bold text-rose-500 font-mono ml-auto flex items-center gap-0.5">${getIconSVG('admin-rbac', 'w-2.5 h-2.5 text-rose-500')} <span>LOCK</span></span>
                 </button>
                 `;
-            }).join('');
-        } else {
-            const groupTools = views.filter(v => v.group === group.key && v.icon && v.scope !== 'project' && (!v.roles || v.roles.includes(systemRole)));
-            groupContent = groupTools.map(item => {
-                const iconSVG = getIconSVG(item.key as IconName, 'w-4 h-4 text-text-muted group-hover:text-text-main transition-colors');
-                
-                // Hide Settings/Team Office for Support and Sales if locked
-                let isLocked = false;
-                if (item.key === 'settings' && (role !== 'admin' && role !== 'manager')) isLocked = true;
-                if (item.key === 'team' && (role !== 'admin' && role !== 'manager' && role !== 'accountant')) isLocked = true;
-
-                if (isLocked) {
-                    return `
-                    <button onclick="if(window.showToast) { window.showToast('Permission Denied: Role [${role.toUpperCase()}] cannot access Settings.', 'error'); } else { alert('Access Denied'); }" 
-                            class="opacity-50 w-full text-left px-3 py-2 rounded-md transition-all font-medium text-xs text-text-muted/60 flex items-center gap-2.5 border border-transparent cursor-not-allowed">
-                        <span class="shrink-0 flex items-center justify-center">${iconSVG}</span> 
-                        <span class="truncate">${item.title}</span>
-                        <span class="text-[9px] font-bold text-rose-500 font-mono ml-auto">🔒 LOCK</span>
-                    </button>
-                    `;
-                }
-
-                return `
-                <button class="nav-btn group w-full text-left px-3 py-2 rounded-md transition-all font-medium text-xs text-text-muted hover:bg-text-main/5 hover:text-text-main flex items-center gap-2.5 border border-transparent" data-view="${item.key}">
-                    <span class="shrink-0 flex items-center justify-center">${iconSVG}</span> 
-                    <span class="truncate">${item.title}</span>
-                </button>
-                `;
-            }).join('');
-        }
+            }
+            
+            return `
+            <button class="nav-btn group w-full text-left px-3 py-2 rounded-md transition-all font-medium text-xs text-text-muted hover:bg-text-main/5 hover:text-text-main flex items-center gap-2.5 border border-transparent" 
+                    data-view="${item.key}" ${pidAttr}>
+                <span class="shrink-0 flex items-center justify-center">${iconSVG}</span> 
+                <span class="truncate">${item.title}</span>
+            </button>
+            `;
+        }).join('');
 
         const openAttr = group.open ? 'open' : '';
         
@@ -286,16 +255,16 @@ if (typeof window !== 'undefined') {
         const toast = document.createElement('div');
         toast.className = `p-3.5 rounded-xl border text-xs font-bold shadow-lg transition-all flex items-center gap-2 pointer-events-auto bg-background text-text-main border-text-main/20 animate-[fadeInUp_0.2s_ease-out_forwards]`;
         
-        let emoji = 'ℹ️';
+        let iconHtml = getIconSVG('info', 'w-4 h-4 text-blue-500');
         if (type === 'success') {
-            emoji = '🟢';
+            iconHtml = getIconSVG('check', 'w-4 h-4 text-emerald-500');
             toast.classList.add('border-emerald-500/30');
         } else if (type === 'error') {
-            emoji = '🔴';
+            iconHtml = getIconSVG('info', 'w-4 h-4 text-rose-500');
             toast.classList.add('border-rose-500/30');
         }
         
-        toast.innerHTML = `<span>${emoji}</span><span>${msg}</span>`;
+        toast.innerHTML = `<span class="shrink-0 flex items-center justify-center">${iconHtml}</span><span class="flex-1">${msg}</span>`;
         container.appendChild(toast);
         
         setTimeout(() => {

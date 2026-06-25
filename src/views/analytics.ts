@@ -1,5 +1,6 @@
 import { state } from "../state";
 import { sanitizeHTML } from "../utils";
+import { getIconSVG } from "./icons";
 
 export function renderAnalyticsView(pid: string): string {
     const p = state.projects.find(x => x.id === pid);
@@ -23,7 +24,7 @@ export function renderAnalyticsView(pid: string): string {
             format: 'tweet',
             channels: ['X (Twitter)', 'Threads', 'WhatsApp'],
             scheduledTime: Date.now() - 86400000 * 2,
-            content: '🚀 The new Meidallm AI console is officially live! Seamlessly manage ideas 💡, research logs 🔍, media assets 🖼️, and publish scheduled campaigns 📢 all in one workflow. Get started at meidallm.com!',
+            content: 'The new Meidallm AI console is officially live! Seamlessly manage ideas, research logs, media assets, and publish scheduled campaigns all in one workflow. Get started at meidallm.com!',
             metrics: {
                 impressions: 4850,
                 clicks: 612,
@@ -243,9 +244,9 @@ export function renderPostDetailHTML(post: any): string {
 
                 <!-- Footer Engagement Actions -->
                 <div class="flex justify-between items-center border-t border-text-main/10 pt-3 text-[11px] text-text-muted font-medium px-1">
-                    <span class="flex items-center gap-1.5 hover:text-rose-500 transition-colors">❤️ ${post.metrics.likes} Likes</span>
-                    <span class="flex items-center gap-1.5 hover:text-text-main transition-colors">💬 ${post.metrics.comments} Comments</span>
-                    <span class="flex items-center gap-1.5 hover:text-emerald-500 transition-colors">🔁 ${post.metrics.shares} Shares</span>
+                    <span class="flex items-center gap-1.5 hover:text-rose-500 transition-colors">${getIconSVG('heart', 'w-3.5 h-3.5 text-rose-500')} <span>${post.metrics.likes} Likes</span></span>
+                    <span class="flex items-center gap-1.5 hover:text-text-main transition-colors">${getIconSVG('comment', 'w-3.5 h-3.5 text-text-muted')} <span>${post.metrics.comments} Comments</span></span>
+                    <span class="flex items-center gap-1.5 hover:text-emerald-500 transition-colors">${getIconSVG('share', 'w-3.5 h-3.5 text-emerald-500')} <span>${post.metrics.shares} Shares</span></span>
                 </div>
             </div>
         </div>

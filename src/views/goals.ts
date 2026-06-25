@@ -10,7 +10,9 @@ export function renderGoalsView(projectId: string): string {
     if (goals.length === 0) {
         goalsListHTML = `
             <div class="col-span-full border border-text-main/15 rounded-xl p-8 text-center text-text-muted">
-                <span class="text-3xl block mb-2">🎯</span>
+                <div class="flex justify-center mb-3">
+                    ${getIconSVG('project-goals', 'w-8 h-8 text-text-muted')}
+                </div>
                 No goals created yet. Let's build target milestones for this campaign!
             </div>
         `;

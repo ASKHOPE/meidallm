@@ -1,5 +1,6 @@
 import { state, addDbTable, deleteDbTable, addDbField, deleteDbField, addDbRow, updateDbRow, deleteDbRow, notifyStateChange } from "../state";
 import { sanitizeHTML } from "../utils";
+import { getIconSVG } from "./icons";
 
 // Custom override for alert to use premium toast notifications
 const alert = (msg: string) => {
@@ -40,10 +41,11 @@ export function renderDatabaseView(pid?: string): string {
                 const isActive = activeTable && activeTable.id === t.id;
                 return `
                 <button onclick="window.switchActiveTable('${t.id}')" 
-                        class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                        class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
                             isActive ? 'bg-primary text-white' : 'text-text-muted hover:bg-panel-hover/40 hover:text-white'
                         }">
-                    📊 ${sanitizeHTML(t.name)}
+                    ${getIconSVG('database-hub', 'w-3.5 h-3.5 shrink-0')}
+                    <span>${sanitizeHTML(t.name)}</span>
                 </button>
                 `;
             }).join('')}
@@ -157,7 +159,7 @@ export function renderDatabaseView(pid?: string): string {
             <!-- Table Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-panel-hover/30 border border-glass-border/30 p-4.5 rounded-2xl">
                 <div>
-                    <h2 class="text-xl font-bold font-outfit text-white">📊 ${sanitizeHTML(activeTable.name)}</h2>
+                    <h2 class="text-xl font-bold font-outfit text-white flex items-center gap-2">${getIconSVG('database-hub', 'w-5 h-5 text-primary shrink-0')} <span>${sanitizeHTML(activeTable.name)}</span></h2>
                     <p class="text-xs text-text-muted mt-1 leading-normal">${sanitizeHTML(activeTable.description)}</p>
                 </div>
                 <button onclick="window.deleteTablePrompt('${activeTable.id}')" class="px-3.5 py-1.5 border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 font-semibold text-[10px] rounded-xl transition-all cursor-pointer">Delete Table</button>
@@ -168,8 +170,8 @@ export function renderDatabaseView(pid?: string): string {
                 <div class="flex gap-3 flex-wrap">
                     <!-- Layout Mode Switcher -->
                     <div class="flex bg-panel-hover p-1 rounded-xl border border-glass-border">
-                        <button onclick="window.toggleDatabaseViewMode('grid')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:text-white transition-colors cursor-pointer ${viewMode === 'grid' ? 'bg-primary text-white' : 'text-text-muted'}">📊 Spreadsheet</button>
-                        <button onclick="window.toggleDatabaseViewMode('gallery')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:text-white transition-colors cursor-pointer ${viewMode === 'gallery' ? 'bg-primary text-white' : 'text-text-muted'}">🖼️ Cards Gallery</button>
+                        <button onclick="window.toggleDatabaseViewMode('grid')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:text-white transition-colors cursor-pointer flex items-center gap-1.5 ${viewMode === 'grid' ? 'bg-primary text-white' : 'text-text-muted'}">${getIconSVG('database-hub', 'w-3.5 h-3.5')} <span>Spreadsheet</span></button>
+                        <button onclick="window.toggleDatabaseViewMode('gallery')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:text-white transition-colors cursor-pointer flex items-center gap-1.5 ${viewMode === 'gallery' ? 'bg-primary text-white' : 'text-text-muted'}">${getIconSVG('media', 'w-3.5 h-3.5')} <span>Cards Gallery</span></button>
                     </div>
                 </div>
                 <div class="flex gap-2.5">

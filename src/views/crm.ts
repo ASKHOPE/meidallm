@@ -208,7 +208,7 @@ export function renderCRMView(pid: string): string {
                         <div class="border-t border-text-main/10 pt-3">
                             <span class="text-[10px] text-text-muted font-bold block uppercase mb-2">Campaign Retainer Order-to-Cash</span>
                             <button onclick="window.generateSponsorInvoice('${selectedContact.id}')" class="w-full py-2 bg-text-main text-background hover:bg-text-main/80 font-bold text-[11px] rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
-                                💼 Convert to Quote, Order & Invoice
+                                ${getIconSVG('crm', 'w-3.5 h-3.5')} Convert to Quote, Order & Invoice
                             </button>
                         </div>
                         `;
@@ -224,23 +224,23 @@ export function renderCRMView(pid: string): string {
                             <!-- OTC Stepper visual -->
                             <div class="flex items-center gap-1 justify-between text-[9px] text-text-muted bg-text-main/5 p-2 rounded-lg border border-text-main/5 my-1">
                                 <div class="flex flex-col items-center">
-                                    <span class="text-emerald-500 font-bold">🟢 Quote</span>
+                                    <span class="text-emerald-500 font-bold flex items-center gap-1"><span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Quote</span>
                                     <span class="text-[8px] opacity-70">Approved</span>
                                 </div>
                                 <div class="w-4 border-t border-text-main/20"></div>
                                 <div class="flex flex-col items-center">
-                                    <span class="text-emerald-500 font-bold">🟢 Order</span>
+                                    <span class="text-emerald-500 font-bold flex items-center gap-1"><span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Order</span>
                                     <span class="text-[8px] opacity-70">Confirmed</span>
                                 </div>
                                 <div class="w-4 border-t border-text-main/20"></div>
                                 <div class="flex flex-col items-center">
-                                    <span class="${isPaid ? 'text-emerald-500 font-bold' : 'text-amber-500'} font-bold">${isPaid ? '🟢' : '🟡'} Invoice</span>
+                                    <span class="${isPaid ? 'text-emerald-500 font-bold' : 'text-amber-500'} font-bold flex items-center gap-1"><span class="inline-block w-1.5 h-1.5 rounded-full ${isPaid ? 'bg-emerald-500' : 'bg-amber-500'}"></span> Invoice</span>
                                     <span class="text-[8px] opacity-70">${isPaid ? 'Paid' : 'Unpaid'}</span>
                                 </div>
                             </div>
                             ${!isPaid ? `
                                 <button onclick="window.paySponsorInvoice('${inv.id}')" class="w-full py-2 bg-emerald-500 text-white hover:bg-emerald-600 font-bold text-[11px] rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
-                                    💵 Process Sponsor Retainer Payment
+                                    ${getIconSVG('project-erp', 'w-3.5 h-3.5')} Process Sponsor Retainer Payment
                                 </button>
                             ` : `<p class="text-[10px] text-emerald-500 font-bold text-center mt-1">✓ Sponsorship revenue reconciled to Campaign Budget!</p>`}
                         </div>

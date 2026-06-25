@@ -28,20 +28,50 @@ export function renderIdeasView(pid: string): string {
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 flex-grow items-start">
             ${projectIdeas.map(idea => `
-                <div class="idea-note-item bg-background border border-text-main/15 p-5 rounded-2xl flex flex-col justify-between min-h-[160px] hover:border-text-main/40 cursor-grab active:cursor-grabbing transition-all group relative"
+                <div class="idea-note-item bg-background border border-text-main/15 p-5 rounded-2xl flex flex-col justify-between min-h-[220px] hover:border-text-main/40 transition-all group relative text-left"
                      data-content="${sanitizeHTML(idea.content)}">
-                    <div class="flex items-center gap-1.5 mb-2 select-none border-b border-text-main/5 pb-1">
-                        <span class="text-text-muted/40 text-xs font-bold leading-none cursor-grab active:cursor-grabbing select-none" title="Drag note">⋮⋮</span>
-                        <span class="text-[9px] font-bold text-text-muted uppercase tracking-wider">Sticky Note</span>
+                    <div class="flex flex-col gap-2 w-full">
+                        <div class="flex items-center justify-between select-none border-b border-text-main/5 pb-2">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-text-muted/40 text-xs font-bold leading-none cursor-grab active:cursor-grabbing select-none" title="Drag note">⋮⋮</span>
+                                <span class="text-[9px] font-bold text-text-muted uppercase tracking-wider">Sticky Note</span>
+                            </div>
+                            <!-- Rich Text Toolbar -->
+                            <div class="flex items-center gap-1 ml-auto">
+                                <button onclick="document.execCommand('bold', false); window.updateStickyNote('${idea.id}', document.getElementById('idea-editor-${idea.id}').innerHTML)" class="p-1 text-text-muted hover:text-text-main text-[10px] font-bold cursor-pointer" title="Bold">B</button>
+                                <button onclick="document.execCommand('italic', false); window.updateStickyNote('${idea.id}', document.getElementById('idea-editor-${idea.id}').innerHTML)" class="p-1 text-text-muted hover:text-text-main text-[10px] italic cursor-pointer" title="Italic">I</button>
+                                <button onclick="document.execCommand('underline', false); window.updateStickyNote('${idea.id}', document.getElementById('idea-editor-${idea.id}').innerHTML)" class="p-1 text-text-muted hover:text-text-main text-[10px] underline cursor-pointer" title="Underline">U</button>
+                                <select onchange="document.execCommand('fontName', false, this.value); window.updateStickyNote('${idea.id}', document.getElementById('idea-editor-${idea.id}').innerHTML)" class="bg-transparent text-text-muted hover:text-text-main text-[9px] border-0 focus:ring-0 p-0.5 cursor-pointer max-w-[65px]" title="Font">
+                                    <option value="Inter" selected>Inter</option>
+                                    <option value="Outfit">Outfit</option>
+                                    <option value="Georgia">Georgia</option>
+                                    <option value="Courier New">Courier</option>
+                                </select>
+                                <button onclick="document.getElementById('idea-img-input-${idea.id}').click()" class="p-1 text-text-muted hover:text-text-main cursor-pointer" title="Insert Image">
+                                    ${getIconSVG('image', 'w-3.5 h-3.5')}
+                                </button>
+                                <button onclick="document.getElementById('idea-file-input-${idea.id}').click()" class="p-1 text-text-muted hover:text-text-main cursor-pointer" title="Attach File">
+                                    ${getIconSVG('paperclip', 'w-3.5 h-3.5')}
+                                </button>
+                                <input type="file" id="idea-img-input-${idea.id}" class="hidden" accept="image/*" onchange="window.handleIdeaImgUpload('${idea.id}', this)">
+                                <input type="file" id="idea-file-input-${idea.id}" class="hidden" accept="*" onchange="window.handleIdeaFileUpload('${idea.id}', this)">
+                            </div>
+                        </div>
+                        <div id="idea-editor-${idea.id}"
+                             contenteditable="true" 
+                             oninput="window.updateStickyNote('${idea.id}', this.innerHTML)" 
+                             class="w-full bg-transparent text-text-main text-xs resize-none focus:outline-none border-b border-transparent focus:border-text-main/10 pb-2 min-h-[100px] max-h-[180px] overflow-y-auto font-inter text-left" 
+                             placeholder="Write your brilliant idea here...">${idea.content || ''}</div>
                     </div>
-                    <textarea onchange="window.updateStickyNote('${idea.id}', this.value)" 
-                               maxlength="200"
-                               class="w-full bg-transparent text-text-main text-xs resize-none focus:outline-none border-b border-transparent focus:border-text-main/10 pb-2 h-20 font-inter" 
-                               placeholder="Write your brilliant idea here...">${sanitizeHTML(idea.content)}</textarea>
-                    <div class="flex justify-between items-center pt-2 mt-2">
-                        <button onclick="window.convertIdeaToTask('${idea.id}')" class="text-[10px] text-text-main hover:text-text-muted flex items-center gap-1 transition-colors cursor-pointer font-semibold">
-                            📋 Convert to Task
-                        </button>
+                    <div class="flex justify-between items-center pt-3 mt-3 border-t border-text-main/5">
+                        <div class="flex gap-2">
+                            <button onclick="window.convertIdeaToTask('${idea.id}')" class="text-[10px] text-text-main hover:text-text-muted flex items-center gap-1 transition-colors cursor-pointer font-semibold">
+                                ${getIconSVG('check', 'w-3 h-3')} Convert to Task
+                            </button>
+                            <button onclick="window.createWorkspaceFromIdea('${idea.id}')" class="text-[10px] text-primary hover:text-indigo-400 flex items-center gap-1 transition-colors cursor-pointer font-semibold">
+                                ${getIconSVG('folder', 'w-3 h-3')} Workspace
+                            </button>
+                        </div>
                         <button onclick="window.deleteStickyNote('${idea.id}')" class="text-[10px] text-rose-500 hover:text-rose-600 font-bold cursor-pointer">
                             Delete
                         </button>
@@ -50,7 +80,7 @@ export function renderIdeasView(pid: string): string {
             `).join('')}
             ${projectIdeas.length === 0 ? `
                 <div class="col-span-full border-2 border-dashed border-text-main/15 rounded-2xl p-12 text-center text-xs text-text-muted">
-                    💡 No brainstorm items yet. Click "+ Add Note" to create sticky notes!
+                    ${getIconSVG('info', 'w-6 h-6 mx-auto mb-2 text-text-muted')} No brainstorm items yet. Click "+ Add Note" to create sticky notes!
                 </div>
             ` : ''}
         </div>

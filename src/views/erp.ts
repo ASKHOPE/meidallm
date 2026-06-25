@@ -141,7 +141,7 @@ export function renderERPView(pid: string): string {
                         <div class="w-full bg-text-main/10 h-3 rounded-full overflow-hidden">
                             <div class="bg-text-main h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
                         </div>
-                        ${percent >= 90 ? `<p class="text-[10px] text-rose-500 font-bold mt-1">⚠️ Warning: Workspace has spent over 90% of its budget limit.</p>` : ''}
+                        ${percent >= 90 ? `<p class="text-[10px] text-rose-500 font-bold mt-1 flex items-center gap-1">${getIconSVG('info', 'w-3.5 h-3.5 text-rose-500')} <span>Warning: Workspace has spent over 90% of its budget limit.</span></p>` : ''}
                     </div>
 
                     <!-- Visual Categories Breakdown -->
@@ -206,7 +206,7 @@ export function renderERPView(pid: string): string {
                                     <tr class="border-b border-text-main/10 hover:bg-text-main/5 transition-colors">
                                         <td class="py-3 font-semibold">
                                             <div class="text-text-main flex items-center gap-1">
-                                                ${isRevenue ? '📈' : ''} ${sanitizeHTML(desc)}
+                                                ${isRevenue ? getIconSVG('analytics', 'w-3 h-3 text-emerald-500 shrink-0') : ''} ${sanitizeHTML(desc)}
                                             </div>
                                             <div class="text-[9px] text-text-muted mt-0.5">${cat}</div>
                                         </td>
@@ -571,7 +571,7 @@ export function renderERPView(pid: string): string {
                             <option value="July 2026">July 2026</option>
                         </select>
                         <button onclick="window.triggerFinancialClose('${pid}')" class="w-full py-2.5 bg-rose-500 text-white font-bold text-xs rounded-xl hover:bg-rose-600 transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
-                            🔒 Lock Ledger Period
+                            ${getIconSVG('admin-rbac', 'w-3.5 h-3.5 text-current')} Lock Ledger Period
                         </button>
                     </div>
                 </div>
@@ -586,7 +586,7 @@ export function renderERPView(pid: string): string {
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-background border border-text-main/15 p-5 rounded-2xl">
             <div>
                 <h2 class="text-2xl font-outfit font-bold flex items-center gap-2">
-                    <span>🏢</span> ${sanitizeHTML(p.name)} ERP Control Hub
+                    ${getIconSVG('workspaces', 'w-5 h-5 text-text-main')} ${sanitizeHTML(p.name)} ERP Control Hub
                 </h2>
                 <p class="text-xs text-text-muted">Tenant: <span class="font-mono text-text-main font-bold">${orgId}</span> • Manage workspace budget limits, verify freelancer POs, monitor safety stocks, and run financial closes.</p>
             </div>
@@ -600,7 +600,7 @@ export function renderERPView(pid: string): string {
         <div class="bg-background border border-text-main/15 p-5 rounded-2xl flex flex-col gap-3">
             <div class="flex justify-between items-center">
                 <h3 class="font-bold text-sm text-text-main flex items-center gap-1.5">
-                    <span>📊</span> Tenant Workspace Pool: ${orgId.toUpperCase()}
+                    ${getIconSVG('database-hub', 'w-4 h-4 text-text-main')} Tenant Workspace Pool: ${orgId.toUpperCase()}
                 </h3>
                 <span class="text-[10px] text-text-muted font-bold">${orgProjects.length} Starred Workspaces</span>
             </div>

@@ -76,8 +76,9 @@ export function renderMediaView(pid: string): string {
                 </div>
                 `).join('')}
                 ${projectAssets.length === 0 ? `
-                    <div class="col-span-full text-center text-xs text-text-muted py-16 border border-dashed border-text-main/15 rounded-2xl">
-                        🖼️ No media assets imported yet. Click a preset template above to load visual mockups.
+                    <div class="col-span-full text-center text-xs text-text-muted py-16 border border-dashed border-text-main/15 rounded-2xl flex flex-col items-center justify-center gap-2">
+                        ${getIconSVG('media', 'w-8 h-8 text-text-muted mb-1')}
+                        <span>No media assets imported yet. Click a preset template above to load visual mockups.</span>
                     </div>
                 ` : ''}
             </div>

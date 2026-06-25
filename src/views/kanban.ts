@@ -55,23 +55,23 @@ export function renderKanbanView(pid: string): string {
                 <!-- Search -->
                 <div class="relative w-40">
                     <input type="text" id="kanban-search-input" oninput="window.filterKanbanTasks()" placeholder="Search tasks..." class="w-full bg-panel-hover border border-glass-border rounded-xl pl-3 pr-8 py-2 text-xs text-text-main focus:outline-none focus:border-text-main transition-all">
-                    <span class="absolute right-3 top-2 text-text-muted text-[10px]">🔍</span>
+                    <span class="absolute right-3 top-2.5 text-text-muted flex items-center justify-center">${getIconSVG('search', 'w-3.5 h-3.5')}</span>
                 </div>
                 <!-- Cycle Filter -->
                 <select onchange="window.setKanbanCycleFilter(this.value)" class="bg-panel-hover border border-glass-border text-xs text-text-main p-2 rounded-xl cursor-pointer">
                     <option value="">All Cycles</option>
-                    ${projectCycles.map(c => `<option value="${c.id}" ${state.kanbanActiveCycleId === c.id ? 'selected' : ''}>⚡ ${sanitizeHTML(c.name)}</option>`).join('')}
+                    ${projectCycles.map(c => `<option value="${c.id}" ${state.kanbanActiveCycleId === c.id ? 'selected' : ''}>${sanitizeHTML(c.name)}</option>`).join('')}
                 </select>
                 <!-- Module Filter -->
                 <select onchange="window.setKanbanModuleFilter(this.value)" class="bg-panel-hover border border-glass-border text-xs text-text-main p-2 rounded-xl cursor-pointer">
                     <option value="">All Modules</option>
-                    ${projectModules.map(m => `<option value="${m.id}" ${state.kanbanActiveModuleId === m.id ? 'selected' : ''}>🎯 ${sanitizeHTML(m.name)}</option>`).join('')}
+                    ${projectModules.map(m => `<option value="${m.id}" ${state.kanbanActiveModuleId === m.id ? 'selected' : ''}>${sanitizeHTML(m.name)}</option>`).join('')}
                 </select>
                 <!-- Layout Mode -->
                 <div class="flex bg-panel-hover p-1 rounded-xl border border-glass-border">
-                    <button onclick="window.setKanbanViewMode('board')" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold hover:text-text-main transition-colors cursor-pointer ${viewMode === 'board' ? 'bg-text-main text-background' : 'text-text-muted'}">📋 Board</button>
-                    <button onclick="window.setKanbanViewMode('list')" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold hover:text-text-main transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-text-main text-background' : 'text-text-muted'}">📝 List</button>
-                    <button onclick="window.setKanbanViewMode('spreadsheet')" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold hover:text-text-main transition-colors cursor-pointer ${viewMode === 'spreadsheet' ? 'bg-text-main text-background' : 'text-text-muted'}">📊 Table</button>
+                    <button onclick="window.setKanbanViewMode('board')" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold hover:text-text-main transition-colors cursor-pointer flex items-center gap-1 ${viewMode === 'board' ? 'bg-text-main text-background' : 'text-text-muted'}">${getIconSVG('kanban-board', 'w-3 h-3')} Board</button>
+                    <button onclick="window.setKanbanViewMode('list')" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold hover:text-text-main transition-colors cursor-pointer flex items-center gap-1 ${viewMode === 'list' ? 'bg-text-main text-background' : 'text-text-muted'}">${getIconSVG('drafts', 'w-3 h-3')} List</button>
+                    <button onclick="window.setKanbanViewMode('spreadsheet')" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold hover:text-text-main transition-colors cursor-pointer flex items-center gap-1 ${viewMode === 'spreadsheet' ? 'bg-text-main text-background' : 'text-text-muted'}">${getIconSVG('database-hub', 'w-3 h-3')} Table</button>
                 </div>
                 <button onclick="window.navigateTo('project-workspace', '${p.id}')" class="px-3 py-2 bg-panel-hover border border-glass-border rounded-xl text-xs font-medium hover:bg-glass-border transition-colors cursor-pointer">Workspace</button>
                 <button onclick="window.showAddTaskModal()" class="px-3 py-2 bg-text-main text-background rounded-xl text-xs font-medium hover:bg-indigo-600 transition-colors shadow-[0_0_15px_var(--color-primary-glow)] cursor-pointer">+ Add Task</button>
@@ -324,6 +324,30 @@ export function renderKanbanView(pid: string): string {
                 <textarea id="edit-modal-task-description" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-xs focus:outline-none focus:border-text-main resize-none h-28 leading-relaxed" placeholder="Type records, reference assets, or detailed action plans here..."></textarea>
             </div>
 
+            <div class="grid grid-cols-2 gap-4 border-t border-glass-border/30 pt-3">
+                <div class="col-span-2">
+                    <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Collaborators (comma-separated)</label>
+                    <input id="edit-modal-task-collaborators" type="text" placeholder="e.g. Alice, Bob" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main">
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-xs font-semibold text-text-muted uppercase mb-1">Reviewers (comma-separated)</label>
+                    <input id="edit-modal-task-reviewers" type="text" placeholder="e.g. Charlie" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main">
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-xs font-semibold text-text-muted uppercase mb-1">External Links (comma-separated)</label>
+                    <input id="edit-modal-task-links" type="text" placeholder="e.g. https://figma.com/..., https://github.com/..." class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main">
+                </div>
+            </div>
+
+            <div class="border-t border-glass-border/30 pt-3">
+                <label class="block text-xs font-semibold text-text-muted uppercase mb-2">Discussion & Comments</label>
+                <div id="edit-modal-comments-container" class="space-y-2 max-h-40 overflow-y-auto mb-2 pr-1 bg-background/30 p-2 rounded-xl border border-glass-border/20"></div>
+                <div class="flex gap-2">
+                    <input id="edit-modal-new-comment" type="text" placeholder="Add a comment..." class="flex-1 bg-panel-hover border border-glass-border p-2 rounded-xl text-text-main text-xs focus:outline-none focus:border-text-main">
+                    <button id="edit-modal-add-comment-btn" class="px-3 py-2 bg-text-main text-background rounded-xl text-xs font-semibold hover:bg-indigo-600 transition-colors cursor-pointer">Post</button>
+                </div>
+            </div>
+
             <div class="flex justify-end gap-2 mt-2 border-t border-glass-border/30 pt-3">
                 <button onclick="window.closeEditTaskModal()" class="px-4 py-2 bg-panel-hover border border-glass-border rounded-xl text-sm font-medium hover:bg-glass-border transition-colors cursor-pointer">Cancel</button>
                 <button id="edit-modal-save-btn" class="px-5 py-2 bg-text-main text-background rounded-xl text-sm font-semibold hover:bg-indigo-600 transition-colors shadow-[0_0_15px_var(--color-primary-glow)] cursor-pointer">Save Changes</button>
@@ -353,7 +377,7 @@ function renderTaskCard(t: KanbanTask, filter: string, cycles: any[], modules: a
                 </div>
                 <div class="flex gap-2 opacity-0 group-hover/kanban-item:opacity-100 transition-opacity">
                     <button onclick="event.stopPropagation(); alert('Start timer for task: ${t.id}')" class="text-emerald-500 hover:text-emerald-600 transition-colors" title="Start Timer">
-                        ▶️
+                        ${getIconSVG('play', 'w-3.5 h-3.5')}
                     </button>
                     ${actionHTML}
                 </div>
@@ -364,12 +388,12 @@ function renderTaskCard(t: KanbanTask, filter: string, cycles: any[], modules: a
         <div class="border-t border-text-main/10 pt-2 mt-2 flex flex-col gap-1.5">
             <div class="flex items-center gap-1.5 flex-wrap">
                 ${t.complexity ? `<span class="px-1.5 py-0.5 text-[8px] font-semibold rounded uppercase tracking-wider bg-slate-500/10 text-slate-400 border border-slate-500/20">${t.complexity}</span>` : ''}
-                ${t.priority && t.priority !== 'none' ? `<span class="px-1.5 py-0.5 text-[8px] font-semibold rounded uppercase tracking-wider ${t.priority === 'urgent' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'}">⚠️ ${t.priority}</span>` : ''}
-                ${t.points ? `<span class="px-1.5 py-0.5 text-[8px] font-semibold rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">🎯 ${t.points} SP</span>` : ''}
-                ${cycle ? `<span class="px-1.5 py-0.5 text-[8px] font-medium rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">⚡ ${sanitizeHTML(cycle.name)}</span>` : ''}
-                ${mod ? `<span class="px-1.5 py-0.5 text-[8px] font-medium rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">🎯 ${sanitizeHTML(mod.name)}</span>` : ''}
-                ${t.assignee ? `<span class="text-[9px] text-primary font-medium">👤 ${sanitizeHTML(t.assignee)}</span>` : ''}
-                ${t.dueDate ? `<span class="text-[9px] text-text-muted">📅 ${t.dueDate}</span>` : ''}
+                ${t.priority && t.priority !== 'none' ? `<span class="px-1.5 py-0.5 text-[8px] font-semibold rounded uppercase tracking-wider flex items-center gap-0.5 ${t.priority === 'urgent' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'}">${getIconSVG('info', 'w-2 h-2 text-current')} ${t.priority}</span>` : ''}
+                ${t.points ? `<span class="px-1.5 py-0.5 text-[8px] font-semibold rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-0.5">${getIconSVG('project-goals', 'w-2 h-2 text-current')} ${t.points} SP</span>` : ''}
+                ${cycle ? `<span class="px-1.5 py-0.5 text-[8px] font-medium rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center gap-0.5">${getIconSVG('project-cycles', 'w-2 h-2 text-current')} ${sanitizeHTML(cycle.name)}</span>` : ''}
+                ${mod ? `<span class="px-1.5 py-0.5 text-[8px] font-medium rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-0.5">${getIconSVG('project-goals', 'w-2 h-2 text-current')} ${sanitizeHTML(mod.name)}</span>` : ''}
+                ${t.assignee ? `<span class="text-[9px] text-primary font-medium flex items-center gap-0.5">${getIconSVG('team', 'w-2.5 h-2.5 text-current')} ${sanitizeHTML(t.assignee)}</span>` : ''}
+                ${t.dueDate ? `<span class="text-[9px] text-text-muted flex items-center gap-0.5">${getIconSVG('calendar', 'w-2.5 h-2.5 text-current')} ${t.dueDate}</span>` : ''}
             </div>
             <div class="text-[8px] text-text-muted flex justify-between pt-1 opacity-60">
                 <span>Created ${formatTime(t.created)}</span>
@@ -394,10 +418,10 @@ function renderTaskListRow(t: KanbanTask, filter: string, cycles: any[], modules
             <h4 class="font-medium text-text-main text-xs truncate max-w-sm md:max-w-md">${sanitizeHTML(t.title)}</h4>
         </div>
         <div class="flex items-center gap-3 shrink-0">
-            ${t.priority && t.priority !== 'none' ? `<span class="text-[9px] text-orange-400 font-semibold">⚠️ ${t.priority}</span>` : ''}
-            ${t.points ? `<span class="text-[9px] text-purple-400 font-bold">🎯 ${t.points}</span>` : ''}
-            ${cycle ? `<span class="text-[9px] text-indigo-400">⚡ ${sanitizeHTML(cycle.name)}</span>` : ''}
-            ${t.assignee ? `<span class="text-[9px] text-text-muted">👤 ${sanitizeHTML(t.assignee)}</span>` : ''}
+            ${t.priority && t.priority !== 'none' ? `<span class="text-[9px] text-orange-400 font-semibold flex items-center gap-0.5">${getIconSVG('info', 'w-2.5 h-2.5 text-current')} ${t.priority}</span>` : ''}
+            ${t.points ? `<span class="text-[9px] text-purple-400 font-bold flex items-center gap-0.5">${getIconSVG('project-goals', 'w-2.5 h-2.5 text-current')} ${t.points}</span>` : ''}
+            ${cycle ? `<span class="text-[9px] text-indigo-400 flex items-center gap-0.5">${getIconSVG('project-cycles', 'w-2.5 h-2.5 text-current')} ${sanitizeHTML(cycle.name)}</span>` : ''}
+            ${t.assignee ? `<span class="text-[9px] text-text-muted flex items-center gap-0.5">${getIconSVG('team', 'w-2.5 h-2.5 text-current')} ${sanitizeHTML(t.assignee)}</span>` : ''}
             <div class="flex gap-2 opacity-0 group-hover/kanban-item:opacity-100 transition-opacity">
                 ${actionHTML}
             </div>
@@ -577,9 +601,15 @@ if (typeof window !== 'undefined') {
         const ptsEl = document.getElementById('edit-modal-task-points') as HTMLInputElement;
         const cyEl = document.getElementById('edit-modal-task-cycle') as HTMLSelectElement;
         const modEl = document.getElementById('edit-modal-task-module') as HTMLSelectElement;
+        const collabEl = document.getElementById('edit-modal-task-collaborators') as HTMLInputElement;
+        const revEl = document.getElementById('edit-modal-task-reviewers') as HTMLInputElement;
+        const linksEl = document.getElementById('edit-modal-task-links') as HTMLInputElement;
+        const commentsContainer = document.getElementById('edit-modal-comments-container');
+        const newCommentEl = document.getElementById('edit-modal-new-comment') as HTMLInputElement;
+        const addCommentBtn = document.getElementById('edit-modal-add-comment-btn');
         const saveBtn = document.getElementById('edit-modal-save-btn');
 
-        if (modal && titleEl && tagEl && compEl && assEl && dateEl && descEl && prioEl && ptsEl && cyEl && modEl && saveBtn) {
+        if (modal && titleEl && tagEl && compEl && assEl && dateEl && descEl && prioEl && ptsEl && cyEl && modEl && collabEl && revEl && linksEl && saveBtn) {
             titleEl.value = t.title || "";
             tagEl.value = t.tag || "";
             compEl.value = t.complexity || "low";
@@ -590,11 +620,56 @@ if (typeof window !== 'undefined') {
             ptsEl.value = (t.points !== undefined) ? t.points.toString() : "0";
             cyEl.value = t.cycleId || "";
             modEl.value = t.moduleId || "";
+            collabEl.value = (t.collaborators || []).join(', ');
+            revEl.value = (t.reviewers || []).join(', ');
+            linksEl.value = (t.externalLinks || []).join(', ');
+
+            let localComments = [...(t.comments || [])];
+            const renderLocalComments = () => {
+                if (commentsContainer) {
+                    if (localComments.length === 0) {
+                        commentsContainer.innerHTML = `<div class="text-xs text-text-muted italic py-1 pl-1">No comments yet. Start the conversation!</div>`;
+                    } else {
+                        commentsContainer.innerHTML = localComments.map(c => `
+                            <div class="bg-panel-hover/50 p-2 rounded-lg border border-glass-border/30 text-xs text-left">
+                                <div class="flex justify-between text-[10px] text-text-muted mb-1 font-bold">
+                                    <span>${sanitizeHTML(c.author)}</span>
+                                    <span>${new Date(c.timestamp).toLocaleString()}</span>
+                                </div>
+                                <div class="text-text-main">${sanitizeHTML(c.text)}</div>
+                            </div>
+                        `).join('');
+                    }
+                    commentsContainer.scrollTop = commentsContainer.scrollHeight;
+                }
+            };
+            renderLocalComments();
+
+            if (addCommentBtn && newCommentEl) {
+                addCommentBtn.onclick = (e) => {
+                    e.preventDefault();
+                    const text = newCommentEl.value.trim();
+                    if (text) {
+                        localComments.push({
+                            id: Math.random().toString(36).substring(2),
+                            author: (window as any).__user_email || "Me",
+                            text,
+                            timestamp: Date.now()
+                        });
+                        newCommentEl.value = "";
+                        renderLocalComments();
+                    }
+                };
+            }
 
             // Show modal
             modal.classList.remove('hidden');
 
             saveBtn.onclick = () => {
+                const collaborators = collabEl.value.split(',').map(s => s.trim()).filter(Boolean);
+                const reviewers = revEl.value.split(',').map(s => s.trim()).filter(Boolean);
+                const externalLinks = linksEl.value.split(',').map(s => s.trim()).filter(Boolean);
+
                 updateTask(
                     taskId,
                     titleEl.value,
@@ -608,7 +683,11 @@ if (typeof window !== 'undefined') {
                     prioEl.value as any,
                     parseInt(ptsEl.value) || 0,
                     cyEl.value || undefined,
-                    modEl.value || undefined
+                    modEl.value || undefined,
+                    collaborators,
+                    reviewers,
+                    externalLinks,
+                    localComments
                 );
                 w.closeEditTaskModal();
             };

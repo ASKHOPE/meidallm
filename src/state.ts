@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember, Cycle, Module, DbField, DbRow, DbTable, Goal, Tenant, Organization, Team, CustomRole, Policy, SalesInvoice, P2PTransaction, InventoryItem, SupportCase, EmployeeRecord, CandidateRecord, ActivityLog, Ticket, ClientFeedback } from "./types";
+import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember, Cycle, Module, DbField, DbRow, DbTable, Goal, Tenant, Organization, Team, CustomRole, Policy, SalesInvoice, P2PTransaction, InventoryItem, SupportCase, EmployeeRecord, CandidateRecord, ActivityLog, Ticket, ClientFeedback, TimeLog, TaskComment } from "./types";
 
 export const GoalSchema = z.object({
     id: z.string(),
@@ -71,7 +71,37 @@ export const KanbanTaskSchema = z.object({
     priority: z.enum(['none', 'low', 'medium', 'high', 'urgent']).optional(),
     points: z.number().optional(),
     cycleId: z.string().optional(),
-    moduleId: z.string().optional()
+    moduleId: z.string().optional(),
+    collaborators: z.array(z.string()).optional(),
+    reviewers: z.array(z.string()).optional(),
+    externalLinks: z.array(z.string()).optional(),
+    comments: z.array(z.object({
+        id: z.string(),
+        author: z.string(),
+        text: z.string(),
+        timestamp: z.number()
+    })).optional()
+});
+
+export const TimeLogSchema = z.object({
+    id: z.string(),
+    projectId: z.string().optional(),
+    taskId: z.string().optional(),
+    taskTitle: z.string(),
+    projectName: z.string(),
+    durationMs: z.number(),
+    timestamp: z.number(),
+    billable: z.boolean()
+});
+
+export const ActiveTimerSchema = z.object({
+    startTime: z.number().nullable(),
+    projectName: z.string(),
+    taskTitle: z.string(),
+    projectId: z.string(),
+    taskId: z.string(),
+    isBillable: z.boolean(),
+    secondsElapsed: z.number()
 });
 
 export const ProjectSchema = z.object({
@@ -674,7 +704,17 @@ export const state = {
     databaseViewMode: 'grid' as 'grid' | 'gallery',
     activeCommandMenu: false,
     activeAiAssistant: false,
-    aiMessages: [] as { sender: 'user' | 'ai', text: string }[]
+    aiMessages: [] as { sender: 'user' | 'ai', text: string }[],
+    timeLogs: [] as TimeLog[],
+    activeTimer: {
+        startTime: null as number | null,
+        projectName: '',
+        taskTitle: '',
+        projectId: '',
+        taskId: '',
+        isBillable: true,
+        secondsElapsed: 0
+    }
 };
 
 // UI Re-render Callback Registration
@@ -818,6 +858,14 @@ function applyDbState(parsed: any) {
         const val = z.array(PolicySchema).safeParse(parsed.policies);
         if (val.success) state.policies = val.data;
     }
+    if (parsed.timeLogs) {
+        const val = z.array(TimeLogSchema).safeParse(parsed.timeLogs);
+        if (val.success) state.timeLogs = val.data;
+    }
+    if (parsed.activeTimer) {
+        const val = ActiveTimerSchema.safeParse(parsed.activeTimer);
+        if (val.success) state.activeTimer = val.data;
+    }
     if (parsed.activeRole) state.activeRole = parsed.activeRole;
     if (parsed.agencyBrand) state.agencyBrand = parsed.agencyBrand;
     if (parsed.theme) state.theme = parsed.theme;
@@ -856,6 +904,8 @@ function loadLocalState() {
             candidates: JSON.parse(localStorage.getItem('meidallm_candidates') || 'null'),
             customRoles: JSON.parse(localStorage.getItem('meidallm_custom_roles') || 'null'),
             policies: JSON.parse(localStorage.getItem('meidallm_policies') || 'null'),
+            timeLogs: JSON.parse(localStorage.getItem('meidallm_time_logs') || 'null'),
+            activeTimer: JSON.parse(localStorage.getItem('meidallm_active_timer') || 'null'),
             activeRole: localStorage.getItem('meidallm_active_role'),
             agencyBrand: JSON.parse(localStorage.getItem('meidallm_agency_brand') || 'null'),
             theme: localStorage.getItem('meidallm_theme'),
@@ -898,6 +948,30 @@ function loadLocalState() {
     if (state.candidates.length === 0) state.candidates = DEFAULT_CANDIDATES;
     if (state.customRoles.length === 0) state.customRoles = DEFAULT_CUSTOM_ROLES;
     if (state.policies.length === 0) state.policies = DEFAULT_POLICIES;
+    if (state.timeLogs.length === 0) {
+        state.timeLogs = [
+            {
+                id: 'tl-1',
+                projectId: 'p-welcome',
+                taskId: 't-welcome-1',
+                taskTitle: 'Read onboarding brief and campaign objectives',
+                projectName: 'Onboarding Campaign',
+                durationMs: 2.25 * 60 * 60 * 1000,
+                timestamp: Date.now() - 24 * 60 * 60 * 1000,
+                billable: true
+            },
+            {
+                id: 'tl-2',
+                projectId: 'p-welcome',
+                taskId: 't-welcome-2',
+                taskTitle: 'Align on team workspace and invite collaborators',
+                projectName: 'Onboarding Campaign',
+                durationMs: 1.0 * 60 * 60 * 1000,
+                timestamp: Date.now() - 12 * 60 * 60 * 1000,
+                billable: false
+            }
+        ];
+    }
     if (!state.activeRole) state.activeRole = 'admin';
     if (!state.agencyBrand || !state.agencyBrand.logo) state.agencyBrand = { logo: 'Meidallm Agency', primaryColor: '#000000', subscriptionTier: 'pro' };
     if (!state.agencyBrand.subscriptionTier) state.agencyBrand.subscriptionTier = 'pro';
@@ -991,6 +1065,8 @@ export function saveState() {
         localStorage.setItem('meidallm_candidates', JSON.stringify(state.candidates));
         localStorage.setItem('meidallm_custom_roles', JSON.stringify(state.customRoles));
         localStorage.setItem('meidallm_policies', JSON.stringify(state.policies));
+        localStorage.setItem('meidallm_time_logs', JSON.stringify(state.timeLogs));
+        localStorage.setItem('meidallm_active_timer', JSON.stringify(state.activeTimer));
         localStorage.setItem('meidallm_active_role', state.activeRole);
         localStorage.setItem('meidallm_agency_brand', JSON.stringify(state.agencyBrand));
         localStorage.setItem('meidallm_kanban_viewmode', state.kanbanViewMode);
@@ -1033,6 +1109,8 @@ export function saveState() {
                     candidates: state.candidates,
                     customRoles: state.customRoles,
                     policies: state.policies,
+                    timeLogs: state.timeLogs,
+                    activeTimer: state.activeTimer,
                     activeRole: state.activeRole,
                     agencyBrand: state.agencyBrand,
                     kanbanViewMode: state.kanbanViewMode,
@@ -1379,7 +1457,11 @@ export function updateTask(
     priority?: KanbanTask['priority'],
     points?: number,
     cycleId?: string,
-    moduleId?: string
+    moduleId?: string,
+    collaborators?: string[],
+    reviewers?: string[],
+    externalLinks?: string[],
+    comments?: TaskComment[]
 ) {
     const t = state.kanbanState.find(x => x.id === taskId);
     if (t) {
@@ -1396,6 +1478,10 @@ export function updateTask(
         if (points !== undefined) t.points = points;
         if (cycleId !== undefined) t.cycleId = cycleId;
         if (moduleId !== undefined) t.moduleId = moduleId;
+        if (collaborators !== undefined) t.collaborators = collaborators;
+        if (reviewers !== undefined) t.reviewers = reviewers;
+        if (externalLinks !== undefined) t.externalLinks = externalLinks;
+        if (comments !== undefined) t.comments = comments;
         t.updated = Date.now();
         logChange(t.projectId, t.id, t.title, oldTitle, 'edited');
         notifyStateChange();
@@ -1475,14 +1561,27 @@ export function convertIdeaToTask(ideaId: string) {
     if (ideaIndex > -1) {
         const idea = state.ideasState[ideaIndex];
         if (idea && idea.content.trim()) {
+            // Strip HTML for title
+            let title = "Brainstormed Task";
+            let description = idea.content;
+            if (typeof document !== 'undefined') {
+                const temp = document.createElement("div");
+                temp.innerHTML = idea.content;
+                const plainText = (temp.textContent || temp.innerText || "").trim();
+                title = plainText.substring(0, 60) || "Brainstormed Task";
+            } else {
+                title = idea.content.replace(/<[^>]*>/g, '').substring(0, 60) || "Brainstormed Task";
+            }
+
             const newTask: KanbanTask = {
                 id: 't-' + Math.random().toString(36).substr(2, 9),
                 projectId: idea.projectId,
-                title: idea.content,
+                title: title,
                 tag: 'Brainstorm',
                 status: 'backlog',
                 created: Date.now(),
-                updated: Date.now()
+                updated: Date.now(),
+                description: description
             };
             state.kanbanState.push(newTask);
             state.ideasState.splice(ideaIndex, 1);
@@ -2175,3 +2274,62 @@ export function hasPermission(action: string): boolean {
     const standardActions = ['view:workspaces', 'create:task', 'edit:task'];
     return standardActions.includes(action);
 }
+
+export function startTimer(projectId: string, taskId: string, taskTitle: string, projectName: string, isBillable = true) {
+    state.activeTimer = {
+        startTime: Date.now(),
+        projectName: projectName,
+        taskTitle: taskTitle,
+        projectId: projectId,
+        taskId: taskId,
+        isBillable: isBillable,
+        secondsElapsed: 0
+    };
+    notifyStateChange();
+}
+
+export function stopAndSaveTimer() {
+    const timer = state.activeTimer;
+    if (timer && timer.startTime) {
+        const durationMs = Date.now() - timer.startTime + (timer.secondsElapsed * 1000);
+        const newLog: TimeLog = {
+            id: 'tl-' + Math.random().toString(36).substr(2, 9),
+            projectId: timer.projectId || undefined,
+            taskId: timer.taskId || undefined,
+            taskTitle: timer.taskTitle || "General Work",
+            projectName: timer.projectName || "General",
+            durationMs: durationMs,
+            timestamp: Date.now(),
+            billable: timer.isBillable
+        };
+        state.timeLogs.unshift(newLog);
+        
+        // Reset active timer
+        state.activeTimer = {
+            startTime: null,
+            projectName: '',
+            taskTitle: '',
+            projectId: '',
+            taskId: '',
+            isBillable: true,
+            secondsElapsed: 0
+        };
+        notifyStateChange();
+        return newLog;
+    }
+    return null;
+}
+
+export function discardTimer() {
+    state.activeTimer = {
+        startTime: null,
+        projectName: '',
+        taskTitle: '',
+        projectId: '',
+        taskId: '',
+        isBillable: true,
+        secondsElapsed: 0
+    };
+    notifyStateChange();
+}
+

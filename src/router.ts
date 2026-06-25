@@ -39,16 +39,17 @@ export interface ViewConfig {
 // Configurable accordion categories for sidebar layout
 export const sidebarGroups: NavGroup[] = [
     { key: 'workflow', label: 'Campaign Workflow', open: true },
-    { key: 'system', label: 'System', open: true },
-    { key: 'admin', label: 'Super Admin Workspace', open: true }
+    { key: 'system', label: 'System & Operations', open: true },
+    { key: 'admin', label: 'Administration', open: true }
 ];
 
 // Global registry of application views
 export const views: ViewConfig[] = [
+    // Administration Group
     {
         key: 'admin-analytics',
         title: 'Usage & Analytics',
-        icon: '📈',
+        icon: 'admin-analytics',
         scope: 'global',
         group: 'admin',
         roles: ['super_admin'],
@@ -57,7 +58,7 @@ export const views: ViewConfig[] = [
     {
         key: 'admin-tenants',
         title: 'Tenants',
-        icon: '🏢',
+        icon: 'admin-tenants',
         scope: 'global',
         group: 'admin',
         roles: ['super_admin'],
@@ -66,7 +67,7 @@ export const views: ViewConfig[] = [
     {
         key: 'admin-rbac',
         title: 'RBAC & Users',
-        icon: '🛡️',
+        icon: 'admin-rbac',
         scope: 'global',
         group: 'admin',
         roles: ['super_admin', 'tenant_owner', 'tenant_admin'],
@@ -75,31 +76,26 @@ export const views: ViewConfig[] = [
     {
         key: 'admin-policies',
         title: 'Rules & Policies',
-        icon: '⚖️',
+        icon: 'admin-policies',
         scope: 'global',
         group: 'admin',
         roles: ['super_admin', 'tenant_owner'],
         render: () => renderAdminPoliciesView()
     },
     {
-        key: 'workspaces',
-        title: 'Workspaces',
-        icon: '📂',
-        scope: 'global',
-        group: 'workflow',
-        render: () => renderProjectsView()
+        key: 'settings',
+        title: 'Settings',
+        icon: 'settings',
+        scope: 'system',
+        group: 'admin',
+        render: () => renderSettingsView()
     },
-    {
-        key: 'project-workspace',
-        title: 'Project Workspace',
-        scope: 'global',
-        group: 'workflow',
-        render: (pid) => renderWorkspaceView(pid || '')
-    },
+
+    // Campaign Workflow Group
     {
         key: 'idea-canvas',
         title: 'Idea Canvas',
-        icon: '💡',
+        icon: 'idea-canvas',
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderIdeasView(pid || '')
@@ -107,7 +103,7 @@ export const views: ViewConfig[] = [
     {
         key: 'kanban-board',
         title: 'Task Kanban Board',
-        icon: '📋',
+        icon: 'kanban-board',
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderKanbanView(pid || '')
@@ -115,7 +111,7 @@ export const views: ViewConfig[] = [
     {
         key: 'project-cycles',
         title: 'Cycles & Sprints',
-        icon: '⚡',
+        icon: 'project-cycles',
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderCyclesView(pid || '')
@@ -123,7 +119,7 @@ export const views: ViewConfig[] = [
     {
         key: 'database-hub',
         title: 'Collaborative Databases',
-        icon: '📊',
+        icon: 'database-hub',
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderDatabaseView(pid || '')
@@ -131,7 +127,7 @@ export const views: ViewConfig[] = [
     {
         key: 'project-goals',
         title: 'Campaign Goals',
-        icon: '🎯',
+        icon: 'project-goals',
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderGoalsView(pid || '')
@@ -139,7 +135,7 @@ export const views: ViewConfig[] = [
     {
         key: 'research',
         title: 'Research & RAG Engine',
-        icon: '🔍',
+        icon: 'research',
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderResearchView(pid || '')
@@ -147,7 +143,7 @@ export const views: ViewConfig[] = [
     {
         key: 'media',
         title: 'Media Assets Studio',
-        icon: '🖼️',
+        icon: 'media',
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderMediaView(pid || '')
@@ -155,7 +151,7 @@ export const views: ViewConfig[] = [
     {
         key: 'drafts',
         title: 'Drafts & Compose',
-        icon: '📝',
+        icon: 'drafts',
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderDraftsView(pid || '')
@@ -163,7 +159,7 @@ export const views: ViewConfig[] = [
     {
         key: 'publish',
         title: 'Publish & Schedule',
-        icon: '📢',
+        icon: 'publish',
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderPublishView(pid || '')
@@ -171,74 +167,83 @@ export const views: ViewConfig[] = [
     {
         key: 'analytics',
         title: 'Campaign Analytics',
-        icon: '📊',
+        icon: 'analytics',
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderAnalyticsView(pid || '')
     },
+
+    // System & Operations Group
+    {
+        key: 'workspaces',
+        title: 'Workspaces',
+        icon: 'workspaces',
+        scope: 'global',
+        group: 'system',
+        render: () => renderProjectsView()
+    },
+    {
+        key: 'project-workspace',
+        title: 'Project Workspace',
+        scope: 'global',
+        group: 'system',
+        render: (pid) => renderWorkspaceView(pid || '')
+    },
     {
         key: 'connections',
         title: 'Connections & API',
-        icon: '🔌',
+        icon: 'connections',
         scope: 'global',
-        group: 'workflow',
+        group: 'system',
         render: () => renderConnectionsView()
     },
     {
         key: 'crm',
         title: 'CRM Hub',
-        icon: '💼',
+        icon: 'crm',
         scope: 'project',
-        group: 'workflow',
+        group: 'system',
         render: (pid) => renderCRMView(pid || '')
     },
     {
         key: 'project-erp',
         title: 'ERP & Budgeting',
-        icon: '📈',
+        icon: 'project-erp',
         scope: 'project',
-        group: 'workflow',
+        group: 'system',
         render: (pid) => renderERPView(pid || '')
     },
     {
         key: 'time-tracking',
         title: 'Time Tracking',
-        icon: '⏰',
+        icon: 'time-tracking',
         scope: 'global',
-        group: 'workflow',
+        group: 'system',
         render: () => renderTimeTrackingView()
     },
     {
         key: 'team',
         title: 'Team Office',
-        icon: '👥',
+        icon: 'team',
         scope: 'global',
-        group: 'workflow',
+        group: 'system',
         render: () => renderTeamView()
-    },
-    {
-        key: 'settings',
-        title: 'Settings',
-        icon: '⚙️',
-        scope: 'system',
-        group: 'footer',
-        render: () => renderSettingsView()
     },
     {
         key: 'client-portal',
         title: 'Client Portal',
-        icon: '🔗',
+        icon: 'client-portal',
         scope: 'project',
-        group: 'workflow',
+        group: 'system',
         roles: ['external_client', 'super_admin', 'tenant_owner', 'tenant_admin', 'manager', 'sales'],
         render: () => renderClientPortalView()
     },
     {
         key: 'helpdesk',
         title: 'Helpdesk',
-        icon: '🎫',
+        icon: 'helpdesk',
         scope: 'project',
-        group: 'workflow',
+        group: 'system',
         render: () => renderHelpdeskView()
     }
 ];

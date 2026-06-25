@@ -1,5 +1,6 @@
 import { state } from "../state";
 import { sanitizeHTML } from "../utils";
+import { getIconSVG } from "./icons";
 
 export function renderWorkspaceView(pid: string): string {
     const p = state.projects.find(x => x.id === pid);
@@ -18,7 +19,7 @@ export function renderWorkspaceView(pid: string): string {
         <!-- Top Row: Overview & Kanban -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Project Details -->
-            <div class="bg-glass-bg border border-glass-border rounded-2xl p-6 col-span-1 flex flex-col justify-between">
+            <div class="bg-glass-bg border border-glass-border rounded-2xl p-6 col-span-1 flex flex-col justify-between text-left">
                 <div>
                     <h3 class="text-xl font-semibold text-white font-outfit mb-2">${sanitizeHTML(p.name)}</h3>
                     <p class="text-text-muted text-sm mb-6">${sanitizeHTML(p.description)}</p>
@@ -28,11 +29,11 @@ export function renderWorkspaceView(pid: string): string {
                         <div class="flex justify-between text-sm"><span class="text-text-muted">Ideas Count</span><span class="text-white font-medium">${projectIdeas.length}</span></div>
                     </div>
                 </div>
-                <button onclick="window.navigateTo('workspaces')" class="w-full mt-6 px-4 py-2 bg-panel-hover border border-glass-border rounded-lg text-sm hover:bg-glass-border transition-colors">Back to Workspaces</button>
+                <button onclick="window.navigateTo('workspaces')" class="w-full mt-6 px-4 py-2 bg-panel-hover border border-glass-border rounded-lg text-sm hover:bg-glass-border transition-colors cursor-pointer">Back to Workspaces</button>
             </div>
 
             <!-- Kanban Preview -->
-            <div class="bg-glass-bg border border-glass-border rounded-2xl p-6 col-span-2 flex flex-col">
+            <div class="bg-glass-bg border border-glass-border rounded-2xl p-6 col-span-2 flex flex-col text-left">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold text-white font-outfit">Task Pipeline</h3>
                     <button onclick="window.navigateTo('kanban-board', '${p.id}')" class="text-sm text-primary hover:text-white transition-colors cursor-pointer">Open Full Board →</button>
@@ -61,22 +62,22 @@ export function renderWorkspaceView(pid: string): string {
         <!-- Bottom Row: Assets Grid -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div onclick="window.navigateTo('idea-canvas', '${p.id}')" class="bg-glass-bg border border-glass-border rounded-2xl p-6 hover:bg-panel-hover hover:border-primary transition-all cursor-pointer flex flex-col items-center text-center">
-                <span class="text-4xl mb-3">💡</span>
+                <span class="mb-3 text-primary">${getIconSVG('idea-canvas', 'w-10 h-10')}</span>
                 <h4 class="font-medium text-white">Idea Canvas</h4>
                 <p class="text-xs text-text-muted mt-1">${projectIdeas.length} notes active</p>
             </div>
             <div onclick="window.navigateTo('research', '${p.id}')" class="bg-glass-bg border border-glass-border rounded-2xl p-6 hover:bg-panel-hover hover:border-primary transition-all cursor-pointer flex flex-col items-center text-center">
-                <span class="text-4xl mb-3">🔍</span>
+                <span class="mb-3 text-primary">${getIconSVG('research', 'w-10 h-10')}</span>
                 <h4 class="font-medium text-white">Research & RAG</h4>
                 <p class="text-xs text-text-muted mt-1">${projectDocs.length} sources indexed</p>
             </div>
             <div onclick="window.navigateTo('media', '${p.id}')" class="bg-glass-bg border border-glass-border rounded-2xl p-6 hover:bg-panel-hover hover:border-primary transition-all cursor-pointer flex flex-col items-center text-center">
-                <span class="text-4xl mb-3">🖼️</span>
+                <span class="mb-3 text-primary">${getIconSVG('media', 'w-10 h-10')}</span>
                 <h4 class="font-medium text-white">Media Assets</h4>
                 <p class="text-xs text-text-muted mt-1">${projectMedia.length} images</p>
             </div>
             <div onclick="window.navigateTo('drafts', '${p.id}')" class="bg-glass-bg border border-glass-border rounded-2xl p-6 hover:bg-panel-hover hover:border-primary transition-all cursor-pointer flex flex-col items-center text-center">
-                <span class="text-4xl mb-3">📝</span>
+                <span class="mb-3 text-primary">${getIconSVG('drafts', 'w-10 h-10')}</span>
                 <h4 class="font-medium text-white">Drafts & Compose</h4>
                 <p class="text-xs text-text-muted mt-1">${projectDrafts.length} active drafts</p>
             </div>
