@@ -21,6 +21,19 @@ if (!session) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script is:inline>
+        (function() {
+            const theme = localStorage.getItem('meidallm_theme') || 'day';
+            if (theme === 'day') {
+                document.documentElement.classList.add('theme-light');
+            } else if (theme === 'night') {
+                document.documentElement.classList.add('theme-dark');
+            } else if (theme === 'auto') {
+                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.classList.add(systemPrefersDark ? 'theme-dark' : 'theme-light');
+            }
+        })();
+    </script>
 </head>
 <body>
     <div class="background-animation">

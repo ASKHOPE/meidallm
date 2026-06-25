@@ -106,9 +106,14 @@ export interface Contact {
     name: string;
     email: string;
     company: string;
-    dealStage: 'lead' | 'contacted' | 'negotiation' | 'won';
+    dealStage: 'lead' | 'connected' | 'discussion' | 'active';
     dealValue: number;
     created: number;
+    updated?: number;
+    isArchived?: boolean;
+    isBinned?: boolean;
+    statusTag?: 'cold' | 'warm' | 'hot' | 'new';
+    history?: { action: string; timestamp: number }[];
 }
 
 export interface TeamMember {

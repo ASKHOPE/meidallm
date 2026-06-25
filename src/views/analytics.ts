@@ -107,32 +107,32 @@ export function renderAnalyticsView(pid: string): string {
     <div class="fade-in flex flex-col gap-6">
         <!-- Top Metrics Row (Global Campaign Summary) -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-glass-bg border border-glass-border p-6 rounded-2xl">
+            <div class="bg-background border border-text-main/15 p-6 rounded-2xl">
                 <span class="text-xs text-text-muted uppercase tracking-wider font-semibold block mb-1">Global Impressions</span>
-                <span class="text-2xl font-bold text-white font-outfit">${impressionsVal.toLocaleString()}</span>
-                <span class="text-[10px] text-emerald-400 block mt-1">▲ +12% this week</span>
+                <span class="text-2xl font-bold text-text-main font-outfit">${impressionsVal.toLocaleString()}</span>
+                <span class="text-[10px] text-emerald-500 block mt-1">▲ +12% this week</span>
             </div>
-            <div class="bg-glass-bg border border-glass-border p-6 rounded-2xl">
+            <div class="bg-background border border-text-main/15 p-6 rounded-2xl">
                 <span class="text-xs text-text-muted uppercase tracking-wider font-semibold block mb-1">Total Link Clicks</span>
-                <span class="text-2xl font-bold text-white font-outfit">${clicksVal.toLocaleString()}</span>
-                <span class="text-[10px] text-emerald-400 block mt-1">▲ +8.4% this week</span>
+                <span class="text-2xl font-bold text-text-main font-outfit">${clicksVal.toLocaleString()}</span>
+                <span class="text-[10px] text-emerald-500 block mt-1">▲ +8.4% this week</span>
             </div>
-            <div class="bg-glass-bg border border-glass-border p-6 rounded-2xl">
+            <div class="bg-background border border-text-main/15 p-6 rounded-2xl">
                 <span class="text-xs text-text-muted uppercase tracking-wider font-semibold block mb-1">Avg. Campaign CTR</span>
-                <span class="text-2xl font-bold text-white font-outfit">${ctrVal}</span>
-                <span class="text-[10px] text-rose-400 block mt-1">▼ -0.3% this week</span>
+                <span class="text-2xl font-bold text-text-main font-outfit">${ctrVal}</span>
+                <span class="text-[10px] text-rose-500 block mt-1">▼ -0.3% this week</span>
             </div>
-            <div class="bg-glass-bg border border-glass-border p-6 rounded-2xl">
+            <div class="bg-background border border-text-main/15 p-6 rounded-2xl">
                 <span class="text-xs text-text-muted uppercase tracking-wider font-semibold block mb-1">Engagement Rate</span>
-                <span class="text-2xl font-bold text-white font-outfit">${engagementVal}</span>
-                <span class="text-[10px] text-emerald-400 block mt-1">▲ +1.5% this week</span>
+                <span class="text-2xl font-bold text-text-main font-outfit">${engagementVal}</span>
+                <span class="text-[10px] text-emerald-500 block mt-1">▲ +1.5% this week</span>
             </div>
         </div>
 
         <!-- Post Browser Section -->
-        <div class="bg-glass-bg border border-glass-border rounded-2xl p-6">
-            <div class="border-b border-glass-border pb-4 mb-6">
-                <h3 class="text-lg font-semibold text-white font-outfit">Published Post Browser</h3>
+        <div class="bg-background border border-text-main/15 rounded-2xl p-6">
+            <div class="border-b border-text-main/10 pb-4 mb-6">
+                <h3 class="text-lg font-semibold text-text-main font-outfit">Published Post Browser</h3>
                 <p class="text-xs text-text-muted mt-0.5">Analyze and preview content performance across your channels.</p>
             </div>
 
@@ -142,25 +142,25 @@ export function renderAnalyticsView(pid: string): string {
                     ${allPosts.map((post, idx) => {
                         const dateStr = new Date(post.scheduledTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
                         const isSelected = idx === 0;
-                        const activeClass = isSelected ? 'border-primary bg-panel-hover/60 shadow-[0_0_15px_var(--color-primary-glow)]' : 'border-glass-border bg-panel-hover/20 hover:bg-panel-hover/30';
+                        const activeClass = isSelected ? 'border-text-main bg-panel-hover/60 shadow-[0_0_15px_var(--color-primary-glow)]' : 'border-text-main/15 bg-panel-hover/20 hover:bg-panel-hover/30';
                         return `
                         <div id="anal-post-card-${post.id}" onclick="window.selectAnalyticsPost('${post.id}')" 
                              class="p-4 rounded-xl border transition-all cursor-pointer text-left flex flex-col gap-2 ${activeClass}">
-                            <div class="flex justify-between items-start gap-2">
-                                <h4 class="font-semibold text-sm text-white truncate max-w-[80%]">${sanitizeHTML(post.title)}</h4>
-                                <span class="text-[10px] text-text-muted shrink-0">${dateStr}</span>
-                            </div>
-                            <p class="text-xs text-text-muted line-clamp-2">${sanitizeHTML(post.content)}</p>
-                            <div class="flex gap-1.5 flex-wrap mt-1">
-                                ${post.channels.map(chan => `<span class="bg-glass-border/50 text-white text-[9px] px-1.5 py-0.5 rounded font-medium">${chan}</span>`).join('')}
-                            </div>
+                             <div class="flex justify-between items-start gap-2">
+                                 <h4 class="font-semibold text-sm text-text-main truncate max-w-[80%]">${sanitizeHTML(post.title)}</h4>
+                                 <span class="text-[10px] text-text-muted shrink-0">${dateStr}</span>
+                             </div>
+                             <p class="text-xs text-text-muted line-clamp-2">${sanitizeHTML(post.content)}</p>
+                             <div class="flex gap-1.5 flex-wrap mt-1">
+                                 ${post.channels.map(chan => `<span class="bg-panel-hover text-text-main text-[9px] px-1.5 py-0.5 rounded font-medium">${chan}</span>`).join('')}
+                             </div>
                         </div>
                         `;
                     }).join('')}
                 </div>
 
                 <!-- Right: Metrics Detail & Browser Preview (span 7) -->
-                <div class="lg:col-span-7 flex flex-col gap-6 bg-panel-hover/10 border border-glass-border/50 rounded-xl p-5" id="analytics-detail-panel">
+                <div class="lg:col-span-7 flex flex-col gap-6 bg-panel-hover/10 border border-text-main/15 rounded-xl p-5" id="analytics-detail-panel">
                     ${firstPost ? renderPostDetailHTML(firstPost) : `<div class="text-text-muted text-center py-12">No posts available.</div>`}
                 </div>
             </div>
@@ -174,51 +174,51 @@ export function renderPostDetailHTML(post: any): string {
     return `
     <div class="flex flex-col gap-5">
         <!-- Post Title and Channel Header -->
-        <div class="flex justify-between items-start border-b border-glass-border/30 pb-4">
+        <div class="flex justify-between items-start border-b border-text-main/10 pb-4">
             <div>
-                <h4 class="text-base font-semibold text-white font-outfit mb-0.5">${sanitizeHTML(post.title)}</h4>
+                <h4 class="text-base font-semibold text-text-main font-outfit mb-0.5">${sanitizeHTML(post.title)}</h4>
                 <div class="flex items-center gap-1.5 text-xs text-text-muted mt-1">
                     <span>Published via</span>
                     <div class="flex gap-1">
-                        ${post.channels.map((c: string) => `<span class="bg-primary/20 text-primary border border-primary/20 text-[10px] px-2 py-0.5 rounded-full font-semibold">${c}</span>`).join('')}
+                        ${post.channels.map((c: string) => `<span class="bg-text-main/10 text-text-main border border-text-main/15 text-[10px] px-2 py-0.5 rounded-full font-semibold">${c}</span>`).join('')}
                     </div>
                 </div>
             </div>
-            <span class="text-[10px] text-text-muted font-medium bg-glass-border px-2.5 py-1 rounded-full uppercase tracking-wider">
+            <span class="text-[10px] text-text-muted font-medium bg-panel-hover px-2.5 py-1 rounded-full uppercase tracking-wider">
                 ${post.format}
             </span>
         </div>
 
         <!-- Mini Metrics Grid -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div class="bg-glass-bg/40 border border-glass-border/50 p-3.5 rounded-xl text-center">
+            <div class="bg-panel-hover/30 border border-text-main/15 p-3.5 rounded-xl text-center">
                 <span class="text-[10px] text-text-muted uppercase tracking-wider font-semibold block mb-0.5">Impressions</span>
-                <span class="text-lg font-bold text-white">${post.metrics.impressions.toLocaleString()}</span>
+                <span class="text-lg font-bold text-text-main">${post.metrics.impressions.toLocaleString()}</span>
             </div>
-            <div class="bg-glass-bg/40 border border-glass-border/50 p-3.5 rounded-xl text-center">
+            <div class="bg-panel-hover/30 border border-text-main/15 p-3.5 rounded-xl text-center">
                 <span class="text-[10px] text-text-muted uppercase tracking-wider font-semibold block mb-0.5">Clicks</span>
-                <span class="text-lg font-bold text-white">${post.metrics.clicks.toLocaleString()}</span>
+                <span class="text-lg font-bold text-text-main">${post.metrics.clicks.toLocaleString()}</span>
             </div>
-            <div class="bg-glass-bg/40 border border-glass-border/50 p-3.5 rounded-xl text-center">
+            <div class="bg-panel-hover/30 border border-text-main/15 p-3.5 rounded-xl text-center">
                 <span class="text-[10px] text-text-muted uppercase tracking-wider font-semibold block mb-0.5">CTR</span>
-                <span class="text-lg font-bold text-white">${post.metrics.ctr}</span>
+                <span class="text-lg font-bold text-text-main">${post.metrics.ctr}</span>
             </div>
-            <div class="bg-glass-bg/40 border border-glass-border/50 p-3.5 rounded-xl text-center">
+            <div class="bg-panel-hover/30 border border-text-main/15 p-3.5 rounded-xl text-center">
                 <span class="text-[10px] text-text-muted uppercase tracking-wider font-semibold block mb-0.5">Engagement</span>
-                <span class="text-lg font-bold text-white">${post.metrics.engagement}</span>
+                <span class="text-lg font-bold text-text-main">${post.metrics.engagement}</span>
             </div>
         </div>
 
         <!-- Social Media Feed Browser Mock Frame -->
-        <div class="border border-glass-border rounded-xl bg-glass-bg/25 overflow-hidden flex flex-col">
+        <div class="border border-text-main/15 rounded-xl bg-panel-hover/5 overflow-hidden flex flex-col">
             <!-- Browser Header bar -->
-            <div class="bg-glass-border/40 px-4 py-2 border-b border-glass-border flex items-center gap-2">
+            <div class="bg-panel-hover/40 px-4 py-2 border-b border-text-main/10 flex items-center gap-2">
                 <div class="flex gap-1.5 shrink-0">
                     <span class="w-2.5 h-2.5 rounded-full bg-rose-500 block"></span>
                     <span class="w-2.5 h-2.5 rounded-full bg-amber-500 block"></span>
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 block"></span>
                 </div>
-                <div class="bg-black/20 border border-glass-border/40 text-[10px] text-text-muted py-0.5 px-3 rounded-md flex-grow font-mono truncate">
+                <div class="bg-text-main/5 border border-text-main/10 text-[10px] text-text-muted py-0.5 px-3 rounded-md flex-grow font-mono truncate">
                     https://meidallm.com/preview/${post.id}
                 </div>
             </div>
@@ -227,11 +227,11 @@ export function renderPostDetailHTML(post: any): string {
             <div class="p-5 flex flex-col gap-4 text-left">
                 <!-- User Avatar card -->
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-xs font-bold text-white shadow-md">
+                    <div class="w-9 h-9 rounded-full bg-text-main text-background flex items-center justify-center text-xs font-bold shadow-md">
                         M
                     </div>
                     <div>
-                        <div class="font-bold text-xs text-white">Meidallm Portal</div>
+                        <div class="font-bold text-xs text-text-main">Meidallm Portal</div>
                         <div class="text-[10px] text-text-muted">@meidallm_agency • Just now</div>
                     </div>
                 </div>
@@ -239,13 +239,13 @@ export function renderPostDetailHTML(post: any): string {
                 <p class="text-xs text-text-main leading-relaxed font-outfit select-text whitespace-pre-line">${sanitizeHTML(post.content)}</p>
                 
                 <!-- Mock Media Preview if exists -->
-                <div class="w-full h-32 rounded-lg bg-cover bg-center border border-glass-border/50" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80')"></div>
+                <div class="w-full h-32 rounded-lg bg-cover bg-center border border-text-main/15" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80')"></div>
 
                 <!-- Footer Engagement Actions -->
-                <div class="flex justify-between items-center border-t border-glass-border/30 pt-3 text-[11px] text-text-muted font-medium px-1">
-                    <span class="flex items-center gap-1.5 hover:text-rose-400 transition-colors">❤️ ${post.metrics.likes} Likes</span>
-                    <span class="flex items-center gap-1.5 hover:text-primary transition-colors">💬 ${post.metrics.comments} Comments</span>
-                    <span class="flex items-center gap-1.5 hover:text-emerald-400 transition-colors">🔁 ${post.metrics.shares} Shares</span>
+                <div class="flex justify-between items-center border-t border-text-main/10 pt-3 text-[11px] text-text-muted font-medium px-1">
+                    <span class="flex items-center gap-1.5 hover:text-rose-500 transition-colors">❤️ ${post.metrics.likes} Likes</span>
+                    <span class="flex items-center gap-1.5 hover:text-text-main transition-colors">💬 ${post.metrics.comments} Comments</span>
+                    <span class="flex items-center gap-1.5 hover:text-emerald-500 transition-colors">🔁 ${post.metrics.shares} Shares</span>
                 </div>
             </div>
         </div>

@@ -193,6 +193,9 @@ export function renderLayoutHTML(): string {
     </aside>
 </div>
 
+<!-- Toast Notification Container -->
+<div id="toast-container" class="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+
 <!-- Command Menu Modal -->
 <div id="command-menu-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center hidden z-50 pt-24 animate-[fadeIn_0.15s_ease-out]" onclick="window.toggleCommandMenu(false)">
     <div class="bg-background border border-text-main/20 rounded-lg w-full max-w-lg overflow-hidden shadow-xl flex flex-col max-h-[400px]" onclick="event.stopPropagation()">
@@ -207,4 +210,32 @@ export function renderLayoutHTML(): string {
     </div>
 </div>
 `;
+}
+
+if (typeof window !== 'undefined') {
+    const w = window as any;
+    w.showToast = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        
+        const toast = document.createElement('div');
+        toast.className = `p-3.5 rounded-xl border text-xs font-bold shadow-lg transition-all flex items-center gap-2 pointer-events-auto bg-background text-text-main border-text-main/20 animate-[fadeInUp_0.2s_ease-out_forwards]`;
+        
+        let emoji = 'ℹ️';
+        if (type === 'success') {
+            emoji = '🟢';
+            toast.classList.add('border-emerald-500/30');
+        } else if (type === 'error') {
+            emoji = '🔴';
+            toast.classList.add('border-rose-500/30');
+        }
+        
+        toast.innerHTML = `<span>${emoji}</span><span>${msg}</span>`;
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.className += ' animate-[fadeOutRight_0.2s_ease-out_forwards]';
+            setTimeout(() => toast.remove(), 250);
+        }, 3000);
+    };
 }

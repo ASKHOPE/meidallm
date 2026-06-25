@@ -36,7 +36,11 @@ import {
     toggleTeamProjectAccess,
     deleteTeam,
     archiveTeam,
-    logActivity
+    logActivity,
+    archiveContact,
+    binContact,
+    updateContactTag,
+    notifyStateChange
 } from "./state";
 import { renderLayoutHTML, renderProjectDropdownOptions } from "./views/layout";
 import { renderPostDetailHTML } from "./views/analytics";
@@ -44,6 +48,16 @@ import { parseDraftContent } from "./views/drafts";
 import { views } from "./router";
 import { sanitizeHTML } from "./utils";
 import type { KanbanTask, ResearchDoc, MediaAsset, Draft } from "./types";
+
+// Custom override for alert to use premium toast notifications
+const alert = (msg: string) => {
+    if (typeof window !== 'undefined' && (window as any).showToast) {
+        const isSuccess = msg.toLowerCase().includes('success') || msg.toLowerCase().includes('copied') || msg.toLowerCase().includes('converted') || msg.toLowerCase().includes('saved');
+        (window as any).showToast(msg, isSuccess ? 'success' : 'info');
+    } else {
+        window.alert(msg);
+    }
+};
 
 // Update sidebar project listing and active dropdown state
 function updateSidebarUI() {
@@ -594,6 +608,34 @@ w.archiveTeamToggle = (teamId: string, isArchived: boolean) => {
     archiveTeam(teamId, isArchived);
 };
 
+w.setCrmFilter = (filter: 'active' | 'archived' | 'bin') => {
+    state.crmFilter = filter;
+    notifyStateChange();
+};
+
+w.archiveContactToggle = (cid: string, isArchived: boolean) => {
+    archiveContact(cid, isArchived);
+};
+
+w.binContactToggle = (cid: string, isBinned: boolean) => {
+    binContact(cid, isBinned);
+};
+
+w.updateCrmContactTag = (cid: string, tag: any) => {
+    updateContactTag(cid, tag);
+};
+
+w.selectCrmContact = (cid: string) => {
+    (window as any).__selectedCrmContactId = cid;
+    notifyStateChange();
+};
+
+w.deleteContactAction = (cid: string) => {
+    if (confirm("Permanently delete this contact?")) {
+        deleteContact(cid);
+    }
+};
+
 w.resetAppState = () => {
     if (confirm("This will clear all custom campaigns, tasks, and notes, restoring setup defaults. Continue?")) {
         resetAppState();
@@ -938,7 +980,7 @@ w.filterCommandMenu = (query: string) => {
             <div class="flex flex-col gap-0.5">
                 ${items.map((item, idx) => `
                 <button onclick="window.runCommandAction(${currentList.indexOf(item)})" 
-                        class="w-full text-left px-2.5 py-2 hover:bg-panel-hover/50 text-xs text-white rounded-xl transition-colors cursor-pointer flex items-center justify-between group">
+                        class="w-full text-left px-2.5 py-2 hover:bg-panel-hover/50 text-xs text-text-main rounded-xl transition-colors cursor-pointer flex items-center justify-between group">
                     <span>${sanitizeHTML(item.name)}</span>
                     <span class="text-[9px] text-text-muted opacity-0 group-hover:opacity-100 transition-opacity">↵</span>
                 </button>
@@ -1063,12 +1105,12 @@ w.renderAiChat = () => {
     if (!chatThread) return;
     
     let html = `
-        <div class="bg-panel-hover/50 p-3 rounded-xl border border-glass-border/40 text-text-muted leading-relaxed">
+        <div class="bg-panel-hover/50 p-3 rounded-xl border border-text-main/15 text-text-muted leading-relaxed">
             Hello! I am your AI assistant. I have full context of your database tables, tasks, cycles, and CRM. Try asking:
             <ul class="list-disc pl-4 mt-2 flex flex-col gap-1.5">
-                <li><button onclick="window.sendAiMessage('Show tasks at risk')" class="text-left text-white underline hover:text-zinc-200">Show tasks at risk</button></li>
-                <li><button onclick="window.sendAiMessage('Summarize current cycle progress')" class="text-left text-white underline hover:text-zinc-200">Summarize current cycle progress</button></li>
-                <li><button onclick="window.sendAiMessage('Recommend copywriting tone')" class="text-left text-white underline hover:text-zinc-200">Recommend copywriting tone</button></li>
+                <li><button onclick="window.sendAiMessage('Show tasks at risk')" class="text-left text-text-main underline hover:text-text-main/80">Show tasks at risk</button></li>
+                <li><button onclick="window.sendAiMessage('Summarize current cycle progress')" class="text-left text-text-main underline hover:text-text-main/80">Summarize current cycle progress</button></li>
+                <li><button onclick="window.sendAiMessage('Recommend copywriting tone')" class="text-left text-text-main underline hover:text-text-main/80">Recommend copywriting tone</button></li>
             </ul>
         </div>
     `;
@@ -1076,13 +1118,13 @@ w.renderAiChat = () => {
     html += state.aiMessages.map(m => {
         if (m.sender === 'user') {
             return `
-            <div class="bg-panel-hover border border-glass-border/40 p-3 rounded-xl ml-6 text-white text-right">
+            <div class="bg-panel-hover border border-text-main/15 p-3 rounded-xl ml-6 text-text-main text-right">
                 ${m.text}
             </div>
             `;
         } else {
             return `
-            <div class="bg-white/5 border border-glass-border/30 p-3 rounded-xl mr-6 text-text-main leading-relaxed">
+            <div class="bg-panel-hover/40 border border-text-main/10 p-3 rounded-xl mr-6 text-text-main leading-relaxed">
                 ${m.text}
             </div>
             `;

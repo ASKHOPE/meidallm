@@ -69,6 +69,7 @@ html.theme-light {
   --color-primary-glow: rgba(0, 0, 0, 0.05);
   --color-secondary: #e4e4e7;
   --color-bg-dark: #ffffff;
+  --color-background: #ffffff;
   --color-glass-bg: #ffffff;
   --color-glass-border: #e4e4e7;
   --color-panel-hover: #f4f4f5;
@@ -91,6 +92,7 @@ html.theme-dark {
   --color-primary-glow: rgba(255, 255, 255, 0.1);
   --color-secondary: #27272a;
   --color-bg-dark: #000000;
+  --color-background: #000000;
   --color-glass-bg: #09090b;
   --color-glass-border: #27272a;
   --color-panel-hover: #18181b;
@@ -99,4 +101,14 @@ html.theme-dark {
 }
 html.theme-dark .background-animation {
     background: radial-gradient(circle at 50% 50%, #09090b 0%, #000000 100%);
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(1rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOutRight {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(2rem); }
 }

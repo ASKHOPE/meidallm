@@ -1,6 +1,16 @@
 import { state, updateErpBudget, addDbRow, notifyStateChange } from "../state";
 import { sanitizeHTML } from "../utils";
 
+// Custom override for alert to use premium toast notifications
+const alert = (msg: string) => {
+    if (typeof window !== 'undefined' && (window as any).showToast) {
+        const isSuccess = msg.toLowerCase().includes('success') || msg.toLowerCase().includes('copied') || msg.toLowerCase().includes('converted') || msg.toLowerCase().includes('saved');
+        (window as any).showToast(msg, isSuccess ? 'success' : 'info');
+    } else {
+        window.alert(msg);
+    }
+};
+
 export function renderERPView(pid: string): string {
     const p = state.projects.find(x => x.id === pid);
     if (!p) return `<div class="fade-in text-text-muted">Project not found.</div>`;

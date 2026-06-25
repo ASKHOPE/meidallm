@@ -1,6 +1,16 @@
 import { state, addDbTable, deleteDbTable, addDbField, deleteDbField, addDbRow, updateDbRow, deleteDbRow, notifyStateChange } from "../state";
 import { sanitizeHTML } from "../utils";
 
+// Custom override for alert to use premium toast notifications
+const alert = (msg: string) => {
+    if (typeof window !== 'undefined' && (window as any).showToast) {
+        const isSuccess = msg.toLowerCase().includes('success') || msg.toLowerCase().includes('copied') || msg.toLowerCase().includes('converted') || msg.toLowerCase().includes('saved');
+        (window as any).showToast(msg, isSuccess ? 'success' : 'info');
+    } else {
+        window.alert(msg);
+    }
+};
+
 export function renderDatabaseView(pid?: string): string {
     const activePid = pid || state.currentProject;
     if (!activePid) {

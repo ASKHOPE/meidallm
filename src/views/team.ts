@@ -26,7 +26,7 @@ export function renderTeamView(): string {
         const totalProjects = activeProjects.length;
         const totalTasksDone = state.kanbanState.filter(t => t.status === 'done').length;
         const totalSpent = state.projects.reduce((sum, p) => sum + (p.spent || 0), 0);
-        const totalDealsWon = state.contacts.filter(c => c.dealStage === 'won').reduce((sum, c) => sum + c.dealValue, 0);
+        const totalDealsWon = state.contacts.filter(c => c.dealStage === 'active').reduce((sum, c) => sum + c.dealValue, 0);
 
         kpiHtml = `
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">

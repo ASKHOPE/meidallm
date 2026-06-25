@@ -121,9 +121,17 @@ export const ContactSchema = z.object({
     name: z.string(),
     email: z.string(),
     company: z.string(),
-    dealStage: z.enum(['lead', 'contacted', 'negotiation', 'won']),
+    dealStage: z.enum(['lead', 'connected', 'discussion', 'active']),
     dealValue: z.number(),
-    created: z.number()
+    created: z.number(),
+    updated: z.number().optional(),
+    isArchived: z.boolean().optional(),
+    isBinned: z.boolean().optional(),
+    statusTag: z.enum(['cold', 'warm', 'hot', 'new']).optional(),
+    history: z.array(z.object({
+        action: z.string(),
+        timestamp: z.number()
+    })).optional()
 });
 
 export const TeamMemberSchema = z.object({
@@ -291,9 +299,9 @@ const DEFAULT_CONNECTIONS: Connection[] = [
 ];
 
 const DEFAULT_CONTACTS: Contact[] = [
-    { id: 'c1', projectId: 'p1', name: 'Sarah Jenkins', email: 'sarah@stripe.com', company: 'Stripe', dealStage: 'contacted', dealValue: 12000, created: Date.now() - 86400000 * 4 },
-    { id: 'c2', projectId: 'p1', name: 'Alex Rivera', email: 'alex@vercel.com', company: 'Vercel', dealStage: 'negotiation', dealValue: 25000, created: Date.now() - 86400000 * 2 },
-    { id: 'c3', projectId: 'p1', name: 'Emily Chen', email: 'emily@notion.so', company: 'Notion', dealStage: 'lead', dealValue: 8000, created: Date.now() - 86400000 * 6 }
+    { id: 'c1', projectId: 'p1', name: 'Sarah Jenkins', email: 'sarah@stripe.com', company: 'Stripe', dealStage: 'connected', dealValue: 12000, created: Date.now() - 86400000 * 4, statusTag: 'warm', history: [{ action: 'Created Prospect', timestamp: Date.now() - 86400000 * 4 }] },
+    { id: 'c2', projectId: 'p1', name: 'Alex Rivera', email: 'alex@vercel.com', company: 'Vercel', dealStage: 'discussion', dealValue: 25000, created: Date.now() - 86400000 * 2, statusTag: 'hot', history: [{ action: 'Created Prospect', timestamp: Date.now() - 86400000 * 2 }] },
+    { id: 'c3', projectId: 'p1', name: 'Emily Chen', email: 'emily@notion.so', company: 'Notion', dealStage: 'lead', dealValue: 8000, created: Date.now() - 86400000 * 6, statusTag: 'new', history: [{ action: 'Created Prospect', timestamp: Date.now() - 86400000 * 6 }] }
 ];
 
 const DEFAULT_TEAM: TeamMember[] = [
@@ -433,7 +441,7 @@ export const state = {
     goals: [] as Goal[],
     
     // Extended States
-    theme: 'night' as 'night' | 'day' | 'auto',
+    theme: 'day' as 'night' | 'day' | 'auto',
     connections: [] as Connection[],
     publishSchedules: [] as PublishSchedule[],
     workspacesSearchQuery: '',
@@ -441,6 +449,7 @@ export const state = {
     workspacesSortBy: 'last-active' as 'last-active' | 'name-asc' | 'name-desc' | 'tasks-count',
     workspacesFilter: 'active' as 'active' | 'archived' | 'bin',
     kanbanFilter: 'active' as 'active' | 'archived' | 'bin',
+    crmFilter: 'active' as 'active' | 'archived' | 'bin',
     kanbanActiveCycleId: null as string | null,
     kanbanActiveModuleId: null as string | null,
     contacts: [] as Contact[],
@@ -742,7 +751,7 @@ export function logChange(projectId: string, taskId: string, itemTitle: string, 
     state.taskLogs.push(logEntry);
 }
 
-export function addContact(pid: string, name: string, email: string, company: string, dealStage: Contact['dealStage'], dealValue: number) {
+export function addContact(pid: string, name: string, email: string, company: string, dealStage: Contact['dealStage'], dealValue: number, statusTag?: Contact['statusTag']) {
     const newContact: Contact = {
         id: 'c-' + Math.random().toString(36).substr(2, 9),
         projectId: pid,
@@ -751,7 +760,12 @@ export function addContact(pid: string, name: string, email: string, company: st
         company: company.trim(),
         dealStage,
         dealValue,
-        created: Date.now()
+        created: Date.now(),
+        updated: Date.now(),
+        isArchived: false,
+        isBinned: false,
+        statusTag: statusTag || 'new',
+        history: [{ action: 'Created Prospect', timestamp: Date.now() }]
     };
     state.contacts.push(newContact);
     logChange(pid, '', `Contact ${newContact.name}`, 'none', 'created_contact');
@@ -759,15 +773,72 @@ export function addContact(pid: string, name: string, email: string, company: st
     return newContact.id;
 }
 
-export function updateContact(cid: string, name: string, email: string, company: string, dealStage: Contact['dealStage'], dealValue: number) {
+export function updateContact(cid: string, name: string, email: string, company: string, dealStage: Contact['dealStage'], dealValue: number, statusTag?: Contact['statusTag']) {
     const contact = state.contacts.find(c => c.id === cid);
     if (contact) {
+        const oldStage = contact.dealStage;
         contact.name = name.trim();
         contact.email = email.trim();
         contact.company = company.trim();
         contact.dealStage = dealStage;
         contact.dealValue = dealValue;
+        if (statusTag) contact.statusTag = statusTag;
+        contact.updated = Date.now();
+        if (!contact.history) contact.history = [];
+        if (oldStage !== dealStage) {
+            contact.history.push({
+                action: `Stage changed: ${oldStage} ➔ ${dealStage}`,
+                timestamp: Date.now()
+            });
+        } else {
+            contact.history.push({
+                action: `Updated details`,
+                timestamp: Date.now()
+            });
+        }
         logChange(contact.projectId, '', `Contact ${contact.name}`, 'edited', 'updated_contact');
+        notifyStateChange();
+    }
+}
+
+export function archiveContact(cid: string, isArchived: boolean) {
+    const contact = state.contacts.find(c => c.id === cid);
+    if (contact) {
+        contact.isArchived = isArchived;
+        contact.updated = Date.now();
+        if (!contact.history) contact.history = [];
+        contact.history.push({
+            action: isArchived ? 'Archived prospect' : 'Restored prospect from archive',
+            timestamp: Date.now()
+        });
+        notifyStateChange();
+    }
+}
+
+export function binContact(cid: string, isBinned: boolean) {
+    const contact = state.contacts.find(c => c.id === cid);
+    if (contact) {
+        contact.isBinned = isBinned;
+        contact.updated = Date.now();
+        if (!contact.history) contact.history = [];
+        contact.history.push({
+            action: isBinned ? 'Moved to Bin' : 'Restored from Bin',
+            timestamp: Date.now()
+        });
+        notifyStateChange();
+    }
+}
+
+export function updateContactTag(cid: string, tag: Contact['statusTag']) {
+    const contact = state.contacts.find(c => c.id === cid);
+    if (contact) {
+        contact.statusTag = tag;
+        contact.updated = Date.now();
+        if (!contact.history) contact.history = [];
+        contact.history.push({
+            action: `Updated status tag to ${tag}`,
+            timestamp: Date.now()
+        });
         notifyStateChange();
     }
 }

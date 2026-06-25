@@ -342,20 +342,23 @@ function renderTaskCard(t: KanbanTask, filter: string, cycles: any[], modules: a
     <div draggable="true" 
          ondragstart="window.handleDragStart(event, '${t.id}')"
          onclick="window.openEditTaskModal('${t.id}')"
-         class="kanban-col-item bg-glass-bg border border-glass-border hover:border-primary p-4 rounded-xl cursor-pointer hover:shadow-lg transition-all select-none group/kanban-item flex flex-col justify-between"
+         class="kanban-col-item bg-background border border-text-main/15 hover:border-text-main p-4 rounded-xl cursor-grab active:cursor-grabbing hover:shadow-lg transition-all select-none group/kanban-item flex flex-col justify-between"
          data-title="${sanitizeHTML(t.title)}"
          data-tag="${sanitizeHTML(t.tag)}">
         <div>
             <div class="flex justify-between items-start mb-2">
-                <span class="px-2 py-0.5 text-[9px] font-semibold bg-panel-hover text-text-muted rounded">${sanitizeHTML(t.tag)}</span>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-text-muted/40 text-xs font-bold leading-none cursor-grab active:cursor-grabbing select-none" title="Drag to reorder">⋮⋮</span>
+                    <span class="px-2 py-0.5 text-[9px] font-semibold bg-panel-hover text-text-muted rounded">${sanitizeHTML(t.tag)}</span>
+                </div>
                 <div class="flex gap-2 opacity-0 group-hover/kanban-item:opacity-100 transition-opacity">
                     ${actionHTML}
                 </div>
             </div>
-            <h4 class="font-medium text-white mb-3 text-xs leading-snug">${sanitizeHTML(t.title)}</h4>
+            <h4 class="font-medium text-text-main mb-3 text-xs leading-snug">${sanitizeHTML(t.title)}</h4>
         </div>
         
-        <div class="border-t border-glass-border/30 pt-2 mt-2 flex flex-col gap-1.5">
+        <div class="border-t border-text-main/10 pt-2 mt-2 flex flex-col gap-1.5">
             <div class="flex items-center gap-1.5 flex-wrap">
                 ${t.complexity ? `<span class="px-1.5 py-0.5 text-[8px] font-semibold rounded uppercase tracking-wider bg-slate-500/10 text-slate-400 border border-slate-500/20">${t.complexity}</span>` : ''}
                 ${t.priority && t.priority !== 'none' ? `<span class="px-1.5 py-0.5 text-[8px] font-semibold rounded uppercase tracking-wider ${t.priority === 'urgent' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'}">⚠️ ${t.priority}</span>` : ''}
