@@ -1331,6 +1331,10 @@ export function updateCmsMetadata(draftId: string, cmsStatus: Draft['cmsStatus']
 }
 
 export function updateErpBudget(pid: string, budgetLimit: number, spent: number) {
+    if (!hasPermission('manage:billing')) {
+        alert("Access Denied: Missing billing management permissions.");
+        return;
+    }
     const p = state.projects.find(x => x.id === pid);
     if (p) {
         p.budgetLimit = budgetLimit;
@@ -2132,4 +2136,42 @@ export function resolveSupportCase(caseId: string) {
 export function resetAppState() {
     localStorage.clear();
     location.reload();
+}
+
+export function hasPermission(action: string): boolean {
+    const user = state.team.find(t => t.id === state.currentUser) || state.team[0];
+    if (!user) return false;
+    
+    // Super admins can do anything
+    if (user.systemRole === 'super_admin') return true;
+    
+    // External clients are highly restricted
+    if (user.systemRole === 'external_client') {
+        const allowedClientActions = ['view:client_portal', 'create:ticket', 'view:ticket', 'create:feedback'];
+        return allowedClientActions.includes(action);
+    }
+    
+    // Standard role checks (Simplified mapping for brevity)
+    if (user.systemRole === 'tenant_owner' || user.systemRole === 'tenant_admin') {
+        return true; // Admins have broad access within tenant
+    }
+
+    // Custom roles logic
+    if (user.customRoleIds && user.customRoleIds.length > 0) {
+        for (const rid of user.customRoleIds) {
+            const role = state.customRoles.find(r => r.id === rid);
+            if (role && role.permissions.includes(action)) {
+                return true;
+            }
+        }
+    }
+    
+    // Fallback checks for basic users based on their activeRole context
+    if (state.activeRole === 'accountant' && action.startsWith('manage:billing')) return true;
+    if (state.activeRole === 'sales' && action.startsWith('manage:crm')) return true;
+    if (state.activeRole === 'support' && action.startsWith('manage:tickets')) return true;
+
+    // Default allow for standard workspace actions if they made it here and aren't clients
+    const standardActions = ['view:workspaces', 'create:task', 'edit:task'];
+    return standardActions.includes(action);
 }

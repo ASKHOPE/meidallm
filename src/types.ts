@@ -221,6 +221,7 @@ export interface Goal {
 export interface Tenant {
     id: string;
     name: string;
+    isSuspended?: boolean;
 }
 
 export interface Organization {

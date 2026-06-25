@@ -46,7 +46,8 @@ import {
     switchTeam,
     switchRole,
     togglePolicy,
-    deleteContact
+    deleteContact,
+    hasPermission
 } from "./state";
 import { renderLayoutHTML, renderProjectDropdownOptions } from "./views/layout";
 import { renderPostDetailHTML } from "./views/analytics";
@@ -1298,6 +1299,32 @@ w.createOrganizationPrompt = () => {
             localStorage.setItem('meidallm_active_orgid', cleanName);
             loadState().then(() => notifyStateChange());
         }
+    }
+};
+
+// Admin Hub Tenant Methods
+w.provisionTenant = () => {
+    if (!w.hasPermission('manage:tenants')) {
+        alert("Permission Denied: Super Admin only.");
+        return;
+    }
+    const name = prompt("Enter new Tenant name:");
+    if (name) {
+        const id = 't-' + name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        state.tenants.push({ id, name, isSuspended: false });
+        notifyStateChange();
+    }
+};
+
+w.suspendTenant = (id: string) => {
+    if (!w.hasPermission('manage:tenants')) {
+        alert("Permission Denied: Super Admin only.");
+        return;
+    }
+    const tenant = state.tenants.find(t => t.id === id);
+    if (tenant) {
+        tenant.isSuspended = !tenant.isSuspended;
+        notifyStateChange();
     }
 };
 

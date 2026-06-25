@@ -38,14 +38,16 @@ export function renderProjectDropdownOptions(): string {
 }
 
 export function renderSidebarNavigation(): string {
+    const userProfile = state.team.find(t => t.id === state.currentUser) || state.team[0];
+    const systemRole = userProfile?.systemRole || 'user';
     const role = state.activeRole || 'admin';
-    const isSuperAdmin = state.currentUser === 'bablu.katru@gmail.com';
+    const isSuperAdmin = systemRole === 'super_admin';
     
-    return sidebarGroups.filter(g => g.key !== 'admin' || isSuperAdmin).map(group => {
+    return sidebarGroups.filter(g => g.key !== 'admin' || ['super_admin', 'tenant_owner', 'tenant_admin'].includes(systemRole)).map(group => {
         let groupContent = "";
         
         if (group.key === 'workflow') {
-            const workflowTools = views.filter(v => v.group === 'workflow' && v.icon);
+            const workflowTools = views.filter(v => v.group === 'workflow' && v.icon && (!v.roles || v.roles.includes(systemRole)));
             groupContent = workflowTools.map(item => {
                 const isProjectScoped = item.scope === 'project';
                 const pidAttr = isProjectScoped && state.currentProject ? `data-pid="${state.currentProject}"` : '';
@@ -78,7 +80,7 @@ export function renderSidebarNavigation(): string {
                 `;
             }).join('');
         } else {
-            const groupTools = views.filter(v => v.group === group.key && v.icon && v.scope !== 'project');
+            const groupTools = views.filter(v => v.group === group.key && v.icon && v.scope !== 'project' && (!v.roles || v.roles.includes(systemRole)));
             groupContent = groupTools.map(item => {
                 const iconSVG = getIconSVG(item.key as IconName, 'w-4 h-4 text-text-muted group-hover:text-text-main transition-colors');
                 

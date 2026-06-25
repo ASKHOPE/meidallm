@@ -32,6 +32,7 @@ export interface ViewConfig {
     icon?: string;
     scope: 'global' | 'project' | 'system';
     group: string;
+    roles?: string[];
     render: (pid?: string) => string;
 }
 
@@ -50,6 +51,7 @@ export const views: ViewConfig[] = [
         icon: '📈',
         scope: 'global',
         group: 'admin',
+        roles: ['super_admin'],
         render: () => renderAdminAnalyticsView()
     },
     {
@@ -58,6 +60,7 @@ export const views: ViewConfig[] = [
         icon: '🏢',
         scope: 'global',
         group: 'admin',
+        roles: ['super_admin'],
         render: () => renderAdminTenantsView()
     },
     {
@@ -66,6 +69,7 @@ export const views: ViewConfig[] = [
         icon: '🛡️',
         scope: 'global',
         group: 'admin',
+        roles: ['super_admin', 'tenant_owner', 'tenant_admin'],
         render: () => renderAdminRBACView()
     },
     {
@@ -74,6 +78,7 @@ export const views: ViewConfig[] = [
         icon: '⚖️',
         scope: 'global',
         group: 'admin',
+        roles: ['super_admin', 'tenant_owner'],
         render: () => renderAdminPoliciesView()
     },
     {
@@ -225,6 +230,7 @@ export const views: ViewConfig[] = [
         icon: '🔗',
         scope: 'project',
         group: 'workflow',
+        roles: ['external_client', 'super_admin', 'tenant_owner', 'tenant_admin', 'manager', 'sales'],
         render: () => renderClientPortalView()
     },
     {

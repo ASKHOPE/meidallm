@@ -1,4 +1,4 @@
-import { state, updateErpBudget, addDbRow, notifyStateChange, createP2PTransaction, approveP2PRequisition, deliverP2PGoods, receiveP2PInvoice, run3WayMatch, payP2PInvoice, replenishInventory, adjustInventoryCount, closeFinancialMonth } from "../state";
+import { state, updateErpBudget, addDbRow, notifyStateChange, createP2PTransaction, approveP2PRequisition, deliverP2PGoods, receiveP2PInvoice, run3WayMatch, payP2PInvoice, replenishInventory, adjustInventoryCount, closeFinancialMonth, hasPermission } from "../state";
 import { sanitizeHTML } from "../utils";
 import { getIconSVG } from "./icons";
 
@@ -86,8 +86,7 @@ export function renderERPView(pid: string): string {
         };
     });
 
-    // Content specific variables
-    const isFinancialRole = role === 'admin' || role === 'manager' || role === 'accountant';
+    const isFinancialRole = hasPermission('manage:billing');
 
     // Tabs navigation HTML
     const tabsHTML = `
