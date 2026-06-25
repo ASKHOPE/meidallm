@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember, Cycle, Module, DbField, DbRow, DbTable, Goal, Tenant, Organization, Team } from "./types";
+import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember, Cycle, Module, DbField, DbRow, DbTable, Goal, Tenant, Organization, Team, CustomRole, Policy, SalesInvoice, P2PTransaction, InventoryItem, SupportCase, EmployeeRecord, CandidateRecord, ActivityLog } from "./types";
 
 export const GoalSchema = z.object({
     id: z.string(),
@@ -10,6 +10,23 @@ export const GoalSchema = z.object({
     unit: z.string(),
     dueDate: z.string(),
     status: z.enum(['on-track', 'behind', 'achieved'])
+});
+
+export const CustomRoleSchema = z.object({
+    id: z.string(),
+    tenantId: z.string(),
+    name: z.string(),
+    description: z.string(),
+    permissions: z.array(z.string())
+});
+
+export const PolicySchema = z.object({
+    id: z.string(),
+    tenantId: z.string(),
+    name: z.string(),
+    description: z.string(),
+    type: z.enum(['security', 'access', 'compliance', 'billing']),
+    enforced: z.boolean()
 });
 
 // --- Zod Validation Schemas ---
@@ -137,6 +154,7 @@ export const ContactSchema = z.object({
 export const TeamMemberSchema = z.object({
     id: z.string(),
     name: z.string(),
+    email: z.string(),
     role: z.string(),
     status: z.enum(['active', 'meeting', 'offline', 'vacation']),
     avatarColor: z.string()
@@ -200,7 +218,7 @@ export const DbFieldSchema = z.object({
 
 export const DbRowSchema = z.object({
     id: z.string(),
-    cells: z.record(z.any())
+    cells: z.record(z.string(), z.any())
 });
 
 export const DbTableSchema = z.object({
@@ -396,10 +414,10 @@ const DEFAULT_CONTACTS: Contact[] = [
 ];
 
 const DEFAULT_TEAM: TeamMember[] = [
-    { id: 'tm1', name: 'Hosanna (You)', role: 'Product Architect', status: 'active', avatarColor: 'bg-indigo-500' },
-    { id: 'tm2', name: 'Gavin Belson', role: 'Campaign Strategist', status: 'meeting', avatarColor: 'bg-rose-500' },
-    { id: 'tm3', name: 'Richard Hendricks', role: 'Lead Developer', status: 'active', avatarColor: 'bg-emerald-500' },
-    { id: 'tm4', name: 'Monica Hall', role: 'Agency Relations', status: 'vacation', avatarColor: 'bg-amber-500' }
+    { id: 'tm1', name: 'Hosanna (You)', email: 'hosanna@example.com', role: 'Product Architect', status: 'active', avatarColor: 'bg-indigo-500' },
+    { id: 'tm2', name: 'Gavin Belson', email: 'gavin@example.com', role: 'Campaign Strategist', status: 'meeting', avatarColor: 'bg-rose-500' },
+    { id: 'tm3', name: 'Richard Hendricks', email: 'richard@example.com', role: 'Lead Developer', status: 'active', avatarColor: 'bg-emerald-500' },
+    { id: 'tm4', name: 'Monica Hall', email: 'monica@example.com', role: 'Agency Relations', status: 'vacation', avatarColor: 'bg-amber-500' }
 ];
 
 const DEFAULT_TENANTS: Tenant[] = [
@@ -418,8 +436,9 @@ const DEFAULT_ORGS: Organization[] = [
 ];
 
 const DEFAULT_TEAMS: Team[] = [
-    { id: 't-1', orgId: 'org-meidallm-core', name: 'Product Engineering', memberIds: ['tm1', 'tm3'], projectIds: ['p1'] },
-    { id: 't-2', orgId: 'org-meidallm-core', name: 'Design & Copywriting', memberIds: ['tm2', 'tm4'], projectIds: ['p2'] },
+    { id: 'team-eng', orgId: 'org-meidallm-core', name: 'Engineering', memberIds: ['tm1', 'tm3'], projectIds: ['p1'], isArchived: false },
+    { id: 'team-marketing', orgId: 'org-meidallm-core', name: 'Marketing & Comms', memberIds: ['tm2', 'tm4'], projectIds: ['p2', 'p3'], isArchived: false },
+    { id: 'team-design', orgId: 'org-meidallm-core', name: 'Design & UI/UX', memberIds: [], projectIds: [], isArchived: false },
     { id: 't-3', orgId: 'org-global-marketing', name: 'Campaign Strategy', memberIds: ['tm1', 'tm2'], projectIds: ['p-welcome', 'p3', 'p4', 'p5'] },
     { id: 't-personal', orgId: 'personal', name: 'My Projects', memberIds: ['tm1'], projectIds: ['p6', 'p7', 'p8', 'p9'] }
 ];
@@ -558,6 +577,18 @@ const DEFAULT_CANDIDATES: CandidateRecord[] = [
     { id: 'cand2', name: 'Elena Rostova', role: 'Social Media Writer', email: 'elena@copywrite.net', status: 'interviewing' }
 ];
 
+const DEFAULT_CUSTOM_ROLES: CustomRole[] = [
+    { id: 'role-finance', tenantId: 't-meidallm', name: 'Finance Manager', description: 'Can view and pay P2P invoices and run payroll.', permissions: ['read:erp', 'write:erp', 'manage:billing'] },
+    { id: 'role-moderator', tenantId: 't-meidallm', name: 'Community Moderator', description: 'Can review content but cannot publish.', permissions: ['read:projects', 'read:kanban'] },
+    { id: 'role-hr', tenantId: 't-global', name: 'HR Recruiter', description: 'Can manage candidates and onboarding.', permissions: ['read:team', 'write:team'] }
+];
+
+const DEFAULT_POLICIES: Policy[] = [
+    { id: 'pol-1', tenantId: 'global', name: 'Require 2FA', description: 'Enforce two-factor authentication for all users.', type: 'security', enforced: false },
+    { id: 'pol-2', tenantId: 't-meidallm', name: 'Max Spend: $10,000', description: 'Cap monthly P2P invoice spending.', type: 'billing', enforced: true },
+    { id: 'pol-3', tenantId: 't-meidallm', name: 'Strict Data Siloing', description: 'Prevent cross-organization data access.', type: 'compliance', enforced: true }
+];
+
 export const state = {
     currentUser: null as string | null,
     activeTenantId: null as string | null,
@@ -584,6 +615,8 @@ export const state = {
     supportCases: [] as SupportCase[],
     employees: [] as EmployeeRecord[],
     candidates: [] as CandidateRecord[],
+    customRoles: [] as CustomRole[],
+    policies: [] as Policy[],
     agencyBrand: { logo: 'Meidallm Agency', primaryColor: '#000000', subscriptionTier: 'pro' as 'creator' | 'pro' },
     
     // Extended States
@@ -749,6 +782,14 @@ function applyDbState(parsed: any) {
         const val = z.array(CandidateRecordSchema).safeParse(parsed.candidates);
         if (val.success) state.candidates = val.data;
     }
+    if (parsed.customRoles) {
+        const val = z.array(CustomRoleSchema).safeParse(parsed.customRoles);
+        if (val.success) state.customRoles = val.data;
+    }
+    if (parsed.policies) {
+        const val = z.array(PolicySchema).safeParse(parsed.policies);
+        if (val.success) state.policies = val.data;
+    }
     if (parsed.activeRole) state.activeRole = parsed.activeRole;
     if (parsed.agencyBrand) state.agencyBrand = parsed.agencyBrand;
     if (parsed.theme) state.theme = parsed.theme;
@@ -785,6 +826,8 @@ function loadLocalState() {
             supportCases: JSON.parse(localStorage.getItem('meidallm_support_cases') || 'null'),
             employees: JSON.parse(localStorage.getItem('meidallm_employees') || 'null'),
             candidates: JSON.parse(localStorage.getItem('meidallm_candidates') || 'null'),
+            customRoles: JSON.parse(localStorage.getItem('meidallm_custom_roles') || 'null'),
+            policies: JSON.parse(localStorage.getItem('meidallm_policies') || 'null'),
             activeRole: localStorage.getItem('meidallm_active_role'),
             agencyBrand: JSON.parse(localStorage.getItem('meidallm_agency_brand') || 'null'),
             theme: localStorage.getItem('meidallm_theme'),
@@ -825,6 +868,8 @@ function loadLocalState() {
     if (state.supportCases.length === 0) state.supportCases = DEFAULT_SUPPORT;
     if (state.employees.length === 0) state.employees = DEFAULT_EMPLOYEES;
     if (state.candidates.length === 0) state.candidates = DEFAULT_CANDIDATES;
+    if (state.customRoles.length === 0) state.customRoles = DEFAULT_CUSTOM_ROLES;
+    if (state.policies.length === 0) state.policies = DEFAULT_POLICIES;
     if (!state.activeRole) state.activeRole = 'admin';
     if (!state.agencyBrand || !state.agencyBrand.logo) state.agencyBrand = { logo: 'Meidallm Agency', primaryColor: '#000000', subscriptionTier: 'pro' };
     if (!state.agencyBrand.subscriptionTier) state.agencyBrand.subscriptionTier = 'pro';
@@ -863,6 +908,14 @@ export async function loadState() {
         } catch (e) {
             console.error("Failed to fetch state from postgres:", e);
         }
+    }
+}
+
+export function togglePolicy(policyId: string) {
+    const policy = state.policies.find(p => p.id === policyId);
+    if (policy) {
+        policy.enforced = !policy.enforced;
+        notifyStateChange();
     }
 }
 
@@ -908,6 +961,8 @@ export function saveState() {
         localStorage.setItem('meidallm_support_cases', JSON.stringify(state.supportCases));
         localStorage.setItem('meidallm_employees', JSON.stringify(state.employees));
         localStorage.setItem('meidallm_candidates', JSON.stringify(state.candidates));
+        localStorage.setItem('meidallm_custom_roles', JSON.stringify(state.customRoles));
+        localStorage.setItem('meidallm_policies', JSON.stringify(state.policies));
         localStorage.setItem('meidallm_active_role', state.activeRole);
         localStorage.setItem('meidallm_agency_brand', JSON.stringify(state.agencyBrand));
         localStorage.setItem('meidallm_kanban_viewmode', state.kanbanViewMode);
@@ -918,7 +973,7 @@ export function saveState() {
         if (state.currentUser && typeof window !== 'undefined') {
             if (!state.activeOrgId) {
                 const parts = state.currentUser.split("@");
-                state.activeOrgId = parts.length === 2 ? parts[1] : `personal-${parts[0]}`;
+                state.activeOrgId = parts.length === 2 && parts[1] ? parts[1] : `personal-${parts[0]}`;
             }
             const body = {
                 email: state.currentUser,
@@ -948,6 +1003,8 @@ export function saveState() {
                     supportCases: state.supportCases,
                     employees: state.employees,
                     candidates: state.candidates,
+                    customRoles: state.customRoles,
+                    policies: state.policies,
                     activeRole: state.activeRole,
                     agencyBrand: state.agencyBrand,
                     kanbanViewMode: state.kanbanViewMode,
@@ -1084,6 +1141,7 @@ export function deleteContact(cid: string) {
 export function addTeam(name: string) {
     const newTeam: Team = {
         id: 't-' + Math.random().toString(36).substr(2, 9),
+        orgId: state.activeOrgId || 'personal',
         name: name.trim(),
         memberIds: [],
         projectIds: [],
@@ -1287,7 +1345,9 @@ export function updateTask(
     dueDate?: string,
     checklist?: string,
     priority?: KanbanTask['priority'],
-    points?: number
+    points?: number,
+    cycleId?: string,
+    moduleId?: string
 ) {
     const t = state.kanbanState.find(x => x.id === taskId);
     if (t) {
@@ -1302,6 +1362,8 @@ export function updateTask(
         if (checklist !== undefined) t.checklist = checklist;
         if (priority !== undefined) t.priority = priority;
         if (points !== undefined) t.points = points;
+        if (cycleId !== undefined) t.cycleId = cycleId;
+        if (moduleId !== undefined) t.moduleId = moduleId;
         t.updated = Date.now();
         logChange(t.projectId, t.id, t.title, oldTitle, 'edited');
         notifyStateChange();
@@ -1956,7 +2018,7 @@ export function hireCreator(candidateId: string) {
                 { task: 'Configure Google Workspace Channel Access', completed: false },
                 { task: 'Verify Bank Routing Details', completed: false }
             ],
-            joinedDate: new Date().toISOString().split('T')[0]
+            joinedDate: new Date().toISOString().split('T')[0] || ''
         };
         state.employees.push(newEmp);
         logActivity(undefined, undefined, `HR Hiring`, `Hired candidate ${cand.name} as ${cand.role}. Onboarding checklist triggered.`);
@@ -2021,7 +2083,7 @@ export function addCaseComment(caseId: string, text: string) {
     const cs = state.supportCases.find(c => c.id === caseId);
     if (cs) {
         cs.comments.push({
-            author: state.currentUser ? state.currentUser.split('@')[0] : 'Agent',
+            author: state.currentUser ? (state.currentUser.split('@')[0] || 'Agent') : 'Agent',
             text: text.trim(),
             timestamp: Date.now()
         });

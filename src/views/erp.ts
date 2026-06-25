@@ -59,9 +59,9 @@ export function renderERPView(pid: string): string {
             const cat = row.cells['f-category'] || 'General';
             const amt = parseFloat(row.cells['f-amount']) || 0;
             if (categoryTotals[cat] !== undefined) {
-                categoryTotals[cat] += amt;
+                categoryTotals[cat] = (categoryTotals[cat] || 0) + amt;
             } else {
-                categoryTotals['General'] += amt;
+                categoryTotals['General'] = (categoryTotals['General'] || 0) + amt;
             }
         });
     }
@@ -146,7 +146,7 @@ export function renderERPView(pid: string): string {
                         <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-3">Operating Categories Allocation</h4>
                         <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
                             ${categories.map(cat => {
-                                const amt = categoryTotals[cat];
+                                const amt = categoryTotals[cat] || 0;
                                 const catPercent = budgetLimit > 0 ? Math.min(100, Math.round((amt / budgetLimit) * 100)) : 0;
                                 return `
                                 <div class="bg-panel-hover/10 p-2.5 rounded-xl border border-text-main/5 flex flex-col justify-between min-h-[65px]">
@@ -759,7 +759,6 @@ if (typeof window !== 'undefined') {
                 if (currentStatus === 'pending') nextStatus = 'approved';
                 else if (currentStatus === 'approved') nextStatus = 'flagged';
                 row.cells['f-status'] = nextStatus;
-                state.saveState();
                 notifyStateChange();
             }
         }
@@ -784,7 +783,6 @@ if (typeof window !== 'undefined') {
                 if (p) {
                     updateErpBudget(pid, p.budgetLimit || 0, sum);
                 } else {
-                    state.saveState();
                     notifyStateChange();
                 }
             }

@@ -292,7 +292,7 @@ export function renderTeamView(): string {
             }).join('')}
             ${tenantOrgs.every(org => state.teams.filter(t => !t.isArchived && t.orgId === org.id).length === 0) ? `
             <div class="border border-dashed border-text-main/15 p-12 text-center text-text-muted text-xs rounded-2xl flex flex-col items-center justify-center gap-2">
-                <span>${getIconSVG('users', 'w-8 h-8')}</span>
+                <span>${getIconSVG('team', 'w-8 h-8')}</span>
                 <h4 class="font-bold text-text-main">Directory Empty</h4>
                 <p class="text-[11px] max-w-xs leading-normal">No users found in active teams for this tenant.</p>
             </div>

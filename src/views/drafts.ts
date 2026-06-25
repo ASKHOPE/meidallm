@@ -137,7 +137,7 @@ export function renderDraftsView(pid: string): string {
     const projectMedia = state.mediaAssets.filter(m => m.projectId === pid);
 
     if (!activeDraftId && projectDrafts.length > 0) {
-        activeDraftId = projectDrafts[0].id;
+        activeDraftId = projectDrafts[0]?.id || null;
     }
     const activeDraft = state.drafts.find(d => d.id === activeDraftId && d.projectId === pid);
     const data = activeDraft ? parseDraftContent(activeDraft.content) : null;
@@ -718,8 +718,6 @@ if (typeof window !== 'undefined') {
 
         draft.content = JSON.stringify(contentData);
         draft.updated = Date.now();
-        state.saveState();
-        
         // Update words/character counters locally
         if (bodyEl) {
             const text = bodyEl.value;
@@ -819,8 +817,9 @@ if (typeof window !== 'undefined') {
             const docs = state.researchDocs.filter(d => d.projectId === pid);
             const matches = docs.filter(d => d.title.toLowerCase().includes(q) || d.content.toLowerCase().includes(q));
 
-            if (matches.length > 0) {
-                box.innerHTML = `<strong>RAG Output:</strong> ${sanitizeHTML(matches[0].content)} <br><button onclick="window.insertResearchText(\`${matches[0].content.replace(/`/g, '\\`').replace(/"/g, '\\"')}\`)" class="text-text-main hover:underline mt-1 cursor-pointer text-[9px] block">Insert snippet into copy</button>`;
+            const match = matches[0];
+            if (match) {
+                box.innerHTML = `<strong>RAG Output:</strong> ${sanitizeHTML(match.content)} <br><button onclick="window.insertResearchText(\`${match.content.replace(/`/g, '\\`').replace(/"/g, '\\"')}\`)" class="text-text-main hover:underline mt-1 cursor-pointer text-[9px] block">Insert snippet into copy</button>`;
             } else {
                 box.innerHTML = `No direct match in the database for "${sanitizeHTML(q)}". Try indexing more documents in your Research engine.`;
             }

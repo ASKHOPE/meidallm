@@ -23,7 +23,7 @@ export function renderDatabaseView(pid?: string): string {
     let activeTable = projectTables.find(t => t.id === state.activeTableId);
     if (!activeTable && projectTables.length > 0) {
         activeTable = projectTables[0];
-        state.activeTableId = activeTable.id;
+        if (activeTable) state.activeTableId = activeTable.id;
     }
 
     const viewMode = state.databaseViewMode || 'grid';
@@ -289,7 +289,7 @@ function renderSpreadsheetCell(tableId: string, rowId: string, f: any, val: any)
         return `
         <select onchange="${onchangeStr}" class="bg-transparent border-0 hover:bg-panel-hover focus:bg-panel-hover text-white text-xs rounded p-1 cursor-pointer w-full">
             <option value="">Select...</option>
-            ${opts.map(o => `<option value="${o}" ${val === o ? 'selected' : ''}>${sanitizeHTML(o)}</option>`).join('')}
+            ${opts.map((o: string) => `<option value="${o}" ${val === o ? 'selected' : ''}>${sanitizeHTML(o)}</option>`).join('')}
         </select>
         `;
     } else if (f.type === 'number') {

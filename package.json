@@ -17,6 +17,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.9",
     "@astrojs/vercel": "^11.0.0",
     "@better-auth/infra": "^0.3.2",
     "astro": "^7.0.2",

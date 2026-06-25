@@ -37,7 +37,9 @@ export function renderProjectDropdownOptions(): string {
 
 export function renderSidebarNavigation(): string {
     const role = state.activeRole || 'admin';
-    return sidebarGroups.map(group => {
+    const isSuperAdmin = state.currentUser === 'bablu.katru@gmail.com';
+    
+    return sidebarGroups.filter(g => g.key !== 'admin' || isSuperAdmin).map(group => {
         let groupContent = "";
         
         if (group.key === 'workflow') {

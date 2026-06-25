@@ -44,7 +44,9 @@ import {
     switchOrganization,
     switchTenant,
     switchTeam,
-    switchRole
+    switchRole,
+    togglePolicy,
+    deleteContact
 } from "./state";
 import { renderLayoutHTML, renderProjectDropdownOptions } from "./views/layout";
 import { renderPostDetailHTML } from "./views/analytics";
@@ -229,6 +231,10 @@ w.switchTeam = (teamId: string) => {
 
 w.switchRole = (role: any) => {
     switchRole(role);
+};
+
+w.togglePolicy = (policyId: string) => {
+    togglePolicy(policyId);
 };
 
 w.toggleProjectDropdown = (e: Event) => {
@@ -997,7 +1003,7 @@ w.filterCommandMenu = (query: string) => {
     const categories: Record<string, typeof filtered> = {};
     filtered.forEach(item => {
         if (!categories[item.category]) categories[item.category] = [];
-        categories[item.category].push(item);
+        categories[item.category]!.push(item);
     });
     
     let html = '';
@@ -1178,7 +1184,7 @@ w.createGoalPrompt = () => {
         targetValue: Number(target),
         currentValue: 0,
         unit: unit.trim(),
-        dueDate: date,
+        dueDate: date || '',
         status: 'on-track' as const
     };
     

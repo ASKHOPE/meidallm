@@ -119,9 +119,28 @@ export interface Contact {
 export interface TeamMember {
     id: string;
     name: string;
+    email: string;
     role: string;
     status: 'active' | 'meeting' | 'offline' | 'vacation';
     avatarColor: string;
+    customRoleIds?: string[]; // Array of role IDs for RBAC
+}
+
+export interface CustomRole {
+    id: string;
+    tenantId: string;
+    name: string;
+    description: string;
+    permissions: string[]; // e.g. ['read:tenants', 'write:users', 'manage:billing']
+}
+
+export interface Policy {
+    id: string;
+    tenantId: string | 'global';
+    name: string;
+    description: string;
+    type: 'security' | 'access' | 'compliance' | 'billing';
+    enforced: boolean;
 }
 
 export interface Cycle {

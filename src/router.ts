@@ -15,6 +15,7 @@ import { renderTeamView } from "./views/team";
 import { renderDatabaseView } from "./views/database";
 import { renderCyclesView } from "./views/cycles";
 import { renderGoalsView } from "./views/goals";
+import { renderAdminTenantsView, renderAdminRBACView, renderAdminPoliciesView } from "./views/admin";
 
 export interface NavGroup {
     key: string;
@@ -34,11 +35,36 @@ export interface ViewConfig {
 // Configurable accordion categories for sidebar layout
 export const sidebarGroups: NavGroup[] = [
     { key: 'workflow', label: 'Campaign Workflow', open: true },
-    { key: 'system', label: 'System', open: true }
+    { key: 'system', label: 'System', open: true },
+    { key: 'admin', label: 'Super Admin Workspace', open: true }
 ];
 
 // Global registry of application views
 export const views: ViewConfig[] = [
+    {
+        key: 'admin-tenants',
+        title: 'Tenants',
+        icon: '🏢',
+        scope: 'global',
+        group: 'admin',
+        render: () => renderAdminTenantsView()
+    },
+    {
+        key: 'admin-rbac',
+        title: 'RBAC & Users',
+        icon: '🛡️',
+        scope: 'global',
+        group: 'admin',
+        render: () => renderAdminRBACView()
+    },
+    {
+        key: 'admin-policies',
+        title: 'Rules & Policies',
+        icon: '⚖️',
+        scope: 'global',
+        group: 'admin',
+        render: () => renderAdminPoliciesView()
+    },
     {
         key: 'workspaces',
         title: 'Workspaces',

@@ -26,14 +26,14 @@ initDb().catch(e => console.error("Failed to initialize state tables:", e));
 function getDefaultOrg(email: string): string {
   const parts = email.split("@");
   if (parts.length === 2) {
-    const domain = parts[1].toLowerCase();
+    const domain = (parts[1] || '').toLowerCase();
     // Exclude generic mail domains to give personal orgs
     const genericDomains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "icloud.com", "aol.com"];
     if (!genericDomains.includes(domain)) {
       return domain;
     }
   }
-  return `personal-${parts[0].replace(/[^a-zA-Z0-9]/g, "-")}`;
+  return `personal-${(parts[0] || '').replace(/[^a-zA-Z0-9]/g, "-")}`;
 }
 
 export const GET: APIRoute = async ({ request }) => {
