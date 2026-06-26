@@ -102,12 +102,15 @@ function updateThemeButtonsUI() {
     const container = document.getElementById('theme-switcher-container');
     if (container) {
         container.innerHTML = `
-            <span class="text-text-muted pl-1.5 font-bold uppercase tracking-wider font-inter">Theme</span>
-            <div class="flex gap-0.5">
-                <button onclick="window.setTheme('day')" class="theme-btn px-2 py-0.5 rounded transition-all font-bold ${state.theme === 'day' ? 'bg-text-main text-background' : 'text-text-muted hover:text-text-main'}" id="theme-btn-day">Day</button>
-                <button onclick="window.setTheme('night')" class="theme-btn px-2 py-0.5 rounded transition-all font-bold ${state.theme === 'night' ? 'bg-text-main text-background' : 'text-text-muted hover:text-text-main'}" id="theme-btn-night">Night</button>
-                <button onclick="window.setTheme('auto')" class="theme-btn px-2 py-0.5 rounded transition-all font-bold ${state.theme === 'auto' ? 'bg-text-main text-background' : 'text-text-muted hover:text-text-main'}" id="theme-btn-auto">Auto</button>
-            </div>
+            <button onclick="window.setTheme('day')" class="theme-btn flex-1 flex items-center justify-center py-1 rounded-md transition-all ${state.theme === 'day' ? 'bg-background text-[var(--color-text-main)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'}" id="theme-btn-day" title="Day Mode">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M20 12h2"/><path d="M2 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+            </button>
+            <button onclick="window.setTheme('night')" class="theme-btn flex-1 flex items-center justify-center py-1 rounded-md transition-all ${state.theme === 'night' ? 'bg-background text-[var(--color-text-main)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'}" id="theme-btn-night" title="Night Mode">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            </button>
+            <button onclick="window.setTheme('auto')" class="theme-btn flex-1 flex items-center justify-center py-1 rounded-md transition-all ${state.theme === 'auto' ? 'bg-background text-[var(--color-text-main)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'}" id="theme-btn-auto" title="System Auto">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </button>
         `;
     }
 }
