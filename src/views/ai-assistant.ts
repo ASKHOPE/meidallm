@@ -17,8 +17,9 @@ export function renderAIAssistantDrawer(): string {
                 Hello! I am your AI assistant. I have full context of your database tables, tasks, cycles, and CRM. Try asking:
                 <ul class="list-disc pl-4 mt-2 flex flex-col gap-1.5">
                     <li><button onclick="window.sendAiMessage('Show tasks at risk')" class="text-left text-text-main underline hover:text-text-main/80">Show tasks at risk</button></li>
-                    <li><button onclick="window.sendAiMessage('Summarize current cycle progress')" class="text-left text-text-main underline hover:text-text-main/80">Summarize current cycle progress</button></li>
-                    <li><button onclick="window.sendAiMessage('Recommend copywriting tone')" class="text-left text-text-main underline hover:text-text-main/80">Recommend copywriting tone</button></li>
+                    <li><button onclick="window.sendAiMessage('Summarize active task comments & standup')" class="text-left text-text-main underline hover:text-text-main/80">Summarize active task comments & standup</button></li>
+                    <li><button onclick="window.sendAiMessage('Generate workspace status report')" class="text-left text-text-main underline hover:text-text-main/80">Generate workspace status report</button></li>
+                    <li><button onclick="window.sendAiMessage('Draft content for active task')" class="text-left text-text-main underline hover:text-text-main/80">Draft content for active task</button></li>
                     <li><button onclick="window.openCreativeWizard()" class="text-left text-purple-500 font-bold underline hover:text-purple-400">Launch Creative Wizard</button></li>
                 </ul>
             </div>

@@ -24,6 +24,8 @@ import { renderTimeTrackingView } from "./views/time-tracking";
 import { renderGanttView } from "./views/gantt";
 import { renderWorkloadView } from "./views/workload";
 import { renderTableView } from "./views/table-view";
+import { renderAutomationsView } from "./views/automations";
+import { renderFormsView } from "./views/forms";
 
 export interface NavGroup {
     key: string;
@@ -216,6 +218,22 @@ export const views: ViewConfig[] = [
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderAnalyticsView(pid || '')
+    },
+    {
+        key: 'automations',
+        title: 'Workflow Automations',
+        icon: 'settings',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderAutomationsView(pid || '')
+    },
+    {
+        key: 'forms',
+        title: 'Ingestion Forms',
+        icon: 'connections',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderFormsView(pid || '')
     },
 
     // System & Operations Group

@@ -92,6 +92,7 @@ export interface Project {
     isStarred?: boolean;
     budgetLimit?: number;
     spent?: number;
+    tenantId?: string;
 }
 
 export interface Idea {
@@ -176,6 +177,10 @@ export interface Contact {
     isBinned?: boolean;
     statusTag?: 'cold' | 'warm' | 'hot' | 'new';
     history?: { action: string; timestamp: number }[];
+    creatorType?: 'influencer' | 'micro-influencer' | 'vlogger' | 'podcaster' | 'live-streamer' | 'blogger' | 'digital-artist' | 'course-creator' | 'newsletter-writer' | 'affiliate-marketer' | 'community-manager' | 'ugc-creator';
+    platforms?: string[];
+    audienceDemographics?: string;
+    monetizationModel?: string;
 }
 
 export type SystemRole = 'super_admin' | 'tenant_owner' | 'tenant_admin' | 'org_admin' | 'user' | 'external_client';
@@ -321,6 +326,7 @@ export interface SalesInvoice {
     orderStatus: 'draft' | 'confirmed';
     invoiceStatus: 'unpaid' | 'paid';
     created: number;
+    isRecurring?: boolean;
 }
 
 export interface P2PTransaction {
