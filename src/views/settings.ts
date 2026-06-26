@@ -116,6 +116,48 @@ export function renderSettingsView(): string {
                 </div>
             </div>
 
+            <!-- Privacy & Compliance -->
+            <div class="flex flex-col gap-4 border-t border-text-main/10 pt-4">
+                <h3 class="text-lg font-semibold text-text-main font-outfit flex items-center gap-2">
+                    ${getIconSVG('admin-policies', 'w-5 h-5 text-violet-400')}
+                    Privacy & Compliance
+                </h3>
+                
+                <div class="flex items-center gap-3 bg-panel-hover/30 border border-text-main/10 rounded-xl p-4">
+                    <input type="checkbox" id="setting-analytics-consent" ${typeof localStorage !== 'undefined' && localStorage.getItem('meidallm_privacy_consent') !== 'false' ? 'checked' : ''} 
+                           onchange="window.toggleAnalyticsConsent(this.checked)" class="rounded text-text-main focus:ring-text-main h-4 w-4">
+                    <label for="setting-analytics-consent" class="text-sm text-text-main cursor-pointer select-none flex-1">
+                        <strong class="block font-medium">Analytics Data Collection</strong>
+                        <span class="text-xs text-text-muted">Allow anonymous usage analytics to improve the product. No PII is collected.</span>
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="bg-panel-hover/30 border border-text-main/10 rounded-xl p-4">
+                        <h4 class="font-medium text-text-main text-sm mb-1">Data Retention</h4>
+                        <p class="text-xs text-text-muted mb-2">Raw events: 90 days. Aggregated metrics: 2 years.</p>
+                        <button onclick="window.purgeExpiredTelemetry()" class="text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer">
+                            Purge Expired Data
+                        </button>
+                    </div>
+                    <div class="bg-panel-hover/30 border border-text-main/10 rounded-xl p-4">
+                        <h4 class="font-medium text-text-main text-sm mb-1">Consent Status</h4>
+                        <p class="text-xs text-text-muted mb-1" id="consent-status-display">
+                            ${typeof localStorage !== 'undefined' && localStorage.getItem('meidallm_privacy_consent_ts') ? 'Consented on: ' + localStorage.getItem('meidallm_privacy_consent_ts') : 'Not recorded'}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <button onclick="window.exportMyData()" class="px-4 py-3 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 text-blue-400 font-medium text-xs rounded-xl cursor-pointer transition-colors flex items-center gap-2 justify-center">
+                        ${getIconSVG('external-link', 'w-3.5 h-3.5')} Download My Data (JSON)
+                    </button>
+                    <button onclick="window.eraseMyData()" class="px-4 py-3 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-400 font-medium text-xs rounded-xl cursor-pointer transition-colors flex items-center gap-2 justify-center">
+                        ${getIconSVG('trash', 'w-3.5 h-3.5')} Delete My Data (Right to Erasure)
+                    </button>
+                </div>
+            </div>
+
             <div class="pt-4 border-t border-text-main/10 flex justify-between gap-4">
                 <button onclick="window.resetAppState()" class="px-5 py-3 bg-rose-950/20 border border-rose-900/30 hover:bg-rose-950/40 text-rose-400 font-medium text-xs rounded-xl cursor-pointer transition-colors">
                     Reset Application Database
@@ -155,4 +197,56 @@ if (typeof window !== 'undefined') {
             alert("Settings saved successfully!");
         }
     };
+
+    // Privacy & Compliance actions
+    w.toggleAnalyticsConsent = (consented: boolean) => {
+        localStorage.setItem('meidallm_privacy_consent', String(consented));
+        localStorage.setItem('meidallm_privacy_consent_ts', new Date().toISOString());
+        alert(consented ? 'Analytics collection enabled.' : 'Analytics collection disabled. No new events will be recorded.');
+    };
+
+    w.purgeExpiredTelemetry = () => {
+        try {
+            const key = 'meidallm_telemetry';
+            const events = JSON.parse(localStorage.getItem(key) || '[]');
+            const cutoff = Date.now() - (90 * 24 * 60 * 60 * 1000);
+            const retained = events.filter((e: any) => e.timestamp > cutoff);
+            const purged = events.length - retained.length;
+            localStorage.setItem(key, JSON.stringify(retained));
+            alert(`Purged ${purged} expired events. ${retained.length} events retained.`);
+        } catch {
+            alert('No telemetry data to purge.');
+        }
+    };
+
+    w.exportMyData = () => {
+        const userId = state.currentUser || 'unknown';
+        const data = {
+            exportedAt: new Date().toISOString(),
+            userId,
+            telemetryEvents: JSON.parse(localStorage.getItem('meidallm_telemetry') || '[]').length,
+            sessions: JSON.parse(localStorage.getItem('meidallm_session') || '[]').length,
+            auditLog: JSON.parse(localStorage.getItem('meidallm_audit_log') || '[]').length,
+            note: 'This export includes counts. Full data available in localStorage.'
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `meidallm-data-export-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        alert('Data export downloaded.');
+    };
+
+    w.eraseMyData = () => {
+        if (!confirm('This will permanently delete all your telemetry and session data. This action cannot be undone. Continue?')) return;
+        localStorage.removeItem('meidallm_telemetry');
+        localStorage.removeItem('meidallm_session');
+        localStorage.removeItem('meidallm_privacy_consent');
+        localStorage.removeItem('meidallm_privacy_consent_ts');
+        alert('All personal telemetry data has been erased.');
+        notifyStateChange();
+    };
 }
+

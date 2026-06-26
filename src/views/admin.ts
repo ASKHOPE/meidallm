@@ -265,6 +265,119 @@ export function renderAdminAnalyticsView(): string {
                 </div>
             </div>
         </div>
+
+        <!-- Security Audit Log -->
+        <div class="border-t border-text-main/10 pt-6 mt-2">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h3 class="text-lg font-bold font-outfit text-text-main flex items-center gap-2">
+                        ${getIconSVG('admin-policies', 'w-5 h-5 text-rose-400')} Security Audit Log
+                    </h3>
+                    <p class="text-xs text-text-muted mt-0.5">Real-time security event monitoring and compliance trail</p>
+                </div>
+                <button onclick="window.exportAuditLog()" class="px-3 py-1.5 rounded-lg border border-text-main/15 hover:bg-text-main/10 transition-colors font-bold text-[11px] text-text-main flex items-center gap-1.5">
+                    ${getIconSVG('external-link', 'w-3 h-3')} Export CSV
+                </button>
+            </div>
+
+            <!-- Threat Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4" id="threat-summary-cards">
+                ${(() => {
+                    const auditLog = (() => { try { return JSON.parse(localStorage.getItem('meidallm_audit_log') || '[]'); } catch { return []; } })();
+                    const critical = auditLog.filter((e: any) => e.severity === 'critical').length;
+                    const warnings = auditLog.filter((e: any) => e.severity === 'warning').length;
+                    const last24h = auditLog.filter((e: any) => Date.now() - e.timestamp < 86400000).length;
+                    const loginFails = auditLog.filter((e: any) => e.action === 'login_failed').length;
+                    return `
+                        <div class="bg-background border border-text-main/15 p-3 rounded-xl">
+                            <span class="text-[10px] text-text-muted font-bold uppercase tracking-wider">Critical Events</span>
+                            <div class="text-2xl font-bold ${critical > 0 ? 'text-rose-400' : 'text-emerald-400'} font-mono mt-1">${critical}</div>
+                        </div>
+                        <div class="bg-background border border-text-main/15 p-3 rounded-xl">
+                            <span class="text-[10px] text-text-muted font-bold uppercase tracking-wider">Warnings</span>
+                            <div class="text-2xl font-bold text-amber-400 font-mono mt-1">${warnings}</div>
+                        </div>
+                        <div class="bg-background border border-text-main/15 p-3 rounded-xl">
+                            <span class="text-[10px] text-text-muted font-bold uppercase tracking-wider">Events (24h)</span>
+                            <div class="text-2xl font-bold text-blue-400 font-mono mt-1">${last24h}</div>
+                        </div>
+                        <div class="bg-background border border-text-main/15 p-3 rounded-xl">
+                            <span class="text-[10px] text-text-muted font-bold uppercase tracking-wider">Failed Logins</span>
+                            <div class="text-2xl font-bold ${loginFails > 3 ? 'text-rose-400' : 'text-text-main'} font-mono mt-1">${loginFails}</div>
+                        </div>
+                    `;
+                })()}
+            </div>
+
+            <!-- Audit Event Table -->
+            <div class="bg-background border border-text-main/15 rounded-xl overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-text-main/5 text-[10px] uppercase tracking-wider text-text-muted">
+                            <th class="p-3 font-bold border-b border-text-main/10">Timestamp</th>
+                            <th class="p-3 font-bold border-b border-text-main/10">Severity</th>
+                            <th class="p-3 font-bold border-b border-text-main/10">Action</th>
+                            <th class="p-3 font-bold border-b border-text-main/10">Resource</th>
+                            <th class="p-3 font-bold border-b border-text-main/10">Details</th>
+                            <th class="p-3 font-bold border-b border-text-main/10">User</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-xs divide-y divide-text-main/10">
+                        ${(() => {
+                            const auditLog = (() => { try { return JSON.parse(localStorage.getItem('meidallm_audit_log') || '[]'); } catch { return []; } })();
+                            const recent = auditLog.slice(-20).reverse();
+                            if (recent.length === 0) {
+                                return `<tr><td colspan="6" class="p-6 text-center text-text-muted text-sm">No audit events recorded yet. Security events will appear here.</td></tr>`;
+                            }
+                            return recent.map((e: any) => {
+                                const severityBadge: Record<string, string> = {
+                                    'info': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+                                    'warning': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+                                    'critical': 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                                };
+                                const badge = severityBadge[e.severity] || severityBadge['info'];
+                                const time = new Date(e.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                                return `
+                                <tr class="hover:bg-text-main/5 transition-colors">
+                                    <td class="p-3 font-mono text-text-muted whitespace-nowrap">${time}</td>
+                                    <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${badge}">${e.severity}</span></td>
+                                    <td class="p-3 font-semibold text-text-main">${e.action}</td>
+                                    <td class="p-3 font-mono text-text-muted">${e.resource || '-'}</td>
+                                    <td class="p-3 text-text-muted max-w-[250px] truncate">${e.details || '-'}</td>
+                                    <td class="p-3 font-mono text-text-muted">${e.userId ? e.userId.substring(0, 12) + '...' : '-'}</td>
+                                </tr>`;
+                            }).join('');
+                        })()}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
     `;
 }
+
+// Global admin window actions
+if (typeof window !== 'undefined') {
+    const w = window as any;
+    w.exportAuditLog = () => {
+        try {
+            const auditLog = JSON.parse(localStorage.getItem('meidallm_audit_log') || '[]');
+            const csvHeader = 'Timestamp,Severity,Action,Resource,Details,User,Tenant\\n';
+            const csvRows = auditLog.map((e: any) => {
+                const time = new Date(e.timestamp).toISOString();
+                return `"${time}","${e.severity}","${e.action}","${e.resource}","${(e.details || '').replace(/"/g, '""')}","${e.userId}","${e.tenantId}"`;
+            }).join('\\n');
+            const blob = new Blob([csvHeader + csvRows], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `audit-log-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            if (w.showToast) w.showToast('Audit log exported as CSV', 'success');
+        } catch {
+            if (w.showToast) w.showToast('No audit data to export', 'error');
+        }
+    };
+}
+

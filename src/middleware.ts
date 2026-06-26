@@ -37,26 +37,60 @@ function validateVerificationToken(token: string, ip: string): boolean {
 const rateLimitMap = new Map<string, number[]>();
 // Track POST requests specifically for login/signup/state endpoints
 const postLimitMap = new Map<string, number[]>();
+// Per-tenant rate limiting — key: tenant_id extracted from cookie/header
+const tenantLimitMap = new Map<string, number[]>();
+// Track data export requests specifically
+const exportLimitMap = new Map<string, number[]>();
+// Track search/query requests
+const searchLimitMap = new Map<string, number[]>();
 
 function cleanOldRequests(timestamps: number[], windowMs: number): number[] {
   const now = Date.now();
   return timestamps.filter(t => now - t < windowMs);
 }
 
+// Graduated response tiers for IP rate limiting
+// Tier 1: 0-40 req/min = normal
+// Tier 2: 40-60 req/min = add warning header
+// Tier 3: 60-90 req/min = throttle (artificial 500ms delay in response)
+// Tier 4: 90-120 req/min = CAPTCHA challenge
+// Tier 5: 120+ req/min = hard block
+type RateLimitTier = 'normal' | 'warn' | 'throttle' | 'captcha' | 'block';
+
+function getRequestTier(count: number): RateLimitTier {
+  if (count > 120) return 'block';
+  if (count > 90) return 'captcha';
+  if (count > 60) return 'throttle';
+  if (count > 40) return 'warn';
+  return 'normal';
+}
+
+// Separate limits for different operation types
+const LIMITS = {
+  globalPerMinute: 120,      // Hard block
+  postPerMinute: 15,          // CAPTCHA trigger for POST
+  exportPerHour: 10,          // Data export rate limit
+  searchPerMinute: 30,        // Search/query rate limit
+  tenantPerMinute: 200,       // Per-tenant aggregate limit
+};
+
 // Clean up maps periodically to prevent memory leaks
 setInterval(() => {
   const now = Date.now();
-  for (const [ip, timestamps] of rateLimitMap.entries()) {
-    const cleaned = cleanOldRequests(timestamps, 60 * 1000);
-    if (cleaned.length === 0) rateLimitMap.delete(ip);
-    else rateLimitMap.set(ip, cleaned);
-  }
-  for (const [ip, timestamps] of postLimitMap.entries()) {
-    const cleaned = cleanOldRequests(timestamps, 60 * 1000);
-    if (cleaned.length === 0) postLimitMap.delete(ip);
-    else postLimitMap.set(ip, cleaned);
-  }
+  const cleanMap = (map: Map<string, number[]>, windowMs: number) => {
+    for (const [key, timestamps] of map.entries()) {
+      const cleaned = cleanOldRequests(timestamps, windowMs);
+      if (cleaned.length === 0) map.delete(key);
+      else map.set(key, cleaned);
+    }
+  };
+  cleanMap(rateLimitMap, 60 * 1000);
+  cleanMap(postLimitMap, 60 * 1000);
+  cleanMap(tenantLimitMap, 60 * 1000);
+  cleanMap(exportLimitMap, 60 * 60 * 1000);
+  cleanMap(searchLimitMap, 60 * 1000);
 }, 5 * 60 * 1000);
+
 
 export const onRequest = defineMiddleware(async (context: any, next: any) => {
   const { request, url, cookies } = context;
@@ -175,14 +209,51 @@ export const onRequest = defineMiddleware(async (context: any, next: any) => {
   }
 
   // Trigger CAPTCHA check for:
-  // - Explicit test request (?trigger-captcha=true)
-  // - Moderate rate limit trigger (40-120 req/min)
-  // - High frequency POST operations (15+ POST reqs/min)
+  // Uses graduated tier system for proportional response
+  // - Tier 1 (0-40): normal
+  // - Tier 2 (40-60): add warning header
+  // - Tier 3 (60-90): throttle
+  // - Tier 4 (90-120): CAPTCHA challenge
+  // - Tier 5 (120+): already blocked above
+  const requestTier = getRequestTier(requestCount);
+
+  // Track tenant-level requests (extracted from cookie)
+  const tenantId = cookies.get("meidallm_tenant")?.value || "default";
+  let tenantRequests = tenantLimitMap.get(tenantId) || [];
+  tenantRequests = cleanOldRequests(tenantRequests, 60 * 1000);
+  tenantRequests.push(now);
+  tenantLimitMap.set(tenantId, tenantRequests);
+
+  // Track export requests
+  const isExportRequest = url.pathname.includes("/export") || url.searchParams.get("action") === "export";
+  if (isExportRequest) {
+    let exports = exportLimitMap.get(clientIp) || [];
+    exports = cleanOldRequests(exports, 60 * 60 * 1000);
+    exports.push(now);
+    exportLimitMap.set(clientIp, exports);
+    if (exports.length > LIMITS.exportPerHour) {
+      return new Response(JSON.stringify({ error: "Export rate limit exceeded. Max 10 exports per hour." }), {
+        status: 429,
+        headers: { "Content-Type": "application/json", "Retry-After": "3600" }
+      });
+    }
+  }
+
+  // Track search/query requests
+  const isSearchRequest = url.pathname.includes("/search") || url.searchParams.has("q");
+  if (isSearchRequest) {
+    let searches = searchLimitMap.get(clientIp) || [];
+    searches = cleanOldRequests(searches, 60 * 1000);
+    searches.push(now);
+    searchLimitMap.set(clientIp, searches);
+  }
+
   const shouldTriggerCaptcha = 
     !isVerified && 
     (url.searchParams.get("trigger-captcha") === "true" || 
-     requestCount > 40 || 
-     (request.method === "POST" && postCount > 15));
+     requestTier === 'captcha' ||
+     (request.method === "POST" && postCount > LIMITS.postPerMinute) ||
+     tenantRequests.length > LIMITS.tenantPerMinute);
 
   if (shouldTriggerCaptcha) {
     const challenge = `${clientIp}:${now}:${Math.random().toString(36).substring(2)}`;
@@ -467,5 +538,33 @@ export const onRequest = defineMiddleware(async (context: any, next: any) => {
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
 
+  // 5. Graduated tier response headers
+  response.headers.set("X-RateLimit-Remaining", String(Math.max(0, LIMITS.globalPerMinute - requestCount)));
+  response.headers.set("X-RateLimit-Limit", String(LIMITS.globalPerMinute));
+
+  if (requestTier === 'warn') {
+    response.headers.set("X-RateLimit-Warning", "Approaching rate limit. Slow down to avoid CAPTCHA.");
+  } else if (requestTier === 'throttle') {
+    response.headers.set("X-RateLimit-Warning", "Throttled. Reduce request frequency immediately.");
+    response.headers.set("Retry-After", "2");
+  }
+
+  // 6. CSRF Token — generate and set as cookie for client-side forms
+  const existingCsrf = cookies.get("meidallm_csrf")?.value;
+  if (!existingCsrf && request.method === "GET") {
+    const csrfToken = crypto.randomBytes(32).toString("hex");
+    cookies.set("meidallm_csrf", csrfToken, {
+      path: "/",
+      httpOnly: false, // Needs to be readable by JS to send in headers
+      secure: true,
+      sameSite: "strict",
+      maxAge: 60 * 60 // 1 hour
+    });
+  }
+
+  // 7. Request tracing ID
+  response.headers.set("X-Request-ID", `req_${now.toString(36)}_${Math.random().toString(36).slice(2, 8)}`);
+
   return response;
 });
+

@@ -5,6 +5,42 @@ export interface TaskComment {
     timestamp: number;
 }
 
+export interface TaskChecklist {
+    id: string;
+    name: string;
+    items: { id: string; text: string; done: boolean }[];
+}
+
+export interface TaskDependency {
+    taskId: string;
+    type: 'blocks' | 'blocked-by' | 'waiting-on';
+}
+
+export interface RecurrenceRule {
+    frequency: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
+    interval: number;
+    nextOccurrence: number;
+}
+
+export interface TaskRelationship {
+    targetTaskId: string;
+    type: 'relates-to' | 'duplicate-of';
+}
+
+export interface CustomFieldValue {
+    fieldId: string;
+    value: any;
+}
+
+export interface TaskAttachment {
+    id: string;
+    name: string;
+    url: string;
+    size: number;
+    type: string;
+    uploadedAt: number;
+}
+
 export interface KanbanTask {
     id: string;
     projectId: string;
@@ -28,7 +64,22 @@ export interface KanbanTask {
     reviewers?: string[];
     externalLinks?: string[];
     comments?: TaskComment[];
+
+    // Phase 3: Enhanced Task Fields
+    subtasks?: KanbanTask[];
+    checklists?: TaskChecklist[];
+    dependencies?: TaskDependency[];
+    recurrence?: RecurrenceRule;
+    relationships?: TaskRelationship[];
+    customFields?: CustomFieldValue[];
+    isMilestone?: boolean;
+    startDate?: string;
+    timeEstimate?: number;       // Estimated ms
+    timeTracked?: number;        // Actual ms (rolled up from time logs)
+    watchers?: string[];
+    attachments?: TaskAttachment[];
 }
+
 
 export interface Project {
     id: string;

@@ -21,6 +21,9 @@ import { renderAdminTenantsView, renderAdminRBACView, renderAdminPoliciesView, r
 import { renderClientPortalView } from "./views/client-portal";
 import { renderHelpdeskView } from "./views/helpdesk";
 import { renderTimeTrackingView } from "./views/time-tracking";
+import { renderGanttView } from "./views/gantt";
+import { renderWorkloadView } from "./views/workload";
+import { renderTableView } from "./views/table-view";
 
 export interface NavGroup {
     key: string;
@@ -109,6 +112,30 @@ export const views: ViewConfig[] = [
         scope: 'project',
         group: 'workflow',
         render: (pid) => renderKanbanView(pid || '')
+    },
+    {
+        key: 'gantt',
+        title: 'Gantt Timeline',
+        icon: 'gantt',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderGanttView(pid || '')
+    },
+    {
+        key: 'workload',
+        title: 'Team Workload',
+        icon: 'workload',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderWorkloadView(pid || '')
+    },
+    {
+        key: 'table-view',
+        title: 'Table View',
+        icon: 'table-view',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderTableView(pid || '')
     },
     {
         key: 'project-cycles',
