@@ -1,4 +1,5 @@
 import { authClient } from "./auth-client";
+import { initTelemetry, trackEvent } from "./telemetry/collector";
 import {
     state,
     registerStateListener,
@@ -37,6 +38,8 @@ import {
     deleteTeam,
     archiveTeam,
     logActivity,
+    addContact,
+    updateContact,
     archiveContact,
     binContact,
     updateContactTag,
@@ -57,6 +60,7 @@ import { renderPostDetailHTML } from "./views/analytics";
 import { parseDraftContent } from "./views/drafts";
 import { views } from "./router";
 import { sanitizeHTML } from "./utils";
+import { getIconSVG } from "./views/icons";
 import type { KanbanTask, ResearchDoc, MediaAsset, Draft, TimeLog } from "./types";
 
 // Custom override for alert to use premium toast notifications
@@ -81,7 +85,7 @@ function updateSidebarUI() {
     const activeDisplay = document.getElementById('active-project-name-display');
     if (activeDisplay) {
         const currentProject = state.projects.find(p => p.id === state.currentProject);
-        activeDisplay.innerHTML = currentProject ? `📁 ${sanitizeHTML(currentProject.name)}` : "Select Campaign...";
+        activeDisplay.innerHTML = currentProject ? `${getIconSVG('folder', 'w-4 h-4 inline-block mr-1.5 text-blue-400')} ${sanitizeHTML(currentProject.name)}` : "Select Campaign...";
     }
     
     // 3. Update the data-pid attribute of project-scoped buttons
@@ -140,6 +144,11 @@ function renderView(viewKey: string, pid?: string) {
 
     state.activeViewKey = viewKey;
     const activePid = pid || state.currentProject || undefined;
+    
+    // Telemetry instrumentation
+    trackEvent(state.activeTenantId || 't-meidallm', state.currentUser || 'anonymous', 'PageViewed', { view: viewKey, projectId: activePid || '' });
+    trackEvent(state.activeTenantId || 't-meidallm', state.currentUser || 'anonymous', 'FeatureUsed', { feature: viewKey });
+    
     if (activePid) {
         state.currentProject = activePid;
     } else if (viewKey === 'workspaces' || viewKey === 'settings') {
@@ -731,6 +740,65 @@ w.deleteContactAction = (cid: string) => {
     }
 };
 
+w.showAddContactModal = () => {
+    const modal = document.getElementById('add-contact-modal');
+    if (modal) modal.classList.remove('hidden');
+};
+
+w.hideAddContactModal = () => {
+    const modal = document.getElementById('add-contact-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        const name = document.getElementById('modal-contact-name') as HTMLInputElement;
+        const email = document.getElementById('modal-contact-email') as HTMLInputElement;
+        const company = document.getElementById('modal-contact-company') as HTMLInputElement;
+        const value = document.getElementById('modal-contact-value') as HTMLInputElement;
+        const creator = document.getElementById('modal-contact-creator-type') as HTMLSelectElement;
+        const platforms = document.getElementById('modal-contact-platforms') as HTMLInputElement;
+        const demographics = document.getElementById('modal-contact-demographics') as HTMLInputElement;
+        const monetization = document.getElementById('modal-contact-monetization') as HTMLInputElement;
+        if (name) name.value = '';
+        if (email) email.value = '';
+        if (company) company.value = '';
+        if (value) value.value = '';
+        if (creator) creator.value = '';
+        if (platforms) platforms.value = '';
+        if (demographics) demographics.value = '';
+        if (monetization) monetization.value = '';
+    }
+};
+
+w.submitContactForm = (pid: string) => {
+    const nameInput = document.getElementById('modal-contact-name') as HTMLInputElement;
+    const emailInput = document.getElementById('modal-contact-email') as HTMLInputElement;
+    const companyInput = document.getElementById('modal-contact-company') as HTMLInputElement;
+    const valueInput = document.getElementById('modal-contact-value') as HTMLInputElement;
+    const tagSelect = document.getElementById('modal-contact-tag') as HTMLSelectElement;
+    const creatorSelect = document.getElementById('modal-contact-creator-type') as HTMLSelectElement;
+    const platformsInput = document.getElementById('modal-contact-platforms') as HTMLInputElement;
+    const demographicsInput = document.getElementById('modal-contact-demographics') as HTMLInputElement;
+    const monetizationInput = document.getElementById('modal-contact-monetization') as HTMLInputElement;
+
+    if (!nameInput || !emailInput || !companyInput || !valueInput || !tagSelect) return;
+
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const company = companyInput.value.trim();
+    const value = Number(valueInput.value) || 0;
+    const tag = tagSelect.value as any;
+    const creatorType = creatorSelect?.value as any || undefined;
+    const platforms = platformsInput?.value ? platformsInput.value.split(',').map(p => p.trim()).filter(Boolean) : undefined;
+    const demographics = demographicsInput?.value.trim() || undefined;
+    const monetization = monetizationInput?.value.trim() || undefined;
+
+    if (!name || !email || !company) {
+        return alert("Name, email, and company are required.");
+    }
+
+    addContact(pid, name, email, company, 'lead', value, tag, creatorType, platforms, demographics, monetization);
+    w.hideAddContactModal();
+};
+
 w.resetAppState = () => {
     if (confirm("This will clear all custom campaigns, tasks, and notes, restoring setup defaults. Continue?")) {
         resetAppState();
@@ -1128,6 +1196,7 @@ async function init() {
     if (initialized) return;
     initialized = true;
     loadState();
+    initTelemetry();
     
     try {
         const sessionRes = await authClient.getSession();
@@ -1387,31 +1456,85 @@ w.sendAiMessage = (text: string) => {
         let response = "I'm analyzing the active state...";
         const lower = text.toLowerCase();
         
+        const activeProjId = state.currentProject || 'p1';
+        const project = state.projects.find(p => p.id === activeProjId);
+        const projectName = project ? project.name : 'Unknown Project';
+        const activeView = state.activeViewKey;
+
+        // Context prefix
+        const contextPrefix = `[Context: Project "${projectName}" | View "${activeView}"]<br><br>`;
+        
         if (lower.includes('task') && (lower.includes('risk') || lower.includes('overdue'))) {
             const activeTasks = state.kanbanState.filter(t => !t.isArchived && !t.isBinned && t.status !== 'done');
             if (activeTasks.length > 0) {
-                response = `Here are tasks currently at risk:<br><br>` + 
-                  activeTasks.map(t => `• <strong>${t.title}</strong> (${t.tag}) - Status: ${t.status}`).join('<br>');
+                response = contextPrefix + `Here are tasks currently at risk:<br><br>` + 
+                  activeTasks.map(t => `• <strong>${t.title}</strong> (${t.tag}) - Status: <strong>${t.status}</strong>`).join('<br>');
             } else {
-                response = "Great news! All active tasks are completed or on-schedule.";
+                response = contextPrefix + "Great news! All active tasks are completed or on-schedule.";
+            }
+        } else if (lower.includes('standup') || (lower.includes('summarize') && (lower.includes('comment') || lower.includes('active')))) {
+            // Standup summary from comments + activity
+            const projTasks = state.kanbanState.filter(t => t.projectId === activeProjId);
+            const taskComments = projTasks.flatMap(t => (t.comments || []).map(c => `Task "${t.title}": "${c.text}" (by ${c.author})`));
+            
+            response = contextPrefix + `<strong>Daily Standup & Activity Summary:</strong><br><br>`;
+            if (taskComments.length > 0) {
+                response += `<strong>Recent Collaborator Comments:</strong><br>` + taskComments.slice(-5).map(c => `• ${c}`).join('<br>') + `<br><br>`;
+            } else {
+                response += `No recent comments found in this project.<br><br>`;
+            }
+            
+            const done = projTasks.filter(t => t.status === 'done');
+            const progress = projTasks.filter(t => t.status === 'progress');
+            response += `<strong>Progress Breakdown:</strong><br>` +
+                        `• Completed: ${done.length} tasks<br>` +
+                        `• In Progress: ${progress.length} tasks<br>`;
+        } else if (lower.includes('status') || lower.includes('report')) {
+            // Status report: done, progress, backlog, review
+            const projTasks = state.kanbanState.filter(t => t.projectId === activeProjId);
+            const done = projTasks.filter(t => t.status === 'done');
+            const progress = projTasks.filter(t => t.status === 'progress');
+            const review = projTasks.filter(t => t.status === 'review');
+            const backlog = projTasks.filter(t => t.status === 'backlog');
+            
+            response = contextPrefix + `<strong>Workspace Status Report for "${projectName}":</strong><br><br>` +
+                        `<span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 mr-1.5"></span><strong>Done (${done.length}):</strong><br>` +
+                        (done.length ? done.map(t => `  • ${t.title}`).slice(0, 3).join('<br>') : '  • None') + `<br>` +
+                        `<span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 mr-1.5"></span><strong>In Progress (${progress.length}):</strong><br>` +
+                        (progress.length ? progress.map(t => `  • ${t.title}`).slice(0, 3).join('<br>') : '  • None') + `<br>` +
+                        `<span class="inline-block w-2.5 h-2.5 rounded-full bg-blue-500 mr-1.5"></span><strong>In Review (${review.length}):</strong><br>` +
+                        (review.length ? review.map(t => `  • ${t.title}`).slice(0, 3).join('<br>') : '  • None') + `<br>` +
+                        `<span class="inline-block w-2.5 h-2.5 rounded-full bg-slate-500 mr-1.5"></span><strong>Backlog (${backlog.length}):</strong><br>` +
+                        (backlog.length ? backlog.map(t => `  • ${t.title}`).slice(0, 3).join('<br>') : '  • None');
+        } else if (lower.includes('draft') || lower.includes('generate') || lower.includes('write')) {
+            // Draft content generation from task description
+            const activeTasks = state.kanbanState.filter(t => t.projectId === activeProjId && t.status !== 'done');
+            const taskToDraft = activeTasks[0];
+            
+            if (taskToDraft) {
+                response = contextPrefix + `<strong>AI Generated Draft Content for "${taskToDraft.title}":</strong><br><br>` +
+                           `<em>Based on description: "${taskToDraft.description || 'No description provided.'}"</em><br><br>` +
+                           `"The future of creative workflows is unified. With the latest campaign updates for ${projectName}, our team has streamlined the asset pipelines. Check it out now and elevate your marketing yield!"`;
+            } else {
+                response = contextPrefix + `No active tasks found in this project to generate drafts from. Try creating a task first!`;
             }
         } else if (lower.includes('cycle') || lower.includes('sprint')) {
             const activeCycle = state.cycles.find(c => c.status === 'active');
             if (activeCycle) {
                 const cycleTasks = state.kanbanState.filter(t => t.cycleId === activeCycle.id);
                 const doneTasks = cycleTasks.filter(t => t.status === 'done');
-                response = `<strong>Active Cycle: ${activeCycle.name}</strong><br>
+                response = contextPrefix + `<strong>Active Cycle: ${activeCycle.name}</strong><br>
                 Duration: ${activeCycle.startDate} to ${activeCycle.endDate}<br>
                 Progress: ${doneTasks.length} / ${cycleTasks.length} tasks completed.`;
             } else {
-                response = "There is no currently active cycle. Head over to Cycles & Sprints to start one!";
+                response = contextPrefix + "There is no currently active cycle. Head over to Cycles & Sprints to start one!";
             }
         } else if (lower.includes('tone') || lower.includes('copywriting')) {
             const toneSelect = document.getElementById('setting-brand-tone') as HTMLSelectElement;
             const currentTone = toneSelect ? toneSelect.value : 'Creative';
-            response = `I recommend drafting with a <strong>${currentTone}</strong> tone to align with your current Campaign Preferences.`;
+            response = contextPrefix + `I recommend drafting with a <strong>${currentTone}</strong> tone to align with your current Campaign Preferences.`;
         } else {
-            response = "I've checked the organization state. Let me know if you need me to summarize task logs, check goals, or filter database entries!";
+            response = contextPrefix + "I've checked the organization state. Let me know if you need me to summarize task logs, check goals, or filter database entries!";
         }
         
         state.aiMessages.push({ sender: 'ai', text: response });

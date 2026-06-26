@@ -1,5 +1,7 @@
 import { z } from "zod";
 import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember, Cycle, Module, DbField, DbRow, DbTable, Goal, Tenant, Organization, Team, CustomRole, Policy, SalesInvoice, P2PTransaction, InventoryItem, SupportCase, EmployeeRecord, CandidateRecord, ActivityLog, Ticket, ClientFeedback, TimeLog, TaskComment } from "./types";
+import { trackEvent } from "./telemetry/collector";
+import { triggerAutomations } from "./automation/engine";
 
 export const GoalSchema = z.object({
     id: z.string(),
@@ -114,7 +116,8 @@ export const ProjectSchema = z.object({
     isBinned: z.boolean().optional(),
     isStarred: z.boolean().optional(),
     budgetLimit: z.number().optional(),
-    spent: z.number().optional()
+    spent: z.number().optional(),
+    tenantId: z.string().optional()
 });
 
 export const IdeaSchema = z.object({
@@ -375,16 +378,16 @@ const DEFAULT_KANBAN: KanbanTask[] = [
 
 
 const DEFAULT_PROJECTS: Project[] = [
-    { id: 'p-welcome', name: '🚀 Welcome Tour', description: 'Interactive overview of Meidallm workflows, features, and capabilities.', status: 'active', lastActive: Date.now(), isStarred: true, budgetLimit: 100000, spent: 45000 },
-    { id: 'p1', name: 'Q3 Product Launch', description: 'Major product updates campaign.', status: 'active', lastActive: Date.now(), isStarred: true, budgetLimit: 50000, spent: 15150 },
-    { id: 'p2', name: 'YouTube Retainer Channel', description: 'Developer video tutorial series.', status: 'active', lastActive: Date.now() - 86400000 * 2, budgetLimit: 12000, spent: 3000 },
-    { id: 'p3', name: 'Pinterest Creative Ads', description: 'Visual banner campaign creative boosts.', status: 'active', lastActive: Date.now() - 86400000 * 4, budgetLimit: 8000, spent: 400 },
-    { id: 'p4', name: 'Facebook Ads A/B Campaign', description: 'Conversion and retargeting ads.', status: 'active', lastActive: Date.now() - 86400000 * 6, isStarred: true, budgetLimit: 25000, spent: 12400 },
-    { id: 'p5', name: 'Threads Community Growth', description: 'Daily engagement drives and AMAs.', status: 'active', lastActive: Date.now() - 86400000 * 8, budgetLimit: 5000, spent: 250 },
-    { id: 'p6', name: 'WhatsApp Customer Operations', description: 'Direct messaging and service updates.', status: 'active', lastActive: Date.now() - 86400000 * 10, budgetLimit: 6000, spent: 0 },
-    { id: 'p7', name: 'X Product Hunt Launch', description: 'Tech community launch day push.', status: 'active', lastActive: Date.now() - 86400000 * 12, isStarred: true, budgetLimit: 15000, spent: 15000 },
-    { id: 'p8', name: 'Content Calendar Pipeline', description: 'Long-form articles and resources.', status: 'active', lastActive: Date.now() - 86400000 * 14, budgetLimit: 10000, spent: 2150 },
-    { id: 'p9', name: 'Influencer Co-branding Hub', description: 'Sponsorship collaborations and codes.', status: 'active', lastActive: Date.now() - 86400000 * 16, budgetLimit: 30000, spent: 12000 }
+    { id: 'p-welcome', name: 'Welcome Tour', description: 'Interactive overview of Meidallm workflows, features, and capabilities.', status: 'active', lastActive: Date.now(), isStarred: true, budgetLimit: 100000, spent: 45000, tenantId: 't-meidallm' },
+    { id: 'p1', name: 'Q3 Product Launch', description: 'Major product updates campaign.', status: 'active', lastActive: Date.now(), isStarred: true, budgetLimit: 50000, spent: 15150, tenantId: 't-meidallm' },
+    { id: 'p2', name: 'YouTube Retainer Channel', description: 'Developer video tutorial series.', status: 'active', lastActive: Date.now() - 86400000 * 2, budgetLimit: 12000, spent: 3000, tenantId: 't-meidallm' },
+    { id: 'p3', name: 'Pinterest Creative Ads', description: 'Visual banner campaign creative boosts.', status: 'active', lastActive: Date.now() - 86400000 * 4, budgetLimit: 8000, spent: 400, tenantId: 't-meidallm' },
+    { id: 'p4', name: 'Facebook Ads A/B Campaign', description: 'Conversion and retargeting ads.', status: 'active', lastActive: Date.now() - 86400000 * 6, isStarred: true, budgetLimit: 25000, spent: 12400, tenantId: 't-global' },
+    { id: 'p5', name: 'Threads Community Growth', description: 'Daily engagement drives and AMAs.', status: 'active', lastActive: Date.now() - 86400000 * 8, budgetLimit: 5000, spent: 250, tenantId: 't-global' },
+    { id: 'p6', name: 'WhatsApp Customer Operations', description: 'Direct messaging and service updates.', status: 'active', lastActive: Date.now() - 86400000 * 10, budgetLimit: 6000, spent: 0, tenantId: 't-personal' },
+    { id: 'p7', name: 'X Product Hunt Launch', description: 'Tech community launch day push.', status: 'active', lastActive: Date.now() - 86400000 * 12, isStarred: true, budgetLimit: 15000, spent: 15000, tenantId: 't-personal' },
+    { id: 'p8', name: 'Content Calendar Pipeline', description: 'Long-form articles and resources.', status: 'active', lastActive: Date.now() - 86400000 * 14, budgetLimit: 10000, spent: 2150, tenantId: 't-personal' },
+    { id: 'p9', name: 'Influencer Co-branding Hub', description: 'Sponsorship collaborations and codes.', status: 'active', lastActive: Date.now() - 86400000 * 16, budgetLimit: 30000, spent: 12000, tenantId: 't-personal' }
 ];
 
 const DEFAULT_IDEAS: Idea[] = [
@@ -435,7 +438,7 @@ const DEFAULT_DRAFTS: Draft[] = [
         id: 'd1',
         projectId: 'p1',
         title: 'Launch Announcement Tweet',
-        content: '🚀 Today, we are releasing the Meidallm Portal! \n\nA complete control center to monitor agent runs, configure RAG models, edit media templates, and draft copy in real-time. \n\nGet started now at meidallm.com!',
+        content: 'Today, we are releasing the Meidallm Portal! \n\nA complete control center to monitor agent runs, configure RAG models, edit media templates, and draft copy in real-time. \n\nGet started now at meidallm.com!',
         format: 'tweet',
         created: Date.now() - 86400000,
         updated: Date.now()
@@ -727,7 +730,10 @@ export function registerStateListener(listener: () => void) {
 export function notifyStateChange(skipSave = false) {
     if (!skipSave) {
         saveState();
+    } else {
+        syncAllFromState();
     }
+    applyTenantFiltering();
     if (stateChangeListener) {
         stateChangeListener();
     }
@@ -746,21 +752,128 @@ export function applyThemeClass(theme: 'day' | 'night' | 'auto') {
     }
 }
 
+// Tenant Master Storage lists
+let allProjects: Project[] = [];
+let allTasks: KanbanTask[] = [];
+let allIdeas: Idea[] = [];
+let allResearch: ResearchDoc[] = [];
+let allMedia: MediaAsset[] = [];
+let allDrafts: Draft[] = [];
+let allGoals: Goal[] = [];
+let allContacts: Contact[] = [];
+let allTimeLogs: TimeLog[] = [];
+let allCustomRoles: CustomRole[] = [];
+let allPolicies: Policy[] = [];
+
+export function applyTenantFiltering() {
+    const activeTenant = state.activeTenantId || 't-meidallm';
+    
+    // Filter projects
+    state.projects = allProjects.filter(p => {
+        const tId = p.tenantId || 't-meidallm';
+        return tId === activeTenant;
+    });
+    
+    const activeProjIds = new Set(state.projects.map(p => p.id));
+    
+    // Filter other project-scoped items
+    state.kanbanState = allTasks.filter(t => activeProjIds.has(t.projectId));
+    state.ideasState = allIdeas.filter(i => activeProjIds.has(i.projectId));
+    state.researchDocs = allResearch.filter(r => activeProjIds.has(r.projectId));
+    state.mediaAssets = allMedia.filter(m => activeProjIds.has(m.projectId));
+    state.drafts = allDrafts.filter(d => activeProjIds.has(d.projectId));
+    state.goals = allGoals.filter(g => activeProjIds.has(g.projectId));
+    state.contacts = allContacts.filter(c => activeProjIds.has(c.projectId));
+    state.timeLogs = allTimeLogs.filter(tl => !tl.projectId || activeProjIds.has(tl.projectId));
+    
+    // Filter custom roles and policies
+    state.customRoles = allCustomRoles.filter(r => r.tenantId === activeTenant);
+    state.policies = allPolicies.filter(p => p.tenantId === 'global' || p.tenantId === activeTenant);
+    
+    // Set currentProject to first valid project if current is not in active tenant
+    if (state.currentProject && !activeProjIds.has(state.currentProject)) {
+        const welcome = state.projects.find(p => p.id === 'p-welcome');
+        state.currentProject = welcome ? welcome.id : (state.projects[0]?.id || null);
+    }
+}
+
+export function syncAllFromState() {
+    if (!state.activeTenantId) return;
+    const activeTenant = state.activeTenantId;
+    const activeProjIds = new Set(state.projects.map(p => p.id));
+    
+    // Update master lists by merging active tenant changes
+    allProjects = [
+        ...allProjects.filter(p => (p.tenantId || 't-meidallm') !== activeTenant),
+        ...state.projects.map(p => ({ ...p, tenantId: p.tenantId || activeTenant }))
+    ];
+    
+    allTasks = [
+        ...allTasks.filter(t => !activeProjIds.has(t.projectId)),
+        ...state.kanbanState
+    ];
+    
+    allIdeas = [
+        ...allIdeas.filter(i => !activeProjIds.has(i.projectId)),
+        ...state.ideasState
+    ];
+    
+    allResearch = [
+        ...allResearch.filter(r => !activeProjIds.has(r.projectId)),
+        ...state.researchDocs
+    ];
+    
+    allMedia = [
+        ...allMedia.filter(m => !activeProjIds.has(m.projectId)),
+        ...state.mediaAssets
+    ];
+    
+    allDrafts = [
+        ...allDrafts.filter(d => !activeProjIds.has(d.projectId)),
+        ...state.drafts
+    ];
+    
+    allGoals = [
+        ...allGoals.filter(g => !activeProjIds.has(g.projectId)),
+        ...state.goals
+    ];
+    
+    allContacts = [
+        ...allContacts.filter(c => !activeProjIds.has(c.projectId)),
+        ...state.contacts
+    ];
+    
+    allTimeLogs = [
+        ...allTimeLogs.filter(tl => tl.projectId && !activeProjIds.has(tl.projectId)),
+        ...state.timeLogs
+    ];
+    
+    allCustomRoles = [
+        ...allCustomRoles.filter(r => r.tenantId !== activeTenant),
+        ...state.customRoles
+    ];
+    
+    allPolicies = [
+        ...allPolicies.filter(p => p.tenantId !== activeTenant && p.tenantId !== 'global'),
+        ...state.policies
+    ];
+}
+
 // Persistence & Zod Verification Helpers
 function applyDbState(parsed: any) {
     if (!parsed) return;
     
     if (parsed.kanbanState) {
         const val = z.array(KanbanTaskSchema).safeParse(parsed.kanbanState);
-        if (val.success) state.kanbanState = val.data;
+        if (val.success) allTasks = val.data;
     }
     if (parsed.projects) {
         const val = z.array(ProjectSchema).safeParse(parsed.projects);
-        if (val.success) state.projects = val.data;
+        if (val.success) allProjects = val.data;
     }
     if (parsed.ideasState) {
         const val = z.array(IdeaSchema).safeParse(parsed.ideasState);
-        if (val.success) state.ideasState = val.data;
+        if (val.success) allIdeas = val.data;
     }
     if (parsed.taskLogs) {
         const val = z.array(TaskLogSchema).safeParse(parsed.taskLogs);
@@ -768,15 +881,15 @@ function applyDbState(parsed: any) {
     }
     if (parsed.researchDocs) {
         const val = z.array(ResearchDocSchema).safeParse(parsed.researchDocs);
-        if (val.success) state.researchDocs = val.data;
+        if (val.success) allResearch = val.data;
     }
     if (parsed.mediaAssets) {
         const val = z.array(MediaAssetSchema).safeParse(parsed.mediaAssets);
-        if (val.success) state.mediaAssets = val.data;
+        if (val.success) allMedia = val.data;
     }
     if (parsed.drafts) {
         const val = z.array(DraftSchema).safeParse(parsed.drafts);
-        if (val.success) state.drafts = val.data;
+        if (val.success) allDrafts = val.data;
     }
     if (parsed.connections) {
         const val = z.array(ConnectionSchema).safeParse(parsed.connections);
@@ -788,7 +901,7 @@ function applyDbState(parsed: any) {
     }
     if (parsed.contacts) {
         const val = z.array(ContactSchema).safeParse(parsed.contacts);
-        if (val.success) state.contacts = val.data;
+        if (val.success) allContacts = val.data;
     }
     if (parsed.team) {
         const val = z.array(TeamMemberSchema).safeParse(parsed.team);
@@ -824,7 +937,7 @@ function applyDbState(parsed: any) {
     }
     if (parsed.goals) {
         const val = z.array(GoalSchema).safeParse(parsed.goals);
-        if (val.success) state.goals = val.data;
+        if (val.success) allGoals = val.data;
     }
     if (parsed.salesInvoices) {
         const val = z.array(SalesInvoiceSchema).safeParse(parsed.salesInvoices);
@@ -852,15 +965,15 @@ function applyDbState(parsed: any) {
     }
     if (parsed.customRoles) {
         const val = z.array(CustomRoleSchema).safeParse(parsed.customRoles);
-        if (val.success) state.customRoles = val.data;
+        if (val.success) allCustomRoles = val.data;
     }
     if (parsed.policies) {
         const val = z.array(PolicySchema).safeParse(parsed.policies);
-        if (val.success) state.policies = val.data;
+        if (val.success) allPolicies = val.data;
     }
     if (parsed.timeLogs) {
         const val = z.array(TimeLogSchema).safeParse(parsed.timeLogs);
-        if (val.success) state.timeLogs = val.data;
+        if (val.success) allTimeLogs = val.data;
     }
     if (parsed.activeTimer) {
         const val = ActiveTimerSchema.safeParse(parsed.activeTimer);
@@ -876,6 +989,10 @@ function applyDbState(parsed: any) {
 
 function loadLocalState() {
     try {
+        state.activeTenantId = localStorage.getItem('meidallm_active_tenantid') || 't-meidallm';
+        state.activeOrgId = localStorage.getItem('meidallm_active_orgid');
+        state.activeTeamId = localStorage.getItem('meidallm_active_teamid');
+
         const local = {
             kanbanState: JSON.parse(localStorage.getItem('meidallm_kanban') || 'null'),
             projects: JSON.parse(localStorage.getItem('meidallm_projects') || 'null'),
@@ -914,23 +1031,22 @@ function loadLocalState() {
             databaseViewMode: localStorage.getItem('meidallm_database_viewmode')
         };
         applyDbState(local);
-        
-        state.activeTenantId = localStorage.getItem('meidallm_active_tenantid');
-        state.activeOrgId = localStorage.getItem('meidallm_active_orgid');
-        state.activeTeamId = localStorage.getItem('meidallm_active_teamid');
     } catch (e) {
         console.error("Local storage load fallback failed:", e);
     }
     
     // Seed default sets if arrays are completely empty
-    if (state.projects.length === 0) state.projects = DEFAULT_PROJECTS;
-    if (state.kanbanState.length === 0) state.kanbanState = DEFAULT_KANBAN;
-    if (state.ideasState.length === 0) state.ideasState = DEFAULT_IDEAS;
-    if (state.researchDocs.length === 0) state.researchDocs = DEFAULT_RESEARCH;
-    if (state.mediaAssets.length === 0) state.mediaAssets = DEFAULT_MEDIA;
-    if (state.drafts.length === 0) state.drafts = DEFAULT_DRAFTS;
-    if (state.connections.length === 0) state.connections = DEFAULT_CONNECTIONS;
-    if (state.contacts.length === 0) state.contacts = DEFAULT_CONTACTS;
+    if (allProjects.length === 0) allProjects = DEFAULT_PROJECTS;
+    if (allTasks.length === 0) allTasks = DEFAULT_KANBAN;
+    if (allIdeas.length === 0) allIdeas = DEFAULT_IDEAS;
+    if (allResearch.length === 0) allResearch = DEFAULT_RESEARCH;
+    if (allMedia.length === 0) allMedia = DEFAULT_MEDIA;
+    if (allDrafts.length === 0) allDrafts = DEFAULT_DRAFTS;
+    if (allGoals.length === 0) allGoals = DEFAULT_GOALS;
+    if (allContacts.length === 0) allContacts = DEFAULT_CONTACTS;
+    if (allCustomRoles.length === 0) allCustomRoles = DEFAULT_CUSTOM_ROLES;
+    if (allPolicies.length === 0) allPolicies = DEFAULT_POLICIES;
+    
     if (state.team.length === 0) state.team = DEFAULT_TEAM;
     if (state.teams.length === 0) state.teams = DEFAULT_TEAMS;
     if (state.tenants.length === 0) state.tenants = DEFAULT_TENANTS;
@@ -939,17 +1055,15 @@ function loadLocalState() {
     if (state.cycles.length === 0) state.cycles = DEFAULT_CYCLES;
     if (state.modules.length === 0) state.modules = DEFAULT_MODULES;
     if (state.tables.length === 0) state.tables = DEFAULT_TABLES;
-    if (state.goals.length === 0) state.goals = DEFAULT_GOALS;
     
     // Creator SaaS Enterprise Defaults
     if (state.inventoryItems.length === 0) state.inventoryItems = DEFAULT_INVENTORY;
     if (state.supportCases.length === 0) state.supportCases = DEFAULT_SUPPORT;
     if (state.employees.length === 0) state.employees = DEFAULT_EMPLOYEES;
     if (state.candidates.length === 0) state.candidates = DEFAULT_CANDIDATES;
-    if (state.customRoles.length === 0) state.customRoles = DEFAULT_CUSTOM_ROLES;
-    if (state.policies.length === 0) state.policies = DEFAULT_POLICIES;
-    if (state.timeLogs.length === 0) {
-        state.timeLogs = [
+    
+    if (allTimeLogs.length === 0) {
+        allTimeLogs = [
             {
                 id: 'tl-1',
                 projectId: 'p-welcome',
@@ -972,11 +1086,13 @@ function loadLocalState() {
             }
         ];
     }
+    
     if (!state.activeRole) state.activeRole = 'admin';
     if (!state.agencyBrand || !state.agencyBrand.logo) state.agencyBrand = { logo: 'Meidallm Agency', primaryColor: '#000000', subscriptionTier: 'pro' };
     if (!state.agencyBrand.subscriptionTier) state.agencyBrand.subscriptionTier = 'pro';
     
     applyThemeClass(state.theme);
+    applyTenantFiltering();
 }
 
 export async function loadState() {
@@ -1004,6 +1120,7 @@ export async function loadState() {
                 }
                 if (data.orgState) {
                     applyDbState(data.orgState);
+                    applyTenantFiltering();
                     notifyStateChange(true); // skip save on initial pull
                 }
             }
@@ -1023,6 +1140,8 @@ export function togglePolicy(policyId: string) {
 
 export function saveState() {
     try {
+        syncAllFromState();
+
         if (state.currentUser) {
             localStorage.setItem('meidallm_user', state.currentUser);
         } else {
@@ -1037,17 +1156,17 @@ export function saveState() {
         if (state.activeTeamId) {
             localStorage.setItem('meidallm_active_teamid', state.activeTeamId);
         }
-        localStorage.setItem('meidallm_kanban', JSON.stringify(state.kanbanState));
-        localStorage.setItem('meidallm_projects', JSON.stringify(state.projects));
-        localStorage.setItem('meidallm_ideas', JSON.stringify(state.ideasState));
+        localStorage.setItem('meidallm_kanban', JSON.stringify(allTasks));
+        localStorage.setItem('meidallm_projects', JSON.stringify(allProjects));
+        localStorage.setItem('meidallm_ideas', JSON.stringify(allIdeas));
         localStorage.setItem('meidallm_logs', JSON.stringify(state.taskLogs));
-        localStorage.setItem('meidallm_research', JSON.stringify(state.researchDocs));
-        localStorage.setItem('meidallm_media', JSON.stringify(state.mediaAssets));
-        localStorage.setItem('meidallm_drafts', JSON.stringify(state.drafts));
+        localStorage.setItem('meidallm_research', JSON.stringify(allResearch));
+        localStorage.setItem('meidallm_media', JSON.stringify(allMedia));
+        localStorage.setItem('meidallm_drafts', JSON.stringify(allDrafts));
         localStorage.setItem('meidallm_theme', state.theme);
         localStorage.setItem('meidallm_connections', JSON.stringify(state.connections));
         localStorage.setItem('meidallm_schedules', JSON.stringify(state.publishSchedules));
-        localStorage.setItem('meidallm_contacts', JSON.stringify(state.contacts));
+        localStorage.setItem('meidallm_contacts', JSON.stringify(allContacts));
         localStorage.setItem('meidallm_team', JSON.stringify(state.team));
         localStorage.setItem('meidallm_teams', JSON.stringify(state.teams));
         localStorage.setItem('meidallm_tenants', JSON.stringify(state.tenants));
@@ -1056,16 +1175,16 @@ export function saveState() {
         localStorage.setItem('meidallm_cycles', JSON.stringify(state.cycles));
         localStorage.setItem('meidallm_modules', JSON.stringify(state.modules));
         localStorage.setItem('meidallm_tables', JSON.stringify(state.tables));
-        localStorage.setItem('meidallm_goals', JSON.stringify(state.goals));
+        localStorage.setItem('meidallm_goals', JSON.stringify(allGoals));
         localStorage.setItem('meidallm_sales_invoices', JSON.stringify(state.salesInvoices));
         localStorage.setItem('meidallm_p2p_transactions', JSON.stringify(state.p2pTransactions));
         localStorage.setItem('meidallm_inventory_items', JSON.stringify(state.inventoryItems));
         localStorage.setItem('meidallm_support_cases', JSON.stringify(state.supportCases));
         localStorage.setItem('meidallm_employees', JSON.stringify(state.employees));
         localStorage.setItem('meidallm_candidates', JSON.stringify(state.candidates));
-        localStorage.setItem('meidallm_custom_roles', JSON.stringify(state.customRoles));
-        localStorage.setItem('meidallm_policies', JSON.stringify(state.policies));
-        localStorage.setItem('meidallm_time_logs', JSON.stringify(state.timeLogs));
+        localStorage.setItem('meidallm_custom_roles', JSON.stringify(allCustomRoles));
+        localStorage.setItem('meidallm_policies', JSON.stringify(allPolicies));
+        localStorage.setItem('meidallm_time_logs', JSON.stringify(allTimeLogs));
         localStorage.setItem('meidallm_active_timer', JSON.stringify(state.activeTimer));
         localStorage.setItem('meidallm_active_role', state.activeRole);
         localStorage.setItem('meidallm_agency_brand', JSON.stringify(state.agencyBrand));
@@ -1084,32 +1203,32 @@ export function saveState() {
                 orgId: state.activeOrgId,
                 theme: state.theme,
                 orgState: {
-                    kanbanState: state.kanbanState,
-                    projects: state.projects,
-                    ideasState: state.ideasState,
+                    kanbanState: allTasks,
+                    projects: allProjects,
+                    ideasState: allIdeas,
                     taskLogs: state.taskLogs,
-                    researchDocs: state.researchDocs,
-                    mediaAssets: state.mediaAssets,
-                    drafts: state.drafts,
+                    researchDocs: allResearch,
+                    mediaAssets: allMedia,
+                    drafts: allDrafts,
                     connections: state.connections,
                     publishSchedules: state.publishSchedules,
-                    contacts: state.contacts,
+                    contacts: allContacts,
                     team: state.team,
                     teams: state.teams,
                     activityLogs: state.activityLogs,
                     cycles: state.cycles,
                     modules: state.modules,
                     tables: state.tables,
-                    goals: state.goals,
+                    goals: allGoals,
                     salesInvoices: state.salesInvoices,
                     p2pTransactions: state.p2pTransactions,
                     inventoryItems: state.inventoryItems,
                     supportCases: state.supportCases,
                     employees: state.employees,
                     candidates: state.candidates,
-                    customRoles: state.customRoles,
-                    policies: state.policies,
-                    timeLogs: state.timeLogs,
+                    customRoles: allCustomRoles,
+                    policies: allPolicies,
+                    timeLogs: allTimeLogs,
                     activeTimer: state.activeTimer,
                     activeRole: state.activeRole,
                     agencyBrand: state.agencyBrand,
@@ -1129,6 +1248,28 @@ export function saveState() {
     }
 }
 
+export function getProjectTenantId(projectId: string): string {
+    const proj = state.projects.find(p => p.id === projectId);
+    if (proj && proj.tenantId) return proj.tenantId;
+    
+    // Look up via team -> org -> tenant
+    const team = state.teams.find(t => t.projectIds?.includes(projectId));
+    if (team) {
+        const org = state.organizations.find(o => o.id === team.orgId);
+        if (org) return org.tenantId;
+    }
+    
+    return state.activeTenantId || 't-meidallm';
+}
+
+export function assertTenantScope(entityTenantId: string | null | undefined): void {
+    if (!entityTenantId) return;
+    if (entityTenantId === 'global') return;
+    if (state.activeTenantId && entityTenantId !== state.activeTenantId) {
+        throw new Error(`Access Denied: Entity belongs to tenant ${entityTenantId}, but active tenant is ${state.activeTenantId}`);
+    }
+}
+
 // State Mutators
 export function logChange(projectId: string, taskId: string, itemTitle: string, fromState: string, toState: string) {
     const logEntry: TaskLog = {
@@ -1143,7 +1284,19 @@ export function logChange(projectId: string, taskId: string, itemTitle: string, 
     state.taskLogs.push(logEntry);
 }
 
-export function addContact(pid: string, name: string, email: string, company: string, dealStage: Contact['dealStage'], dealValue: number, statusTag?: Contact['statusTag']) {
+export function addContact(
+    pid: string, 
+    name: string, 
+    email: string, 
+    company: string, 
+    dealStage: Contact['dealStage'], 
+    dealValue: number, 
+    statusTag?: Contact['statusTag'],
+    creatorType?: Contact['creatorType'],
+    platforms?: Contact['platforms'],
+    audienceDemographics?: Contact['audienceDemographics'],
+    monetizationModel?: Contact['monetizationModel']
+) {
     const newContact: Contact = {
         id: 'c-' + Math.random().toString(36).substr(2, 9),
         projectId: pid,
@@ -1157,7 +1310,11 @@ export function addContact(pid: string, name: string, email: string, company: st
         isArchived: false,
         isBinned: false,
         statusTag: statusTag || 'new',
-        history: [{ action: 'Created Prospect', timestamp: Date.now() }]
+        history: [{ action: 'Created Prospect', timestamp: Date.now() }],
+        creatorType,
+        platforms,
+        audienceDemographics,
+        monetizationModel
     };
     state.contacts.push(newContact);
     logChange(pid, '', `Contact ${newContact.name}`, 'none', 'created_contact');
@@ -1165,7 +1322,19 @@ export function addContact(pid: string, name: string, email: string, company: st
     return newContact.id;
 }
 
-export function updateContact(cid: string, name: string, email: string, company: string, dealStage: Contact['dealStage'], dealValue: number, statusTag?: Contact['statusTag']) {
+export function updateContact(
+    cid: string, 
+    name: string, 
+    email: string, 
+    company: string, 
+    dealStage: Contact['dealStage'], 
+    dealValue: number, 
+    statusTag?: Contact['statusTag'],
+    creatorType?: Contact['creatorType'],
+    platforms?: Contact['platforms'],
+    audienceDemographics?: Contact['audienceDemographics'],
+    monetizationModel?: Contact['monetizationModel']
+) {
     const contact = state.contacts.find(c => c.id === cid);
     if (contact) {
         const oldStage = contact.dealStage;
@@ -1175,9 +1344,14 @@ export function updateContact(cid: string, name: string, email: string, company:
         contact.dealStage = dealStage;
         contact.dealValue = dealValue;
         if (statusTag) contact.statusTag = statusTag;
+        if (creatorType !== undefined) contact.creatorType = creatorType;
+        if (platforms !== undefined) contact.platforms = platforms;
+        if (audienceDemographics !== undefined) contact.audienceDemographics = audienceDemographics;
+        if (monetizationModel !== undefined) contact.monetizationModel = monetizationModel;
         contact.updated = Date.now();
         if (!contact.history) contact.history = [];
         if (oldStage !== dealStage) {
+            trackEvent(state.activeTenantId || 't-meidallm', state.currentUser || 'anonymous', 'DealStageChanged', { contactId: cid, fromStage: oldStage, toStage: dealStage, dealValue });
             contact.history.push({
                 action: `Stage changed: ${oldStage} ➔ ${dealStage}`,
                 timestamp: Date.now()
@@ -1404,6 +1578,9 @@ export function updateCmsMetadata(draftId: string, cmsStatus: Draft['cmsStatus']
         d.cmsStatus = cmsStatus;
         d.seoKeywords = seoKeywords.trim();
         d.collaborators = collaborators.trim();
+        if (cmsStatus === 'published') {
+            trackEvent(state.activeTenantId || 't-meidallm', state.currentUser || 'anonymous', 'DraftPublished', { draftId, projectId: d.projectId });
+        }
         notifyStateChange();
     }
 }
@@ -1422,6 +1599,7 @@ export function updateErpBudget(pid: string, budgetLimit: number, spent: number)
 }
 
 export function addTask(pid: string, title: string, tag: string, priority?: KanbanTask['priority'], points?: number) {
+    assertTenantScope(getProjectTenantId(pid));
     const newTask: KanbanTask = {
         id: 't-' + Math.random().toString(36).substr(2, 9),
         projectId: pid,
@@ -1441,6 +1619,8 @@ export function addTask(pid: string, title: string, tag: string, priority?: Kanb
     const p = state.projects.find(proj => proj.id === pid);
     if (p) p.lastActive = Date.now();
 
+    trackEvent(state.activeTenantId || 't-meidallm', state.currentUser || 'anonymous', 'TaskCreated', { taskId: newTask.id, projectId: pid });
+    triggerAutomations('task_created', newTask, state.activeTenantId || 't-meidallm');
     notifyStateChange();
 }
 
@@ -1465,7 +1645,10 @@ export function updateTask(
 ) {
     const t = state.kanbanState.find(x => x.id === taskId);
     if (t) {
+        assertTenantScope(getProjectTenantId(t.projectId));
         const oldTitle = t.title;
+        const oldStatus = t.status;
+        const oldPriority = t.priority;
         t.title = title.trim();
         t.tag = tag.trim() || 'General';
         if (status) t.status = status;
@@ -1484,6 +1667,14 @@ export function updateTask(
         if (comments !== undefined) t.comments = comments;
         t.updated = Date.now();
         logChange(t.projectId, t.id, t.title, oldTitle, 'edited');
+        
+        if (status && status !== oldStatus) {
+            trackEvent(state.activeTenantId || 't-meidallm', state.currentUser || 'anonymous', 'TaskStatusChanged', { taskId, projectId: t.projectId, fromStatus: oldStatus, toStatus: status });
+            triggerAutomations('status_changed', t, state.activeTenantId || 't-meidallm', { oldValue: oldStatus, newValue: status });
+        }
+        if (priority !== undefined && priority !== oldPriority) {
+            triggerAutomations('priority_changed', t, state.activeTenantId || 't-meidallm', { oldValue: oldPriority, newValue: priority });
+        }
         notifyStateChange();
     }
 }
@@ -1491,6 +1682,7 @@ export function updateTask(
 export function archiveTask(taskId: string, isArchived: boolean) {
     const t = state.kanbanState.find(x => x.id === taskId);
     if (t) {
+        assertTenantScope(getProjectTenantId(t.projectId));
         t.isArchived = isArchived;
         t.updated = Date.now();
         logChange(t.projectId, t.id, t.title, isArchived ? 'active' : 'archived', isArchived ? 'archived' : 'active');
@@ -1501,6 +1693,7 @@ export function archiveTask(taskId: string, isArchived: boolean) {
 export function binTask(taskId: string, isBinned: boolean) {
     const t = state.kanbanState.find(x => x.id === taskId);
     if (t) {
+        assertTenantScope(getProjectTenantId(t.projectId));
         t.isBinned = isBinned;
         t.updated = Date.now();
         logChange(t.projectId, t.id, t.title, isBinned ? 'active' : 'binned', isBinned ? 'binned' : 'active');
@@ -1511,6 +1704,7 @@ export function binTask(taskId: string, isBinned: boolean) {
 export function deleteTask(taskId: string) {
     const task = state.kanbanState.find(t => t.id === taskId);
     if (task) {
+        assertTenantScope(getProjectTenantId(task.projectId));
         logChange(task.projectId, task.id, task.title, 'binned', 'permanently_deleted');
         state.kanbanState = state.kanbanState.filter(t => t.id !== taskId);
         notifyStateChange();
@@ -1519,16 +1713,20 @@ export function deleteTask(taskId: string) {
 
 export function moveTask(taskId: string, targetStatus: KanbanTask['status']) {
     const task = state.kanbanState.find(t => t.id === taskId);
-    if (task && task.status !== targetStatus) {
+    if (task) {
+        assertTenantScope(getProjectTenantId(task.projectId));
         const oldStatus = task.status;
-        task.status = targetStatus;
-        task.updated = Date.now();
-        logChange(task.projectId, task.id, task.title, oldStatus, targetStatus);
-        
-        const p = state.projects.find(proj => proj.id === task.projectId);
-        if (p) p.lastActive = Date.now();
+        if (task.status !== targetStatus) {
+            task.status = targetStatus;
+            task.updated = Date.now();
+            logChange(task.projectId, task.id, task.title, oldStatus, targetStatus);
+            
+            const p = state.projects.find(proj => proj.id === task.projectId);
+            if (p) p.lastActive = Date.now();
 
-        notifyStateChange();
+            trackEvent(state.activeTenantId || 't-meidallm', state.currentUser || 'anonymous', 'TaskStatusChanged', { taskId, projectId: task.projectId, fromStatus: oldStatus, toStatus: targetStatus });
+            notifyStateChange();
+        }
     }
 }
 

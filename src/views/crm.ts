@@ -8,8 +8,9 @@ export function renderCRMView(pid: string): string {
 
     state.currentProject = p.id;
     const filter = state.crmFilter || 'active';
+    const creatorFilter = (window as any).__crmCreatorTypeFilter || 'all';
 
-    // 1. Filter contacts based on project + tab filter
+    // 1. Filter contacts based on project + tab filter + creator type
     let projectContacts = state.contacts.filter(c => c.projectId === pid);
     if (filter === 'active') {
         projectContacts = projectContacts.filter(c => !c.isArchived && !c.isBinned);
@@ -17,6 +18,10 @@ export function renderCRMView(pid: string): string {
         projectContacts = projectContacts.filter(c => c.isArchived && !c.isBinned);
     } else if (filter === 'bin') {
         projectContacts = projectContacts.filter(c => c.isBinned);
+    }
+
+    if (creatorFilter !== 'all') {
+        projectContacts = projectContacts.filter(c => c.creatorType === creatorFilter);
     }
 
     const totalPipelineValue = projectContacts.reduce((sum, c) => sum + c.dealValue, 0);
@@ -31,6 +36,17 @@ export function renderCRMView(pid: string): string {
     // Read selected contact for history detail viewer from session
     const selectedContactId = (window as any).__selectedCrmContactId || '';
     const selectedContact = projectContacts.find(c => c.id === selectedContactId);
+
+    // Register CRM view window listeners once
+    if (typeof window !== 'undefined' && !(window as any).crmViewInitialized) {
+        (window as any).crmViewInitialized = true;
+        (window as any).setCrmCreatorTypeFilter = (val: string) => {
+            (window as any).__crmCreatorTypeFilter = val;
+            if ((window as any).refreshActiveView) {
+                (window as any).refreshActiveView();
+            }
+        };
+    }
 
     return `
     <div class="fade-in flex flex-col gap-6 text-text-main">
@@ -51,12 +67,28 @@ export function renderCRMView(pid: string): string {
             </div>
         </div>
 
-        <!-- CRM Tab Filters -->
-        <div class="flex justify-between items-center mb-1">
-            <div class="flex gap-6 border-b border-text-main/10 w-full pb-2">
+        <!-- CRM Tab Filters & Creator Type Segment Filters -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-text-main/10 pb-2">
+            <div class="flex gap-6">
                 <button onclick="window.setCrmFilter('active')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'active' ? 'text-text-main border-b-2 border-text-main font-bold' : 'text-text-muted hover:text-text-main'}">Active Deals</button>
                 <button onclick="window.setCrmFilter('archived')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'archived' ? 'text-text-main border-b-2 border-text-main font-bold' : 'text-text-muted hover:text-text-main'}">Archived Deals</button>
                 <button onclick="window.setCrmFilter('bin')" class="pb-1.5 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${filter === 'bin' ? 'text-text-main border-b-2 border-text-main font-bold' : 'text-text-muted hover:text-text-main'}">Bin / Trash</button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <label class="text-[10px] uppercase font-bold text-text-muted">Creator Segment:</label>
+                <select onchange="window.setCrmCreatorTypeFilter(this.value)" class="bg-panel-hover border border-glass-border px-2 py-1 rounded-lg text-xs text-text-main focus:outline-none cursor-pointer">
+                    <option value="all" ${creatorFilter === 'all' ? 'selected' : ''}>All Types</option>
+                    <option value="influencer" ${creatorFilter === 'influencer' ? 'selected' : ''}>Influencer</option>
+                    <option value="micro-influencer" ${creatorFilter === 'micro-influencer' ? 'selected' : ''}>Micro-Influencer</option>
+                    <option value="vlogger" ${creatorFilter === 'vlogger' ? 'selected' : ''}>Vlogger</option>
+                    <option value="podcaster" ${creatorFilter === 'podcaster' ? 'selected' : ''}>Podcaster</option>
+                    <option value="live-streamer" ${creatorFilter === 'live-streamer' ? 'selected' : ''}>Live-Streamer</option>
+                    <option value="blogger" ${creatorFilter === 'blogger' ? 'selected' : ''}>Blogger</option>
+                    <option value="digital-artist" ${creatorFilter === 'digital-artist' ? 'selected' : ''}>Digital Artist</option>
+                    <option value="newsletter-writer" ${creatorFilter === 'newsletter-writer' ? 'selected' : ''}>Newsletter Writer</option>
+                    <option value="ugc-creator" ${creatorFilter === 'ugc-creator' ? 'selected' : ''}>UGC Creator</option>
+                </select>
             </div>
         </div>
 
@@ -129,7 +161,7 @@ export function renderCRMView(pid: string): string {
                                 }
 
                                 return `
-                                <div class="bg-background border ${isSelected ? 'border-text-main' : 'border-text-main/15'} hover:border-text-main p-4 rounded-xl flex flex-col gap-3 group/crm-card transition-all cursor-grab active:cursor-grabbing"
+                                <div class="bg-background border ${isSelected ? 'border-text-main' : 'border-text-main/15'} hover:border-text-main p-4 rounded-xl flex flex-col gap-3 group/crm-card transition-all cursor-grab active:cursor-grabbing text-left"
                                      id="contact-card-${c.id}"
                                      draggable="true"
                                      onclick="window.selectCrmContact('${c.id}')"
@@ -139,6 +171,12 @@ export function renderCRMView(pid: string): string {
                                         <div>
                                             <h4 class="font-bold text-text-main text-xs truncate max-w-[120px]">${sanitizeHTML(c.name)}</h4>
                                             <span class="text-[10px] text-text-muted font-medium block mt-0.5">${sanitizeHTML(c.company)}</span>
+                                            ${c.creatorType ? `<span class="inline-block mt-1 text-[8px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-1 py-0.2 rounded font-semibold capitalize">${c.creatorType}</span>` : ''}
+                                            ${c.platforms && c.platforms.length > 0 ? `
+                                                <div class="flex gap-1 flex-wrap mt-1">
+                                                    ${c.platforms.map(plat => `<span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1 py-0.2 rounded text-[8px] font-mono">${sanitizeHTML(plat)}</span>`).join('')}
+                                                </div>
+                                            ` : ''}
                                         </div>
                                         <div class="flex gap-2.5 opacity-0 group-hover/crm-card:opacity-100 transition-opacity">
                                             <button onclick="event.stopPropagation(); window.editContactPrompt('${c.id}')" class="text-text-muted hover:text-text-main transition-colors cursor-pointer" title="Edit Deal Info">
@@ -189,13 +227,13 @@ export function renderCRMView(pid: string): string {
 
             <!-- Details & Activity history sidebar panel -->
             <div class="bg-background border border-text-main/15 p-5 rounded-2xl flex flex-col gap-4 max-h-[700px] overflow-y-auto">
-                <h3 class="font-bold text-sm font-outfit">Deal History & Activity</h3>
+                <h3 class="font-bold text-sm font-outfit text-left">Deal History & Activity</h3>
                 ${(() => {
                     if (!selectedContact) {
                         return `
                         <div class="text-center py-16 text-xs text-text-muted leading-relaxed">
                             ${getIconSVG('info', 'w-8 h-8 mx-auto mb-2 text-text-muted/60')}
-                            Select a deal card to view time tracking, Order-to-Cash stepper, support cases, and logs.
+                            Select a deal card to view creator profile details, quote billing, support cases, and logs.
                         </div>
                         `;
                     }
@@ -205,17 +243,17 @@ export function renderCRMView(pid: string): string {
                     let invoiceBlock = "";
                     if (!inv) {
                         invoiceBlock = `
-                        <div class="border-t border-text-main/10 pt-3">
+                        <div class="border-t border-text-main/10 pt-3 text-left">
                             <span class="text-[10px] text-text-muted font-bold block uppercase mb-2">Campaign Retainer Order-to-Cash</span>
                             <button onclick="window.generateSponsorInvoice('${selectedContact.id}')" class="w-full py-2 bg-text-main text-background hover:bg-text-main/80 font-bold text-[11px] rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
-                                ${getIconSVG('crm', 'w-3.5 h-3.5')} Convert to Quote, Order & Invoice
+                                ${getIconSVG('crm', 'w-3.5 h-3.5')} Convert to Quote & Invoice
                             </button>
                         </div>
                         `;
                     } else {
                         const isPaid = inv.invoiceStatus === 'paid';
                         invoiceBlock = `
-                        <div class="border-t border-text-main/10 pt-3 flex flex-col gap-2">
+                        <div class="border-t border-text-main/10 pt-3 flex flex-col gap-2 text-left">
                             <span class="text-[10px] text-text-muted font-bold block uppercase">Campaign Billing Status</span>
                             <div class="flex items-center justify-between text-xs">
                                 <span class="font-semibold text-text-main">Invoice #${inv.id}</span>
@@ -250,7 +288,7 @@ export function renderCRMView(pid: string): string {
                     // Support tickets check
                     const cases = state.supportCases.filter(c => c.contactId === selectedContact.id);
                     const casesBlock = `
-                    <div class="border-t border-text-main/10 pt-3 flex flex-col gap-3">
+                    <div class="border-t border-text-main/10 pt-3 flex flex-col gap-3 text-left">
                         <div class="flex justify-between items-center">
                             <span class="text-[10px] text-text-muted font-bold block uppercase">Creator Support Tickets</span>
                             <button onclick="window.createSupportCasePrompt('${pid}', '${selectedContact.id}')" class="text-[9px] font-bold text-text-main hover:underline cursor-pointer">+ Log Ticket</button>
@@ -298,7 +336,7 @@ export function renderCRMView(pid: string): string {
                                         
                                         ${c.status !== 'resolved' ? `
                                             <div class="flex gap-1.5 mt-1.5">
-                                                <input type="text" id="comment-input-${c.id}" placeholder="Reply to ticket..." class="flex-grow bg-background border border-text-main/20 focus:border-text-main rounded px-2 py-1 text-[9px] focus:outline-none">
+                                                <input type="text" id="comment-input-${c.id}" placeholder="Reply to ticket..." class="flex-grow bg-background border border-text-main/20 focus:border-text-main rounded px-2 py-1 text-[9px] focus:outline-none text-text-main">
                                                 <button onclick="window.submitCaseComment('${c.id}')" class="px-2 py-1 bg-text-main text-background hover:bg-text-main/80 text-[9px] font-bold rounded cursor-pointer">Reply</button>
                                                 <button onclick="window.resolveSupportCase('${c.id}')" class="px-2 py-1 bg-emerald-500 text-white hover:bg-emerald-600 text-[9px] font-bold rounded cursor-pointer">Resolve</button>
                                             </div>
@@ -312,12 +350,37 @@ export function renderCRMView(pid: string): string {
                     `;
 
                     return `
-                    <div class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-4 text-left">
                         <div>
                             <span class="text-[10px] text-text-muted font-bold block uppercase">Client Info</span>
                             <h4 class="font-bold text-text-main text-sm mt-1">${sanitizeHTML(selectedContact.name)}</h4>
                             <p class="text-xs text-text-muted">${sanitizeHTML(selectedContact.email || 'No email provided')}</p>
                             <span class="text-[10px] bg-text-main/5 px-2 py-1 border border-text-main/10 rounded font-bold inline-block mt-2">${sanitizeHTML(selectedContact.company)}</span>
+                        </div>
+
+                        <!-- Creator Taxonomy Profile Section -->
+                        <div class="border-t border-text-main/10 pt-3 flex flex-col gap-2">
+                            <span class="text-[10px] text-text-muted font-bold block uppercase">Creator Profile</span>
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                    <span class="text-text-muted block text-[9px] uppercase font-semibold">Creator Type</span>
+                                    <span class="text-text-main font-semibold capitalize">${selectedContact.creatorType || 'Not specified'}</span>
+                                </div>
+                                <div>
+                                    <span class="text-text-muted block text-[9px] uppercase font-semibold">Monetization Model</span>
+                                    <span class="text-text-main font-semibold">${sanitizeHTML(selectedContact.monetizationModel || 'Not specified')}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="text-text-muted block text-[9px] uppercase font-semibold">Platforms</span>
+                                <div class="flex gap-1 flex-wrap mt-1">
+                                    ${(selectedContact.platforms || []).map(plat => `<span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded text-[9px] font-medium font-mono">${sanitizeHTML(plat)}</span>`).join('') || '<span class="italic text-text-muted text-[10px]">None specified</span>'}
+                                </div>
+                            </div>
+                            <div>
+                                <span class="text-text-muted block text-[9px] uppercase font-semibold">Audience Demographics</span>
+                                <p class="text-text-main text-xs mt-0.5 leading-relaxed">${sanitizeHTML(selectedContact.audienceDemographics || 'No demographics data logged.')}</p>
+                            </div>
                         </div>
 
                         ${invoiceBlock}
@@ -358,18 +421,50 @@ export function renderCRMView(pid: string): string {
                 <button onclick="window.hideAddContactModal()" class="text-text-muted hover:text-text-main font-bold text-sm">✕</button>
             </div>
             <div>
-                <label class="block text-xs font-bold text-text-muted uppercase mb-1">Contact Name</label>
+                <label class="block text-xs font-bold text-text-muted uppercase mb-1 text-left">Contact Name</label>
                 <input id="modal-contact-name" type="text" placeholder="e.g. Sarah Jenkins" class="w-full bg-background border border-text-main/20 focus:border-text-main p-3 rounded-xl text-text-main text-sm focus:outline-none">
             </div>
             <div>
-                <label class="block text-xs font-bold text-text-muted uppercase mb-1">Email</label>
+                <label class="block text-xs font-bold text-text-muted uppercase mb-1 text-left">Email</label>
                 <input id="modal-contact-email" type="email" placeholder="e.g. sarah@stripe.com" class="w-full bg-background border border-text-main/20 focus:border-text-main p-3 rounded-xl text-text-main text-sm focus:outline-none">
             </div>
             <div>
-                <label class="block text-xs font-bold text-text-muted uppercase mb-1">Company</label>
+                <label class="block text-xs font-bold text-text-muted uppercase mb-1 text-left">Company</label>
                 <input id="modal-contact-company" type="text" placeholder="e.g. Stripe" class="w-full bg-background border border-text-main/20 focus:border-text-main p-3 rounded-xl text-text-main text-sm focus:outline-none">
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            
+            <!-- Creator Taxonomy Input Section -->
+            <div class="grid grid-cols-2 gap-3 text-left">
+                <div>
+                    <label class="block text-xs font-bold text-text-muted uppercase mb-1">Creator Type</label>
+                    <select id="modal-contact-creator-type" class="w-full bg-background border border-text-main/20 focus:border-text-main p-3 rounded-xl text-text-main text-sm focus:outline-none cursor-pointer">
+                        <option value="">None / Sponsor</option>
+                        <option value="influencer">Influencer</option>
+                        <option value="micro-influencer">Micro-Influencer</option>
+                        <option value="vlogger">Vlogger</option>
+                        <option value="podcaster">Podcaster</option>
+                        <option value="live-streamer">Live-Streamer</option>
+                        <option value="blogger">Blogger</option>
+                        <option value="digital-artist">Digital Artist</option>
+                        <option value="newsletter-writer">Newsletter Writer</option>
+                        <option value="ugc-creator">UGC Creator</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-text-muted uppercase mb-1">Platforms (comma-sep)</label>
+                    <input id="modal-contact-platforms" type="text" placeholder="YouTube, TikTok" class="w-full bg-background border border-text-main/20 focus:border-text-main p-3 rounded-xl text-text-main text-sm focus:outline-none">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-text-muted uppercase mb-1 text-left">Audience Demographics</label>
+                <input id="modal-contact-demographics" type="text" placeholder="e.g. 18-24 Gen Z, 65% Female, US" class="w-full bg-background border border-text-main/20 focus:border-text-main p-3 rounded-xl text-text-main text-sm focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-text-muted uppercase mb-1 text-left">Monetization Model</label>
+                <input id="modal-contact-monetization" type="text" placeholder="e.g. Sponsorship, Affiliate, AdSense" class="w-full bg-background border border-text-main/20 focus:border-text-main p-3 rounded-xl text-text-main text-sm focus:outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-left">
                 <div>
                     <label class="block text-xs font-bold text-text-muted uppercase mb-1">Deal Value ($)</label>
                     <input id="modal-contact-value" type="number" placeholder="e.g. 5000" class="w-full bg-background border border-text-main/20 focus:border-text-main p-3 rounded-xl text-text-main text-sm focus:outline-none">
