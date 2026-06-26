@@ -650,6 +650,7 @@ const DEFAULT_POLICIES: Policy[] = [
 
 export const state = {
     currentUser: null as string | null,
+    sidebarCollapsed: false,
     activeTenantId: null as string | null,
     activeOrgId: null as string | null,
     activeTeamId: null as string | null,
@@ -985,6 +986,28 @@ function applyDbState(parsed: any) {
     if (parsed.kanbanViewMode) state.kanbanViewMode = parsed.kanbanViewMode;
     if (parsed.activeTableId) state.activeTableId = parsed.activeTableId;
     if (parsed.databaseViewMode) state.databaseViewMode = parsed.databaseViewMode;
+    if (parsed.sidebarCollapsed !== undefined && parsed.sidebarCollapsed !== null) {
+        state.sidebarCollapsed = parsed.sidebarCollapsed === true || parsed.sidebarCollapsed === 'true';
+    }
+}
+
+// Ensures hardcoded DEFAULT_TEAM members always have their canonical systemRole,
+// regardless of what was loaded from localStorage or the database.
+function ensureDefaultTeamRoles() {
+    if (state.team.length === 0) {
+        state.team = [...DEFAULT_TEAM];
+    } else {
+        DEFAULT_TEAM.forEach(defaultMember => {
+            const existing = state.team.find(t => t.email === defaultMember.email);
+            if (!existing) {
+                state.team.push({ ...defaultMember });
+            } else {
+                // Always enforce the canonical systemRole — can't be overwritten by cache
+                existing.systemRole = defaultMember.systemRole;
+                existing.role = defaultMember.role;
+            }
+        });
+    }
 }
 
 function loadLocalState() {
@@ -1028,7 +1051,8 @@ function loadLocalState() {
             theme: localStorage.getItem('meidallm_theme'),
             kanbanViewMode: localStorage.getItem('meidallm_kanban_viewmode'),
             activeTableId: localStorage.getItem('meidallm_active_tableid'),
-            databaseViewMode: localStorage.getItem('meidallm_database_viewmode')
+            databaseViewMode: localStorage.getItem('meidallm_database_viewmode'),
+            sidebarCollapsed: localStorage.getItem('meidallm_sidebar_collapsed')
         };
         applyDbState(local);
     } catch (e) {
@@ -1047,7 +1071,9 @@ function loadLocalState() {
     if (allCustomRoles.length === 0) allCustomRoles = DEFAULT_CUSTOM_ROLES;
     if (allPolicies.length === 0) allPolicies = DEFAULT_POLICIES;
     
-    if (state.team.length === 0) state.team = DEFAULT_TEAM;
+    // Always ensure DEFAULT_TEAM members are present with correct system roles
+    // (guards against stale cached data wiping hardcoded super_admin entries)
+    ensureDefaultTeamRoles();
     if (state.teams.length === 0) state.teams = DEFAULT_TEAMS;
     if (state.tenants.length === 0) state.tenants = DEFAULT_TENANTS;
     if (state.organizations.length === 0) state.organizations = DEFAULT_ORGS;
@@ -1120,6 +1146,7 @@ export async function loadState() {
                 }
                 if (data.orgState) {
                     applyDbState(data.orgState);
+                    ensureDefaultTeamRoles(); // re-enforce hardcoded roles after DB load
                     applyTenantFiltering();
                     notifyStateChange(true); // skip save on initial pull
                 }
@@ -1191,6 +1218,7 @@ export function saveState() {
         localStorage.setItem('meidallm_kanban_viewmode', state.kanbanViewMode);
         if (state.activeTableId) localStorage.setItem('meidallm_active_tableid', state.activeTableId);
         localStorage.setItem('meidallm_database_viewmode', state.databaseViewMode);
+        localStorage.setItem('meidallm_sidebar_collapsed', state.sidebarCollapsed.toString());
 
         // Async save to Postgres database
         if (state.currentUser && typeof window !== 'undefined') {
@@ -2436,7 +2464,7 @@ export function resetAppState() {
 }
 
 export function hasPermission(action: string): boolean {
-    const user = state.team.find(t => t.id === state.currentUser) || state.team[0];
+    const user = state.team.find(t => t.email === state.currentUser) || state.team[0];
     if (!user) return false;
     
     // Super admins can do anything

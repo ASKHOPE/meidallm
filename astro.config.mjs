@@ -12,6 +12,7 @@ export default defineConfig({
       external: ['pg-native'] // Avoid issues compiling pg driver for serverless
     },
     build: {
+      chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
           manualChunks(id) {

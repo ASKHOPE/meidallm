@@ -26,6 +26,7 @@ import { renderWorkloadView } from "./views/workload";
 import { renderTableView } from "./views/table-view";
 import { renderAutomationsView } from "./views/automations";
 import { renderFormsView } from "./views/forms";
+import { renderProfileView } from "./views/profile";
 
 export interface NavGroup {
     key: string;
@@ -97,8 +98,23 @@ export const views: ViewConfig[] = [
         group: 'admin',
         render: () => renderSettingsView()
     },
+    {
+        key: 'profile',
+        title: 'Profile Management',
+        scope: 'system',
+        group: 'admin',
+        render: () => renderProfileView()
+    },
 
     // Campaign Workflow Group
+    {
+        key: 'project-workspace',
+        title: 'Workspace Overview',
+        icon: 'project-workspace',
+        scope: 'project',
+        group: 'workflow',
+        render: (pid) => renderWorkspaceView(pid || '')
+    },
     {
         key: 'idea-canvas',
         title: 'Idea Canvas',
@@ -244,13 +260,6 @@ export const views: ViewConfig[] = [
         scope: 'global',
         group: 'system',
         render: () => renderProjectsView()
-    },
-    {
-        key: 'project-workspace',
-        title: 'Project Workspace',
-        scope: 'global',
-        group: 'system',
-        render: (pid) => renderWorkspaceView(pid || '')
     },
     {
         key: 'connections',

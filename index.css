@@ -112,3 +112,19 @@ html.theme-dark .background-animation {
     from { opacity: 1; transform: translateX(0); }
     to { opacity: 0; transform: translateX(2rem); }
 }
+
+/* Custom Sleek Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--color-glass-border);
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-muted);
+}

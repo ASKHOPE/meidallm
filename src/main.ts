@@ -209,6 +209,16 @@ function renderView(viewKey: string, pid?: string) {
 const w = window as any;
 
 w.navigateTo = (viewKey: string, pid?: string) => {
+    // If user clicks a nav item while the sidebar is hover-expanded (collapsed state),
+    // pin the sidebar open so it doesn't collapse when they move the mouse away
+    if (state.sidebarCollapsed) {
+        state.sidebarCollapsed = false;
+        saveState();
+        notifyStateChange();
+        // Small delay so the sidebar expand animation completes before rendering
+        setTimeout(() => renderView(viewKey, pid), 50);
+        return;
+    }
     renderView(viewKey, pid);
 };
 
@@ -266,6 +276,16 @@ w.closeAllRailDropdowns = () => {
     document.getElementById('team-rail-dropdown')?.classList.add('hidden');
     document.getElementById('project-selector-dropdown')?.classList.add('hidden');
     document.getElementById('user-rail-dropdown')?.classList.add('hidden');
+    document.getElementById('role-rail-dropdown')?.classList.add('hidden');
+    document.getElementById('super-admin-rail-dropdown')?.classList.add('hidden');
+};
+
+w.toggleRoleDropdown = (e: Event) => {
+    e.stopPropagation();
+    const el = document.getElementById('role-rail-dropdown');
+    const show = el?.classList.contains('hidden');
+    w.closeAllRailDropdowns();
+    if (show) el?.classList.remove('hidden');
 };
 
 w.toggleTenantDropdown = (e: Event) => {
@@ -316,6 +336,24 @@ w.closeProjectDropdown = () => {
     document.getElementById('project-selector-dropdown')?.classList.add('hidden');
 };
 
+w.toggleSuperAdminDropdown = (e: Event) => {
+    e.stopPropagation();
+    const el = document.getElementById('super-admin-rail-dropdown');
+    const show = el?.classList.contains('hidden');
+    w.closeAllRailDropdowns();
+    if (show) el?.classList.remove('hidden');
+};
+
+w.closeSuperAdminDropdown = () => {
+    document.getElementById('super-admin-rail-dropdown')?.classList.add('hidden');
+};
+
+w.toggleSidebarCollapse = (e: Event) => {
+    e.stopPropagation();
+    state.sidebarCollapsed = !state.sidebarCollapsed;
+    notifyStateChange();
+};
+
 // Global click handler to dismiss dropdowns
 document.addEventListener('click', () => {
     if (w.closeAllRailDropdowns) {
@@ -327,13 +365,8 @@ w.selectProject = (pid: string) => {
     state.currentProject = pid;
     saveState();
     
-    // Maintain the active workflow view if it's project-scoped; otherwise navigate to project workspace
-    const activeView = views.find(v => v.key === state.activeViewKey);
-    if (activeView && activeView.scope === 'project') {
-        renderView(state.activeViewKey, pid);
-    } else {
-        renderView('project-workspace', pid);
-    }
+    // Always navigate to the workspace overview (dashboard) of that workshop
+    renderView('project-workspace', pid);
     w.closeProjectDropdown();
 };
 
