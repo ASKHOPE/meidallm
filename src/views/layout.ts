@@ -114,147 +114,154 @@ export function renderLayoutHTML(): string {
     
     return `
 <div class="flex h-screen w-full overflow-hidden text-[var(--color-text-main)] font-inter bg-background">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-[var(--color-glass-bg)] border-r border-[var(--color-glass-border)] flex flex-col p-5">
-        <!-- Brand Header -->
-        <div class="flex items-center gap-3 mb-6 cursor-pointer" onclick="window.navigateTo('workspaces')">
-            <div class="w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center font-bold text-base shadow-sm">M</div>
-            <h2 class="text-base font-bold font-outfit uppercase tracking-wider text-[var(--color-text-main)]">MEIDALLM</h2>
-        </div>
-
-        <!-- SaaS Hierarchy Dropdowns -->
-        <div class="flex flex-col gap-2 mb-5">
+    <!-- Left Rail -->
+    <aside class="w-16 bg-[var(--color-panel-hover)] border-r border-[var(--color-glass-border)] flex flex-col items-center py-5 justify-between select-none">
+        <div class="flex flex-col items-center gap-4 w-full">
+            <!-- Brand Logo -->
+            <div class="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center font-bold text-lg cursor-pointer shadow-md mb-2 animate-[fadeIn_0.3s_ease-out]" onclick="window.navigateTo('workspaces')" title="Overview">M</div>
+            
+            <div class="w-8 border-t border-[var(--color-glass-border)] my-1"></div>
+            
+            <!-- Tenant circular button -->
             ${(systemRole === 'super_admin' || systemRole === 'tenant_owner' || systemRole === 'tenant_admin') ? `
-            <div class="relative w-full">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-muted)]">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-                </span>
-                <select onchange="window.switchTenant(this.value)" class="w-full bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] hover:border-[var(--color-text-muted)] rounded-lg pl-9 pr-8 py-2.5 text-xs font-semibold text-[var(--color-text-main)] focus:outline-none cursor-pointer appearance-none">
-                    ${state.tenants.map(t => `<option value="${t.id}" ${t.id === state.activeTenantId ? 'selected' : ''}>${sanitizeHTML(t.name)}</option>`).join('')}
-                </select>
-                <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-muted)]">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"/></svg>
-                </span>
+            <div class="relative group/rail-item">
+                <button onclick="window.toggleTenantDropdown(event)" class="w-10 h-10 rounded-full bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] hover:border-[var(--color-text-main)] flex items-center justify-center font-bold text-xs cursor-pointer transition-all shadow-sm" title="Switch Tenant">
+                    ${(state.tenants.find(t => t.id === state.activeTenantId)?.name || 'T').substring(0, 2).toUpperCase()}
+                </button>
+                <div id="tenant-rail-dropdown" class="hidden absolute left-full top-0 ml-3 w-56 bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-lg shadow-xl p-1 z-30 flex flex-col">
+                    <div class="px-3 py-1.5 text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Switch Tenant</div>
+                    <div class="flex flex-col gap-0.5 max-h-48 overflow-y-auto">
+                        ${state.tenants.map(t => `<button onclick="window.switchTenant('${t.id}')" class="w-full text-left px-2.5 py-2 text-xs rounded-md transition-colors text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] font-medium ${t.id === state.activeTenantId ? 'bg-[var(--color-panel-hover)] font-bold' : ''}">${sanitizeHTML(t.name)}</button>`).join('')}
+                    </div>
+                </div>
             </div>
             ` : ''}
             
-            <div class="relative w-full">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-muted)]">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-                </span>
-                <select onchange="window.switchOrganization(this.value)" class="w-full bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] hover:border-[var(--color-text-muted)] rounded-lg pl-9 pr-8 py-2.5 text-xs font-semibold text-[var(--color-text-main)] focus:outline-none cursor-pointer appearance-none">
-                    ${state.organizations.filter(o => o.tenantId === state.activeTenantId).map(o => `<option value="${o.id}" ${o.id === state.activeOrgId ? 'selected' : ''}>${sanitizeHTML(o.name)}</option>`).join('') || '<option value="">No Organizations</option>'}
-                </select>
-                <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-muted)]">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"/></svg>
-                </span>
-            </div>
-            
-            <div class="relative w-full">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-muted)]">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </span>
-                <select onchange="window.switchTeam(this.value)" class="w-full bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] hover:border-[var(--color-text-muted)] rounded-lg pl-9 pr-8 py-2.5 text-xs font-semibold text-[var(--color-text-main)] focus:outline-none cursor-pointer appearance-none">
-                    ${state.teams.filter(t => t.orgId === state.activeOrgId).map(t => `<option value="${t.id}" ${t.id === state.activeTeamId ? 'selected' : ''}>${sanitizeHTML(t.name)}</option>`).join('') || '<option value="">No Teams</option>'}
-                </select>
-                <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-muted)]">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"/></svg>
-                </span>
-            </div>
-            
-            <!-- Project Selector Dropdown (Active Workspace) -->
-            <div class="relative w-full">
-                <button id="project-selector-btn" onclick="window.toggleProjectDropdown(event)" class="w-full bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] hover:border-[var(--color-text-muted)] rounded-lg pl-9 pr-8 py-2.5 text-left text-xs font-semibold text-[var(--color-text-main)] flex justify-between items-center transition-all cursor-pointer">
-                    <span id="active-project-name-display" class="truncate flex items-center gap-2">
-                        <svg class="w-4 h-4 text-amber-500 fill-current" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                        ${activeProjectName}
-                    </span>
+            <!-- Org circular button -->
+            <div class="relative group/rail-item">
+                <button onclick="window.toggleOrgDropdown(event)" class="w-10 h-10 rounded-full bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] hover:border-[var(--color-text-main)] flex items-center justify-center font-bold text-xs cursor-pointer transition-all shadow-sm" title="Switch Organization">
+                    ${(state.organizations.find(o => o.id === state.activeOrgId)?.name || 'O').substring(0, 2).toUpperCase()}
                 </button>
-                <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-muted)]">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"/></svg>
-                </span>
-                
-                <div id="project-selector-dropdown" class="hidden absolute top-full left-0 mt-1.5 w-full bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-lg shadow-sm py-1.5 z-10 flex flex-col animate-[fadeIn_0.15s_ease-out] p-1">
+                <div id="org-rail-dropdown" class="hidden absolute left-full top-0 ml-3 w-56 bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-lg shadow-xl p-1 z-30 flex flex-col">
+                    <div class="px-3 py-1.5 text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Switch Organization</div>
+                    <div class="flex flex-col gap-0.5 max-h-48 overflow-y-auto">
+                        ${state.organizations.filter(o => o.tenantId === state.activeTenantId).map(o => `<button onclick="window.switchOrganization('${o.id}')" class="w-full text-left px-2.5 py-2 text-xs rounded-md transition-colors text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] font-medium ${o.id === state.activeOrgId ? 'bg-[var(--color-panel-hover)] font-bold' : ''}">${sanitizeHTML(o.name)}</button>`).join('') || '<div class="px-3 py-2 text-xs text-[var(--color-text-muted)] italic">No Organizations</div>'}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Team circular button -->
+            <div class="relative group/rail-item">
+                <button onclick="window.toggleTeamDropdown(event)" class="w-10 h-10 rounded-full bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] hover:border-[var(--color-text-main)] flex items-center justify-center font-bold text-xs cursor-pointer transition-all shadow-sm" title="Switch Team">
+                    ${(state.teams.find(t => t.id === state.activeTeamId)?.name || 'T').substring(0, 2).toUpperCase()}
+                </button>
+                <div id="team-rail-dropdown" class="hidden absolute left-full top-0 ml-3 w-56 bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-lg shadow-xl p-1 z-30 flex flex-col">
+                    <div class="px-3 py-1.5 text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Switch Team</div>
+                    <div class="flex flex-col gap-0.5 max-h-48 overflow-y-auto">
+                        ${state.teams.filter(t => t.orgId === state.activeOrgId).map(t => `<button onclick="window.switchTeam('${t.id}')" class="w-full text-left px-2.5 py-2 text-xs rounded-md transition-colors text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] font-medium ${t.id === state.activeTeamId ? 'bg-[var(--color-panel-hover)] font-bold' : ''}">${sanitizeHTML(t.name)}</button>`).join('') || '<div class="px-3 py-2 text-xs text-[var(--color-text-muted)] italic">No Teams</div>'}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Project circular button -->
+            <div class="relative group/rail-item">
+                <button id="project-selector-btn" onclick="window.toggleProjectDropdown(event)" class="w-10 h-10 rounded-full bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] hover:border-[var(--color-text-main)] flex items-center justify-center cursor-pointer transition-all shadow-sm" title="Switch Workspace">
+                    <svg class="w-4 h-4 text-amber-500 fill-current" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                </button>
+                <div id="project-selector-dropdown" class="hidden absolute left-full top-0 ml-3 w-56 bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-lg shadow-xl p-1 z-30 flex flex-col">
+                    <div class="px-3 py-1.5 text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Switch Workspace</div>
                     <div id="project-dropdown-list" class="flex flex-col max-h-48 overflow-y-auto gap-0.5">
                         ${renderProjectDropdownOptions()}
                     </div>
                     <div class="border-t border-[var(--color-glass-border)] my-1"></div>
-                    <button onclick="window.createProjectPrompt(); window.closeProjectDropdown();" class="w-full text-left px-3 py-2 text-xs text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] rounded-md transition-colors flex items-center gap-2 font-bold cursor-pointer">
+                    <button onclick="window.createProjectPrompt(); window.closeProjectDropdown();" class="w-full text-left px-2.5 py-2 text-xs text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] rounded-md transition-colors flex items-center gap-2 font-bold cursor-pointer">
                         ${getIconSVG('plus', 'w-3.5 h-3.5')} New Project
                     </button>
                 </div>
             </div>
         </div>
-
-        <!-- Navigation -->
-        <nav class="flex flex-col gap-1.5 flex-grow overflow-y-auto pr-1">
-            ${renderSidebarNavigation()}
-        </nav>
-
-        <!-- Footer -->
-        <div class="flex flex-col gap-3.5 pt-4 border-t border-[var(--color-glass-border)]">
-            <!-- User Role Box -->
-            <div class="flex items-center justify-between bg-[var(--color-panel-hover)] border border-[var(--color-glass-border)] px-2.5 py-1.5 rounded-lg text-xs">
-                <div class="flex items-center gap-2">
-                    <svg class="w-3.5 h-3.5 text-[var(--color-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8-2a1 1 0 0 1 .48 0l8 2A1 1 0 0 1 20 6z"/></svg>
-                    <span class="text-[9px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider font-inter">User Role</span>
-                </div>
-                <div class="relative flex items-center">
-                    <select onchange="window.switchRole(this.value)" class="bg-transparent text-[var(--color-text-main)] text-xs font-semibold py-0.5 pr-4 focus:outline-none cursor-pointer appearance-none">
-                        <option value="admin" ${role === 'admin' ? 'selected' : ''}>Admin</option>
-                        <option value="manager" ${role === 'manager' ? 'selected' : ''}>Manager</option>
-                        <option value="accountant" ${role === 'accountant' ? 'selected' : ''}>Accountant</option>
-                        <option value="sales" ${role === 'sales' ? 'selected' : ''}>Sales Rep</option>
-                        <option value="support" ${role === 'support' ? 'selected' : ''}>Support Rep</option>
-                    </select>
-                    <span class="absolute right-0 pointer-events-none text-[var(--color-text-muted)]">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-                    </span>
+        
+        <div class="flex flex-col items-center gap-4 w-full">
+            <!-- User menu circular button -->
+            <div class="relative">
+                <button onclick="window.toggleUserDropdown(event)" class="w-10 h-10 rounded-full bg-[var(--color-panel-hover)] border border-[var(--color-glass-border)] hover:border-[var(--color-text-main)] flex items-center justify-center font-bold text-xs text-[var(--color-text-main)] cursor-pointer transition-all shadow-sm animate-[fadeIn_0.3s_ease-out]" title="Account & Roles">
+                    ${displayName.substring(0, 2).toUpperCase()}
+                </button>
+                <div id="user-rail-dropdown" class="hidden absolute left-full bottom-0 ml-3 w-64 bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-lg shadow-xl p-3.5 z-30 flex flex-col gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-[var(--color-panel-hover)] border border-[var(--color-glass-border)] rounded-full flex items-center justify-center font-bold text-xs text-[var(--color-text-main)]">
+                            ${displayName.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div class="overflow-hidden">
+                            <div id="user-display-name" class="font-bold text-xs text-[var(--color-text-main)] truncate">${sanitizeHTML(displayName)}</div>
+                            <div class="text-[10px] text-[var(--color-text-muted)] truncate">${sanitizeHTML(state.currentUser || 'john.doe@enterprise.com')}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-[var(--color-glass-border)] my-0.5"></div>
+                    
+                    <!-- User Role Select inside popover -->
+                    <div class="flex items-center justify-between bg-[var(--color-panel-hover)] border border-[var(--color-glass-border)] px-2.5 py-1.5 rounded-lg text-xs">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5 text-[var(--color-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8-2a1 1 0 0 1 .48 0l8 2A1 1 0 0 1 20 6z"/></svg>
+                            <span class="text-[9px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider font-inter">Role</span>
+                        </div>
+                        <div class="relative flex items-center">
+                            <select onchange="window.switchRole(this.value)" class="bg-transparent text-[var(--color-text-main)] text-xs font-semibold py-0.5 pr-4 focus:outline-none cursor-pointer appearance-none">
+                                <option value="admin" ${role === 'admin' ? 'selected' : ''}>Admin</option>
+                                <option value="manager" ${role === 'manager' ? 'selected' : ''}>Manager</option>
+                                <option value="accountant" ${role === 'accountant' ? 'selected' : ''}>Accountant</option>
+                                <option value="sales" ${role === 'sales' ? 'selected' : ''}>Sales Rep</option>
+                                <option value="support" ${role === 'support' ? 'selected' : ''}>Support Rep</option>
+                            </select>
+                            <span class="absolute right-0 pointer-events-none text-[var(--color-text-muted)]">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full text-left px-2.5 py-2 text-xs rounded-md transition-colors text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] font-medium flex items-center gap-2 cursor-pointer" onclick="window.navigateTo('settings'); window.closeUserDropdown();">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg>
+                        Profile Settings
+                    </button>
+                    <button class="w-full text-left px-2.5 py-2 text-xs rounded-md transition-colors text-red-500 hover:bg-[var(--color-panel-hover)] font-medium flex items-center gap-2 cursor-pointer" onclick="window.signOut()">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        Sign Out
+                    </button>
                 </div>
             </div>
-
-            <!-- Profile Info -->
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-[var(--color-panel-hover)] border border-[var(--color-glass-border)] rounded-full flex items-center justify-center font-bold text-xs text-[var(--color-text-main)]">
-                        ${displayName.substring(0, 2).toUpperCase()}
-                    </div>
-                    <div>
-                        <div id="user-display-name" class="font-bold text-xs text-[var(--color-text-main)]">${sanitizeHTML(displayName)}</div>
-                        <div class="text-[10px] text-[var(--color-text-muted)] truncate max-w-[120px]">${sanitizeHTML(state.currentUser || 'john.doe@enterprise.com')}</div>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button class="text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors p-1 cursor-pointer" onclick="window.navigateTo('settings')" title="Profile Settings">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg>
-                    </button>
-                    <button class="text-[var(--color-text-muted)] hover:text-red-500 transition-colors p-1 cursor-pointer" onclick="window.signOut()" title="Sign Out">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Theme Switcher / Settings Row -->
-            <div class="flex gap-2">
-                <div id="theme-switcher-container" class="flex-grow flex items-center justify-between bg-[var(--color-panel-hover)] p-0.5 rounded-lg border border-[var(--color-glass-border)]">
-                    <button onclick="window.setTheme('day')" class="theme-btn flex-1 flex items-center justify-center py-1 rounded-md transition-all ${state.theme === 'day' ? 'bg-background text-[var(--color-text-main)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'}" id="theme-btn-day" title="Day Mode">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M20 12h2"/><path d="M2 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-                    </button>
-                    <button onclick="window.setTheme('night')" class="theme-btn flex-1 flex items-center justify-center py-1 rounded-md transition-all ${state.theme === 'night' ? 'bg-background text-[var(--color-text-main)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'}" id="theme-btn-night" title="Night Mode">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-                    </button>
-                    <button onclick="window.setTheme('auto')" class="theme-btn flex-1 flex items-center justify-center py-1 rounded-md transition-all ${state.theme === 'auto' ? 'bg-background text-[var(--color-text-main)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'}" id="theme-btn-auto" title="System Auto">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                    </button>
-                </div>
-                <button onclick="window.navigateTo('settings')" class="w-9 h-9 flex items-center justify-center bg-[var(--color-panel-hover)] hover:bg-[var(--color-panel-hover)]/80 text-[var(--color-text-main)] rounded-lg border border-[var(--color-glass-border)] cursor-pointer transition-colors" title="Settings">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            
+            <!-- Theme cycle / toggle -->
+            <div id="theme-switcher-container" class="flex flex-col bg-[var(--color-panel-hover)] p-0.5 rounded-lg border border-[var(--color-glass-border)] w-10">
+                <!-- Theme buttons inside rail (stacked) -->
+                <button onclick="window.setTheme('day')" class="theme-btn w-full h-8 flex items-center justify-center rounded-md transition-all ${state.theme === 'day' ? 'bg-background text-[var(--color-text-main)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'}" id="theme-btn-day" title="Day Mode">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M20 12h2"/><path d="M2 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                </button>
+                <button onclick="window.setTheme('night')" class="theme-btn w-full h-8 flex items-center justify-center rounded-md transition-all ${state.theme === 'night' ? 'bg-background text-[var(--color-text-main)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'}" id="theme-btn-night" title="Night Mode">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
+                <button onclick="window.setTheme('auto')" class="theme-btn w-full h-8 flex items-center justify-center rounded-md transition-all ${state.theme === 'auto' ? 'bg-background text-[var(--color-text-main)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'}" id="theme-btn-auto" title="System Auto">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                 </button>
             </div>
+            
+            <button onclick="window.navigateTo('settings')" class="w-10 h-10 flex items-center justify-center bg-[var(--color-panel-hover)] hover:bg-[var(--color-panel-hover)]/80 text-[var(--color-text-main)] rounded-xl border border-[var(--color-glass-border)] cursor-pointer transition-colors" title="Settings">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
         </div>
     </aside>
 
-    <!-- Main Content Area -->
+    <!-- Main Navigation Sidebar -->
+    <aside class="w-56 bg-[var(--color-glass-bg)] border-r border-[var(--color-glass-border)] flex flex-col p-5 animate-[fadeIn_0.3s_ease-out]">
+        <div class="mb-5 flex flex-col">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] font-inter">Workspace</span>
+            <span class="text-sm font-bold text-[var(--color-text-main)] truncate mt-0.5" id="sidebar-active-project-display">${activeProjectName}</span>
+        </div>
+        
+        <nav class="flex flex-col gap-1.5 flex-grow overflow-y-auto pr-1">
+            ${renderSidebarNavigation()}
+        </nav>
+    </aside>
     <main class="flex-grow flex flex-col p-6 overflow-y-auto mr-0 transition-all duration-300 bg-background" id="main-content-wrapper">
         <header class="flex justify-between items-center pb-4 border-b border-text-main/10 mb-6">
             <h1 id="page-title" class="text-2xl font-bold font-outfit text-text-main">Overview</h1>

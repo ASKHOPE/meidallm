@@ -85,10 +85,17 @@ function updateSidebarUI() {
     const activeDisplay = document.getElementById('active-project-name-display');
     if (activeDisplay) {
         const currentProject = state.projects.find(p => p.id === state.currentProject);
-        activeDisplay.innerHTML = currentProject ? `${getIconSVG('folder', 'w-4 h-4 inline-block mr-1.5 text-blue-400')} ${sanitizeHTML(currentProject.name)}` : "Select Campaign...";
+        activeDisplay.innerHTML = currentProject ? `<svg class="w-4 h-4 text-amber-500 fill-current inline-block mr-1.5" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> ${sanitizeHTML(currentProject.name)}` : "Select Campaign...";
+    }
+
+    // 3. Update active workspace name on the main navigation sidebar
+    const sidebarActiveDisplay = document.getElementById('sidebar-active-project-display');
+    if (sidebarActiveDisplay) {
+        const currentProject = state.projects.find(p => p.id === state.currentProject);
+        sidebarActiveDisplay.innerText = currentProject ? currentProject.name : "Select Campaign...";
     }
     
-    // 3. Update the data-pid attribute of project-scoped buttons
+    // 4. Update the data-pid attribute of project-scoped buttons
     document.querySelectorAll('.nav-btn').forEach(btn => {
         const viewKey = btn.getAttribute('data-view');
         const view = views.find(v => v.key === viewKey);
@@ -253,24 +260,68 @@ w.togglePolicy = (policyId: string) => {
     togglePolicy(policyId);
 };
 
+w.closeAllRailDropdowns = () => {
+    document.getElementById('tenant-rail-dropdown')?.classList.add('hidden');
+    document.getElementById('org-rail-dropdown')?.classList.add('hidden');
+    document.getElementById('team-rail-dropdown')?.classList.add('hidden');
+    document.getElementById('project-selector-dropdown')?.classList.add('hidden');
+    document.getElementById('user-rail-dropdown')?.classList.add('hidden');
+};
+
+w.toggleTenantDropdown = (e: Event) => {
+    e.stopPropagation();
+    const el = document.getElementById('tenant-rail-dropdown');
+    const show = el?.classList.contains('hidden');
+    w.closeAllRailDropdowns();
+    if (show) el?.classList.remove('hidden');
+};
+
+w.toggleOrgDropdown = (e: Event) => {
+    e.stopPropagation();
+    const el = document.getElementById('org-rail-dropdown');
+    const show = el?.classList.contains('hidden');
+    w.closeAllRailDropdowns();
+    if (show) el?.classList.remove('hidden');
+};
+
+w.toggleTeamDropdown = (e: Event) => {
+    e.stopPropagation();
+    const el = document.getElementById('team-rail-dropdown');
+    const show = el?.classList.contains('hidden');
+    w.closeAllRailDropdowns();
+    if (show) el?.classList.remove('hidden');
+};
+
 w.toggleProjectDropdown = (e: Event) => {
     e.stopPropagation();
-    const dropdown = document.getElementById('project-selector-dropdown');
-    const arrow = document.getElementById('project-selector-arrow');
-    if (dropdown) {
-        const isHidden = dropdown.classList.toggle('hidden');
-        if (arrow) {
-            arrow.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
-        }
-    }
+    const el = document.getElementById('project-selector-dropdown');
+    const show = el?.classList.contains('hidden');
+    w.closeAllRailDropdowns();
+    if (show) el?.classList.remove('hidden');
+};
+
+w.toggleUserDropdown = (e: Event) => {
+    e.stopPropagation();
+    const el = document.getElementById('user-rail-dropdown');
+    const show = el?.classList.contains('hidden');
+    w.closeAllRailDropdowns();
+    if (show) el?.classList.remove('hidden');
+};
+
+w.closeUserDropdown = () => {
+    document.getElementById('user-rail-dropdown')?.classList.add('hidden');
 };
 
 w.closeProjectDropdown = () => {
-    const dropdown = document.getElementById('project-selector-dropdown');
-    const arrow = document.getElementById('project-selector-arrow');
-    if (dropdown) dropdown.classList.add('hidden');
-    if (arrow) arrow.style.transform = 'rotate(0deg)';
+    document.getElementById('project-selector-dropdown')?.classList.add('hidden');
 };
+
+// Global click handler to dismiss dropdowns
+document.addEventListener('click', () => {
+    if (w.closeAllRailDropdowns) {
+        w.closeAllRailDropdowns();
+    }
+});
 
 w.selectProject = (pid: string) => {
     state.currentProject = pid;
@@ -1184,6 +1235,10 @@ function renderMainApp() {
 
 // Register state-change listener to redraw active UI components
 registerStateListener(() => {
+    const appContainer = document.getElementById('app');
+    if (appContainer) {
+        appContainer.innerHTML = renderLayoutHTML();
+    }
     updateSidebarUI();
     updateThemeButtonsUI();
     renderView(state.activeViewKey, state.currentProject || undefined);
