@@ -9,7 +9,7 @@ import type { IconName } from "./icons";
 export function renderProjectDropdownOptions(): string {
     const activeTeam = state.teams.find(t => t.id === state.activeTeamId);
     const validProjectIds = activeTeam ? activeTeam.projectIds : [];
-    const activeProjects = state.projects.filter(p => !p.isArchived && !p.isBinned && validProjectIds.includes(p.id) && (p.isStarred || p.id === 'p-welcome'));
+    const activeProjects = state.projects.filter(p => !p.isArchived && !p.isBinned && validProjectIds.includes(p.id));
     
     const sorted = [...activeProjects].sort((a, b) => {
         if (a.id === 'p-welcome') return -1;
@@ -24,15 +24,20 @@ export function renderProjectDropdownOptions(): string {
         return `
         <button onclick="window.selectProject('${p.id}')" class="w-full text-left px-3 py-2 text-xs rounded-md transition-colors flex items-center justify-between group/dropdown-item ${currentClass}">
             <span class="truncate flex items-center gap-2">${starIcon} ${sanitizeHTML(p.name)}</span>
-            <span class="opacity-0 group-hover/dropdown-item:opacity-100 text-xs text-text-muted hover:text-red-500 transition-opacity pl-2" onclick="event.stopPropagation(); window.binProjectToggle('${p.id}', true)" title="Move to Bin">
-                ${getIconSVG('trash', 'w-3 h-3')}
-            </span>
+            <div class="opacity-0 group-hover/dropdown-item:opacity-100 flex items-center gap-1 transition-opacity pl-2">
+                <span class="text-xs text-text-muted hover:text-amber-500 cursor-pointer" onclick="event.stopPropagation(); window.toggleProjectStar('${p.id}')" title="${p.isStarred ? 'Unpin' : 'Pin to Rail'}">
+                    ${getIconSVG('pin', 'w-3 h-3')}
+                </span>
+                <span class="text-xs text-text-muted hover:text-red-500 cursor-pointer" onclick="event.stopPropagation(); window.confirmBinProject('${p.id}', '${p.name.replace(/'/g, "\\'")}')" title="Move to Bin">
+                    ${getIconSVG('trash', 'w-3 h-3')}
+                </span>
+            </div>
         </button>
         `;
     }).join('');
     
     if (activeProjects.length === 0) {
-        options = `<div class="px-3 py-2.5 text-xs text-text-muted italic">No starred projects</div>`;
+        options = `<div class="px-3 py-2.5 text-xs text-text-muted italic">No workspaces available</div>`;
     }
     return options;
 }
@@ -42,12 +47,12 @@ export function renderSidebarNavigation(): string {
     const systemRole = userProfile?.systemRole || 'user';
     const role = state.activeRole || 'admin';
     
-    return sidebarGroups.filter(g => g.key !== 'admin' || ['super_admin', 'tenant_owner', 'tenant_admin'].includes(systemRole)).map(group => {
+    return sidebarGroups.filter(g => g.key !== 'admin' || ['super_admin', 'tenant_owner', 'tenant_admin', 'support_admin', 'support_manager'].includes(systemRole)).map(group => {
         const groupTools = views.filter(v => v.group === group.key && v.icon && (!v.roles || v.roles.includes(systemRole)));
         const groupContent = groupTools.map(item => {
             const isProjectScoped = item.scope === 'project';
             const pidAttr = isProjectScoped && state.currentProject ? `data-pid="${state.currentProject}"` : '';
-            const iconSVG = getIconSVG(item.key as IconName, 'w-4 h-4 text-[var(--color-text-muted)] group-hover:text-[var(--color-text-main)] transition-colors');
+            const iconSVG = getIconSVG((item.icon || item.key) as IconName, 'w-4 h-4 text-[var(--color-text-muted)] group-hover:text-[var(--color-text-main)] transition-colors');
             
             // RBAC Lock Rules
             let isLocked = false;
@@ -56,47 +61,56 @@ export function renderSidebarNavigation(): string {
             if (item.key === 'publish' && (role === 'accountant' || role === 'support')) isLocked = true;
             if (item.key === 'drafts' && (role === 'accountant' || role === 'support')) isLocked = true;
             if (item.key === 'settings' && (role !== 'admin' && role !== 'manager')) isLocked = true;
-            if (item.key === 'team' && (role !== 'admin' && role !== 'manager' && role !== 'accountant')) isLocked = true;
+            if (item.key === 'team' && (role !== 'admin' && role !== 'manager' && role !== 'accountant' && !systemRole.startsWith('support_'))) isLocked = true;
 
             if (isLocked) {
                 return `
                 <button onclick="if(window.showToast) { window.showToast('Permission Denied: Role [${role.toUpperCase()}] cannot access this view.', 'error'); } else { alert('Access Denied'); }" 
-                        class="opacity-50 w-full text-left px-3 py-2 rounded-lg transition-all font-medium text-[11px] text-[var(--color-text-muted)]/60 flex items-center gap-3 border border-transparent cursor-not-allowed">
+                        class="opacity-50 w-full ${state.sidebarCollapsed ? 'justify-center' : 'text-left px-3'} py-2 rounded-lg transition-all font-medium text-[11px] text-[var(--color-text-muted)]/60 flex items-center gap-3 border border-transparent cursor-not-allowed"
+                        title="Locked: ${item.title}">
                     <span class="shrink-0 flex items-center justify-center">${iconSVG}</span> 
+                    ${!state.sidebarCollapsed ? `
                     <span class="line-clamp-2 leading-tight break-words text-left pr-1">${item.title}</span>
                     <span class="text-[9px] font-bold text-rose-500 font-mono ml-auto flex items-center gap-0.5 shrink-0">${getIconSVG('admin-rbac', 'w-2.5 h-2.5 text-rose-500')} <span>LOCK</span></span>
+                    ` : ''}
                 </button>
                 `;
             }
             
+            let actionButton = '';
+
+
             return `
-            <button class="nav-btn group w-full text-left px-3 py-2 rounded-lg transition-all font-medium text-[11px] text-[var(--color-text-muted)] hover:bg-[var(--color-panel-hover)] hover:text-[var(--color-text-main)] flex items-center gap-3 border border-transparent cursor-pointer" 
-                    data-view="${item.key}" ${pidAttr}>
-                <span class="shrink-0 flex items-center justify-center">${iconSVG}</span> 
-                <span class="line-clamp-2 leading-tight break-words text-left pr-1">${item.title}</span>
-            </button>
+            <div class="nav-btn group w-full ${state.sidebarCollapsed ? 'justify-center' : 'text-left px-3'} py-2 rounded-lg transition-all font-medium text-[11px] text-[var(--color-text-muted)] hover:bg-[var(--color-panel-hover)] hover:text-[var(--color-text-main)] flex items-center gap-3 border border-transparent cursor-pointer" 
+                    data-view="${item.key}" ${pidAttr} title="${item.title}">
+                <span class="shrink-0 flex items-center justify-center pointer-events-none">${iconSVG}</span> 
+                ${!state.sidebarCollapsed ? `
+                <span class="line-clamp-2 leading-tight break-words text-left pr-1 pointer-events-none">${item.title}</span>
+                ${actionButton}
+                ` : ''}
+            </div>
             `;
         }).join('');
 
-        if (group.key === 'workflow') {
+        if (group.key === 'hubs') {
             return `
-            <div class="flex flex-col gap-0.5 mt-2">
+            <div class="flex flex-col gap-0.5 mt-0">
                 ${groupContent}
             </div>
             `;
         }
 
-        const openAttr = group.open ? 'open' : '';
+        const openAttr = state.sidebarCollapsed || group.open ? 'open' : '';
         
         return `
-        <details class="group mt-5" ${openAttr}>
-            <summary class="flex justify-between items-center text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-bold cursor-pointer select-none py-2 hover:text-[var(--color-text-main)] transition-colors list-none [&::-webkit-details-marker]:hidden">
+        <details class="group mt-2" ${openAttr}>
+            <summary class="${state.sidebarCollapsed ? 'hidden' : 'flex'} justify-between items-center text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-bold cursor-pointer select-none py-2 hover:text-[var(--color-text-main)] transition-colors list-none [&::-webkit-details-marker]:hidden">
                 ${group.label}
                 <span class="transition-transform group-open:-rotate-180 text-[10px] text-[var(--color-text-muted)]">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
                 </span>
             </summary>
-            <div class="flex flex-col gap-0.5 mt-1">
+            <div class="flex flex-col gap-0.5 mt-1 ${state.sidebarCollapsed ? 'items-center' : ''}">
                 ${groupContent}
             </div>
         </details>
@@ -114,13 +128,26 @@ export function renderLayoutHTML(): string {
     const isAdmin = role === 'admin';
     
     const hasActiveSupportCases = state.supportCases && state.supportCases.some(sc => sc.status !== 'resolved');
-    const starredProjects = state.projects.filter(p => p.isStarred && !p.isArchived && !p.isBinned).slice(0, 3);
+    
+    let activeTeam = state.teams.find(t => t.id === state.activeTeamId);
+    if (!activeTeam && state.teams.length > 0) activeTeam = state.teams[0];
+    const validProjectIds = activeTeam ? activeTeam.projectIds : [];
+    const teamProjects = state.projects.filter(p => !p.isArchived && !p.isBinned && validProjectIds.includes(p.id));
+    
+    // Rail shows starred projects + currently active project
+    let railProjects = teamProjects.filter(p => p.isStarred);
+    if (state.currentProject && !railProjects.find(p => p.id === state.currentProject)) {
+        const current = teamProjects.find(p => p.id === state.currentProject);
+        if (current) railProjects.push(current);
+    }
+    railProjects = railProjects.slice(0, 4);
+
     const sidebarCollapsedClass = state.sidebarCollapsed 
-        ? "w-0 p-0 overflow-hidden border-transparent group-hover/sidebar-container:w-56 group-hover/sidebar-container:p-5 group-hover/sidebar-container:pointer-events-auto border-r border-[var(--color-glass-border)] bg-[var(--color-glass-bg)] transition-all duration-300 ease-in-out relative" 
-        : "w-56 p-5 border-r border-[var(--color-glass-border)] relative opacity-100 pointer-events-auto";
+        ? "sidebar-is-collapsed py-5 flex flex-col items-center border-r border-[var(--color-glass-border)] bg-[var(--color-glass-bg)] transition-all duration-300 ease-in-out relative" 
+        : "py-5 pl-5 border-r border-[var(--color-glass-border)] relative opacity-100 pointer-events-auto transition-all duration-300 ease-in-out";
 
     const sidebarInnerClass = state.sidebarCollapsed 
-        ? "opacity-0 group-hover/sidebar-container:opacity-100 transition-opacity duration-200 pointer-events-none group-hover/sidebar-container:pointer-events-auto" 
+        ? "w-full flex flex-col items-center" 
         : "opacity-100 pointer-events-auto";
 
     return `
@@ -163,6 +190,10 @@ export function renderLayoutHTML(): string {
                             <svg class="w-3.5 h-3.5 text-violet-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                             Tenants
                         </button>
+                        <button onclick="window.navigateTo('admin-orgs'); window.closeSuperAdminDropdown();" class="w-full text-left px-2.5 py-2 text-xs rounded-md transition-colors text-[var(--color-text-main)] hover:bg-violet-600/15 hover:text-violet-300 font-medium flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5 text-violet-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                            Organizations
+                        </button>
                         <button onclick="window.navigateTo('admin-rbac'); window.closeSuperAdminDropdown();" class="w-full text-left px-2.5 py-2 text-xs rounded-md transition-colors text-[var(--color-text-main)] hover:bg-violet-600/15 hover:text-violet-300 font-medium flex items-center gap-2">
                             <svg class="w-3.5 h-3.5 text-violet-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                             RBAC &amp; Users
@@ -193,44 +224,10 @@ export function renderLayoutHTML(): string {
             <div class="w-8 border-t border-violet-500/30 my-1"></div>
             ` : ''}
             
-            <!-- Tenant circular button -->
-            ${(systemRole === 'super_admin' || systemRole === 'tenant_owner' || systemRole === 'tenant_admin') ? `
+            <!-- Unified Hierarchy Switcher -->
             <div class="relative group/rail-item w-full flex justify-center">
-                <button onclick="window.toggleTenantDropdown(event)" class="w-10 h-10 rounded-full bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] hover:border-[var(--color-text-main)] flex items-center justify-center font-bold text-xs cursor-pointer transition-all shadow-sm">
-                    ${(state.tenants.find(t => t.id === state.activeTenantId)?.name || 'T').substring(0, 2).toUpperCase()}
-                </button>
-                <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-neutral-900 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-xl opacity-0 group-hover/rail-item:opacity-100 transition-all duration-200 pointer-events-none translate-x-2 group-hover/rail-item:translate-x-0 whitespace-nowrap z-50 border border-white/10">
-                    Switch Tenant (${sanitizeHTML(state.tenants.find(t => t.id === state.activeTenantId)?.name || 'T')})
-                </div>
-                <div id="tenant-rail-dropdown" class="hidden absolute left-full top-0 ml-3 w-56 bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-lg shadow-xl p-1 z-[60] flex flex-col">
-                    <div class="px-3 py-1.5 text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Switch Tenant</div>
-                    <div class="flex flex-col gap-0.5 max-h-48 overflow-y-auto">
-                        ${state.tenants.map(t => `<button onclick="window.switchTenant('${t.id}')" class="w-full text-left px-2.5 py-2 text-xs rounded-md transition-colors text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] font-medium ${t.id === state.activeTenantId ? 'bg-[var(--color-panel-hover)] font-bold' : ''}">${sanitizeHTML(t.name)}</button>`).join('')}
-                    </div>
-                </div>
-            </div>
-            ` : ''}
-            
-            <!-- Org circular button -->
-            <div class="relative group/rail-item w-full flex justify-center">
-                <button onclick="window.toggleOrgDropdown(event)" class="w-10 h-10 rounded-full bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] hover:border-[var(--color-text-main)] flex items-center justify-center font-bold text-xs cursor-pointer transition-all shadow-sm">
-                    ${(state.organizations.find(o => o.id === state.activeOrgId)?.name || 'O').substring(0, 2).toUpperCase()}
-                </button>
-                <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-neutral-900 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-xl opacity-0 group-hover/rail-item:opacity-100 transition-all duration-200 pointer-events-none translate-x-2 group-hover/rail-item:translate-x-0 whitespace-nowrap z-50 border border-white/10">
-                    Switch Organization (${sanitizeHTML(state.organizations.find(o => o.id === state.activeOrgId)?.name || 'O')})
-                </div>
-                <div id="org-rail-dropdown" class="hidden absolute left-full top-0 ml-3 w-56 bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-lg shadow-xl p-1 z-[60] flex flex-col">
-                    <div class="px-3 py-1.5 text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Switch Organization</div>
-                    <div class="flex flex-col gap-0.5 max-h-48 overflow-y-auto">
-                        ${state.organizations.filter(o => o.tenantId === state.activeTenantId).map(o => `<button onclick="window.switchOrganization('${o.id}')" class="w-full text-left px-2.5 py-2 text-xs rounded-md transition-colors text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] font-medium ${o.id === state.activeOrgId ? 'bg-[var(--color-panel-hover)] font-bold' : ''}">${sanitizeHTML(o.name)}</button>`).join('') || '<div class="px-3 py-2 text-xs text-[var(--color-text-muted)] italic">No Organizations</div>'}
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Team circular button -->
-            <div class="relative group/rail-item w-full flex justify-center">
-                <button onclick="window.toggleTeamDropdown(event)" class="relative w-10 h-10 rounded-full bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] hover:border-[var(--color-text-main)] flex items-center justify-center font-bold text-xs cursor-pointer transition-all shadow-sm">
-                    ${(state.teams.find(t => t.id === state.activeTeamId)?.name || 'T').substring(0, 2).toUpperCase()}
+                <button onclick="window.toggleHierarchyDropdown(event)" class="relative w-10 h-10 rounded-full bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] hover:border-[var(--color-text-main)] flex items-center justify-center cursor-pointer transition-all shadow-sm">
+                    ${getIconSVG('connections', 'w-4 h-4 text-amber-500')}
                     ${hasActiveSupportCases ? `
                     <span class="absolute -top-1 -right-1 flex h-3.5 w-3.5">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
@@ -239,13 +236,42 @@ export function renderLayoutHTML(): string {
                     ` : ''}
                 </button>
                 <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-neutral-900 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-xl opacity-0 group-hover/rail-item:opacity-100 transition-all duration-200 pointer-events-none translate-x-2 group-hover/rail-item:translate-x-0 whitespace-nowrap z-50 border border-white/10">
-                    Switch Team (${sanitizeHTML(state.teams.find(t => t.id === state.activeTeamId)?.name || 'T')})
+                    Switch Context
                 </div>
-                <div id="team-rail-dropdown" class="hidden absolute left-full top-0 ml-3 w-56 bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-lg shadow-xl p-1 z-[60] flex flex-col">
-                    <div class="px-3 py-1.5 text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Switch Team</div>
-                    <div class="flex flex-col gap-0.5 max-h-48 overflow-y-auto">
-                        ${state.teams.filter(t => t.orgId === state.activeOrgId).map(t => `<button onclick="window.switchTeam('${t.id}')" class="w-full text-left px-2.5 py-2 text-xs rounded-md transition-colors text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] font-medium ${t.id === state.activeTeamId ? 'bg-[var(--color-panel-hover)] font-bold' : ''}">${sanitizeHTML(t.name)}</button>`).join('') || '<div class="px-3 py-2 text-xs text-[var(--color-text-muted)] italic">No Teams</div>'}
+                <div id="hierarchy-rail-dropdown" class="hidden absolute left-full top-0 ml-3 w-64 bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-lg shadow-xl p-2 z-[60] flex flex-col gap-3">
+                    
+                    ${(systemRole === 'super_admin' || systemRole === 'tenant_owner' || systemRole === 'tenant_admin') ? `
+                    <div>
+                        <div class="px-2 pb-1 text-[9px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider flex justify-between items-center">
+                            <span>Tenant</span>
+                            <button onclick="window.navigateTo('admin-tenants'); window.closeAllRailDropdowns();" class="text-amber-500 hover:text-amber-400 capitalize px-1 bg-amber-500/10 rounded">Manage</button>
+                        </div>
+                        <div class="flex flex-col gap-0.5 max-h-32 overflow-y-auto">
+                            ${state.tenants.map(t => `<button onclick="window.switchTenant('${t.id}')" class="w-full text-left px-2 py-1.5 text-xs rounded transition-colors text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] font-medium ${t.id === state.activeTenantId ? 'bg-[var(--color-panel-hover)] font-bold border-l-2 border-amber-500' : ''} truncate">${sanitizeHTML(t.name)}</button>`).join('')}
+                        </div>
                     </div>
+                    ` : ''}
+
+                    <div>
+                        <div class="px-2 pb-1 text-[9px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider flex justify-between items-center">
+                            <span>Organization</span>
+                            <button onclick="window.navigateTo('admin-orgs'); window.closeAllRailDropdowns();" class="text-amber-500 hover:text-amber-400 capitalize px-1 bg-amber-500/10 rounded">Manage</button>
+                        </div>
+                        <div class="flex flex-col gap-0.5 max-h-32 overflow-y-auto">
+                            ${state.organizations.filter(o => o.tenantId === state.activeTenantId).map(o => `<button onclick="window.switchOrganization('${o.id}')" class="w-full text-left px-2 py-1.5 text-xs rounded transition-colors text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] font-medium ${o.id === state.activeOrgId ? 'bg-[var(--color-panel-hover)] font-bold border-l-2 border-amber-500' : ''} truncate">${sanitizeHTML(o.name)}</button>`).join('') || '<div class="px-2 py-1 text-xs text-[var(--color-text-muted)] italic">No Organizations</div>'}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="px-2 pb-1 text-[9px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider flex justify-between items-center">
+                            <span>Team</span>
+                            <button onclick="window.navigateTo('team'); window.closeAllRailDropdowns();" class="text-amber-500 hover:text-amber-400 capitalize px-1 bg-amber-500/10 rounded">Manage</button>
+                        </div>
+                        <div class="flex flex-col gap-0.5 max-h-32 overflow-y-auto">
+                            ${state.teams.filter(t => t.orgId === state.activeOrgId).map(t => `<button onclick="window.switchTeam('${t.id}')" class="w-full text-left px-2 py-1.5 text-xs rounded transition-colors text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] font-medium ${t.id === state.activeTeamId ? 'bg-[var(--color-panel-hover)] font-bold border-l-2 border-amber-500' : ''} truncate">${sanitizeHTML(t.name)}</button>`).join('') || '<div class="px-2 py-1 text-xs text-[var(--color-text-muted)] italic">No Teams</div>'}
+                        </div>
+                    </div>
+
                 </div>
             </div>
             
@@ -258,7 +284,10 @@ export function renderLayoutHTML(): string {
                     Switch Workspace
                 </div>
                 <div id="project-selector-dropdown" class="hidden absolute left-full top-0 ml-3 w-56 bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-lg shadow-xl p-1 z-[60] flex flex-col">
-                    <div class="px-3 py-1.5 text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Switch Workspace</div>
+                    <div class="px-3 py-1.5 text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider flex justify-between items-center">
+                        <span>Switch Workspace</span>
+                        <button onclick="window.navigateTo('workspaces'); window.closeAllRailDropdowns();" class="text-amber-500 hover:text-amber-400 capitalize text-[9px] px-1 bg-amber-500/10 rounded">Manage</button>
+                    </div>
                     <div id="project-dropdown-list" class="flex flex-col max-h-48 overflow-y-auto gap-0.5">
                         ${renderProjectDropdownOptions()}
                     </div>
@@ -269,8 +298,8 @@ export function renderLayoutHTML(): string {
                 </div>
             </div>
 
-            <!-- Starred Workspace Shortcut Pins -->
-            ${starredProjects.map(p => {
+            <!-- Team Workspace Shortcut Pins -->
+            ${railProjects.map(p => {
                 const isCurrent = state.currentProject === p.id;
                 const activeBorderClass = isCurrent ? 'border-amber-500 border-2' : 'border-[var(--color-glass-border)] hover:border-amber-400';
                 return `
@@ -284,7 +313,7 @@ export function renderLayoutHTML(): string {
                 </div>
                 `;
             }).join('')}
-            ${starredProjects.length > 0 ? `<div class="w-8 border-t border-[var(--color-glass-border)] my-1"></div>` : ''}
+            ${railProjects.length > 0 ? `<div class="w-8 border-t border-[var(--color-glass-border)] my-1"></div>` : ''}
         </div>
         
         <div class="flex flex-col items-center gap-4 w-full">
@@ -335,6 +364,16 @@ export function renderLayoutHTML(): string {
             </div>
             `}
 
+            <!-- Inbox Button -->
+            <div class="relative group/rail-item w-full flex justify-center">
+                <button onclick="window.navigateTo('inbox')" class="w-10 h-10 flex items-center justify-center bg-[var(--color-panel-hover)] hover:bg-[var(--color-panel-hover)]/80 text-[var(--color-text-main)] rounded-xl border border-[var(--color-glass-border)] cursor-pointer transition-colors">
+                    ${getIconSVG('inbox', 'w-4.5 h-4.5 text-[var(--color-text-muted)]')}
+                </button>
+                <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-neutral-900 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-xl opacity-0 group-hover/rail-item:opacity-100 transition-all duration-200 pointer-events-none translate-x-2 group-hover/rail-item:translate-x-0 whitespace-nowrap z-50 border border-white/10">
+                    Inbox
+                </div>
+            </div>
+
             <!-- Help Desk Button -->
             <div class="relative group/rail-item w-full flex justify-center">
                 <button onclick="window.navigateTo('helpdesk')" class="w-10 h-10 flex items-center justify-center bg-[var(--color-panel-hover)] hover:bg-[var(--color-panel-hover)]/80 text-[var(--color-text-main)] rounded-xl border border-[var(--color-glass-border)] cursor-pointer transition-colors">
@@ -345,40 +384,37 @@ export function renderLayoutHTML(): string {
                 </div>
             </div>
 
-            <!-- Settings button -->
-            <div class="relative group/rail-item w-full flex justify-center">
-                <button onclick="window.navigateTo('settings')" class="w-10 h-10 flex items-center justify-center bg-[var(--color-panel-hover)] hover:bg-[var(--color-panel-hover)]/80 text-[var(--color-text-main)] rounded-xl border border-[var(--color-glass-border)] cursor-pointer transition-colors">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                </button>
-                <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-neutral-900 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-xl opacity-0 group-hover/rail-item:opacity-100 transition-all duration-200 pointer-events-none translate-x-2 group-hover/rail-item:translate-x-0 whitespace-nowrap z-50 border border-white/10">
-                    Settings
-                </div>
-            </div>
-
-            <!-- Profile circular button -->
-            <div class="relative group/rail-item w-full flex justify-center">
-                <button onclick="window.navigateTo('profile')" class="w-10 h-10 rounded-full bg-[var(--color-panel-hover)] border border-[var(--color-glass-border)] hover:border-[var(--color-text-main)] flex items-center justify-center font-bold text-xs text-[var(--color-text-main)] cursor-pointer transition-all shadow-sm animate-[fadeIn_0.3s_ease-out]">
+            <!-- Profile button with Sign Out dropdown -->
+            <div class="relative w-full flex justify-center" id="profile-rail-container">
+                <button onclick="window.toggleProfileDropdown(event)" class="w-10 h-10 rounded-full bg-[var(--color-panel-hover)] border border-[var(--color-glass-border)] hover:border-[var(--color-text-main)] flex items-center justify-center font-bold text-xs text-[var(--color-text-main)] cursor-pointer transition-all shadow-sm animate-[fadeIn_0.3s_ease-out]">
                     ${displayName.substring(0, 2).toUpperCase()}
                 </button>
-                <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-neutral-900 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-xl opacity-0 group-hover/rail-item:opacity-100 transition-all duration-200 pointer-events-none translate-x-2 group-hover/rail-item:translate-x-0 whitespace-nowrap z-50 border border-white/10">
-                    Profile Management
-                </div>
-            </div>
-
-            <!-- Quick Sign Out Button -->
-            <div class="relative group/rail-item w-full flex justify-center">
-                <button onclick="window.signOut()" class="w-10 h-10 flex items-center justify-center bg-[var(--color-panel-hover)] hover:bg-rose-500/10 hover:border-rose-500 text-rose-500 rounded-xl border border-[var(--color-glass-border)] cursor-pointer transition-colors">
-                    <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                </button>
-                <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-rose-600 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-xl opacity-0 group-hover/rail-item:opacity-100 transition-all duration-200 pointer-events-none translate-x-2 group-hover/rail-item:translate-x-0 whitespace-nowrap z-50 border border-rose-500">
-                    Sign Out
+                <!-- Profile dropdown -->
+                <div id="profile-rail-dropdown" class="hidden absolute bottom-0 left-full ml-3 w-52 bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-xl shadow-2xl p-1.5 z-[60] flex flex-col gap-0.5">
+                    <div class="px-3 py-2 border-b border-[var(--color-glass-border)] mb-1">
+                        <div class="text-xs font-bold text-[var(--color-text-main)] truncate">${displayName}</div>
+                        <div class="text-[10px] text-[var(--color-text-muted)] truncate mt-0.5">${state.currentUser || ''}</div>
+                    </div>
+                    <button onclick="window.navigateTo('profile'); window.closeProfileDropdown();" class="w-full text-left px-3 py-2 text-xs rounded-lg text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] font-medium flex items-center gap-2.5 transition-colors cursor-pointer">
+                        ${getIconSVG('user', 'w-3.5 h-3.5 text-[var(--color-text-muted)]')}
+                        Profile Management
+                    </button>
+                    <button onclick="window.navigateTo('settings'); window.closeProfileDropdown();" class="w-full text-left px-3 py-2 text-xs rounded-lg text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] font-medium flex items-center gap-2.5 transition-colors cursor-pointer">
+                        ${getIconSVG('settings', 'w-3.5 h-3.5 text-[var(--color-text-muted)]')}
+                        Settings
+                    </button>
+                    <div class="h-px bg-[var(--color-glass-border)] my-1"></div>
+                    <button onclick="window.signOut(); window.closeProfileDropdown();" class="w-full text-left px-3 py-2 text-xs rounded-lg text-rose-500 hover:bg-rose-500/10 font-medium flex items-center gap-2.5 transition-colors cursor-pointer">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        Sign Out
+                    </button>
                 </div>
             </div>
         </div>
     </aside>
 
     <!-- Main Navigation Sidebar -->
-    <aside class="bg-[var(--color-glass-bg)] flex flex-col transition-all duration-300 ease-in-out relative overflow-visible ${sidebarCollapsedClass}">
+    <aside id="main-sidebar" class="bg-[var(--color-glass-bg)] flex flex-col transition-all duration-300 ease-in-out relative overflow-visible ${sidebarCollapsedClass}" style="width: ${state.sidebarCollapsed ? '64' : state.sidebarWidth}px; min-width: ${state.sidebarCollapsed ? '64' : '200'}px; max-width: 400px;">
         <!-- Floating Seam Toggle Pill -->
         <button onclick="window.toggleSidebarCollapse(event)" class="absolute top-1/2 -translate-y-1/2 -right-3 w-[14px] h-10 rounded-full border flex items-center justify-center cursor-pointer shadow-md z-50 transition-all duration-200
             ${state.sidebarCollapsed
@@ -388,31 +424,104 @@ export function renderLayoutHTML(): string {
                 ? getIconSVG('chevron-down', 'w-2.5 h-2.5 -rotate-90')
                 : getIconSVG('chevron-down', 'w-2.5 h-2.5 rotate-90')}
         </button>
+        
+        <!-- Sidebar Resizer Handle -->
+        ${!state.sidebarCollapsed ? `
+        <div id="sidebar-resizer" class="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-purple-500/50 z-[45] transition-colors" onmousedown="window.initSidebarResizer(event)"></div>
+        ` : ''}
         <div class="w-full h-full flex flex-col overflow-hidden transition-opacity duration-300 ${sidebarInnerClass}">
-            <div class="mb-5 flex flex-col shrink-0">
+            ${!state.sidebarCollapsed ? `
+            <div class="mb-3 flex flex-col shrink-0 pr-5">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] font-inter">Workspace</span>
                 <span class="text-sm font-bold text-[var(--color-text-main)] truncate mt-0.5" id="sidebar-active-project-display">${activeProjectName}</span>
             </div>
             
-            <nav class="flex flex-col gap-1.5 flex-grow overflow-y-auto pr-1">
+            <div class="mb-4 shrink-0 pr-5">
+                <div class="relative cursor-pointer group" onclick="window.toggleCommandMenu(true)">
+                    <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-[var(--color-text-muted)] group-hover:text-[var(--color-text-main)] transition-colors">
+                        ${getIconSVG('search', 'w-3.5 h-3.5')}
+                    </div>
+                    <input type="text" readonly placeholder="Search (⌘K)" class="w-full bg-[var(--color-panel-hover)] border border-[var(--color-glass-border)] rounded-md py-1.5 pl-8 pr-2 text-xs text-[var(--color-text-main)] cursor-pointer group-hover:border-[var(--color-text-muted)] transition-colors outline-none pointer-events-none">
+                </div>
+            </div>
+            ` : ''}
+            
+            <nav class="flex flex-col gap-1.5 flex-grow overflow-y-auto w-full ${state.sidebarCollapsed ? 'items-center mt-2' : 'pr-4'}">
                 ${renderSidebarNavigation()}
             </nav>
         </div>
     </aside>
     </div>
     <main class="flex-grow flex flex-col p-6 overflow-y-auto mr-0 transition-all duration-300 bg-background" id="main-content-wrapper">
+        ${state.isSupportAssistMode ? `
+        <div class="bg-red-500/10 border border-red-500 text-red-500 p-3 rounded-lg mb-6 flex justify-between items-center animate-[fadeIn_0.3s_ease-out]">
+            <div class="flex items-center gap-2 font-bold text-xs">
+                ⚠️ SUPPORT ASSIST MODE: Viewing data for ${sanitizeHTML(state.team.find(t => t.id === state.assistTargetUserId)?.name || 'Unknown')} (Read-Only)
+            </div>
+            <button onclick="window.exitSupportAssist()" class="px-3 py-1 bg-red-500 text-white rounded text-xs font-bold hover:bg-red-600 transition-colors cursor-pointer">
+                Exit Assist Mode
+            </button>
+        </div>
+        ` : ''}
         <header class="flex justify-between items-center pb-4 border-b border-text-main/10 mb-6">
             <h1 id="page-title" class="text-2xl font-bold font-outfit text-text-main">Overview</h1>
             <div class="flex gap-2">
                 <button class="w-9 h-9 bg-background border border-text-main/15 rounded-lg flex items-center justify-center hover:border-text-main/45 transition-all cursor-pointer text-text-main" onclick="window.toggleCommandMenu(true)" title="Command Menu (⌘K)">
                     ${getIconSVG('search', 'w-4 h-4')}
                 </button>
+                
+                <!-- Quick Calendar Button -->
+                <div class="relative">
+                    <button class="w-9 h-9 bg-background border border-text-main/15 rounded-lg flex items-center justify-center hover:border-text-main/45 transition-all cursor-pointer text-text-main" onclick="window.toggleQuickCalendarDropdown(event)" title="Quick Calendar View">
+                        ${getIconSVG('calendar', 'w-4 h-4')}
+                    </button>
+                    <div id="quick-calendar-dropdown" class="hidden absolute right-0 top-full mt-2 w-80 bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-xl shadow-2xl p-4 z-[60] flex flex-col gap-3">
+                        <div class="flex justify-between items-center border-b border-[var(--color-glass-border)] pb-2 mb-1">
+                            <span class="text-xs font-bold text-[var(--color-text-main)] font-outfit">Schedules Quick-Look</span>
+                            <span class="text-[9px] font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded">June 2026</span>
+                        </div>
+                        <div id="quick-calendar-list" class="max-h-64 overflow-y-auto flex flex-col gap-2 no-scrollbar text-left">
+                            <!-- Schedules will be rendered here dynamically -->
+                        </div>
+                        <button onclick="window.navigateToHub('distribute', 'publish'); window.closeQuickCalendarDropdown();" class="w-full text-center py-2 bg-[var(--color-panel-hover)] hover:bg-[var(--color-panel-hover)]/80 text-[10px] font-bold rounded-lg border border-[var(--color-glass-border)] text-[var(--color-text-main)] transition-colors cursor-pointer">
+                            Go to Distribution Calendar →
+                        </button>
+                    </div>
+                </div>
+
                 <button class="w-9 h-9 bg-background border border-text-main/15 rounded-lg flex items-center justify-center hover:border-text-main/45 transition-all cursor-pointer text-text-main" onclick="window.toggleAiAssistant(true)" title="AI Assistant">
                     ${getIconSVG('bot', 'w-4 h-4')}
                 </button>
-                <button class="w-9 h-9 bg-background border border-text-main/15 rounded-lg flex items-center justify-center hover:border-text-main/45 transition-all cursor-pointer text-text-main" onclick="alert('No new notifications')">
-                    ${getIconSVG('bell', 'w-4 h-4')}
-                </button>
+                <div class="relative">
+                    <button class="w-9 h-9 bg-background border border-text-main/15 rounded-lg flex items-center justify-center hover:border-text-main/45 transition-all cursor-pointer text-text-main relative" onclick="window.toggleNotificationsDropdown(event)" title="Notifications">
+                        ${getIconSVG('bell', 'w-4 h-4')}
+                        ${(state.notifications && state.notifications.filter(n => !n.isRead && n.targetUsers.includes(state.team.find(t => t.email === state.currentUser)?.id || '')).length > 0) ? `<span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>` : ''}
+                    </button>
+                    <div id="notifications-dropdown" class="hidden absolute right-0 top-full mt-2 w-80 bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-lg shadow-xl p-0 z-[60] flex flex-col">
+                        <div class="px-3 py-2 border-b border-text-main/10 flex justify-between items-center bg-text-main/5">
+                            <span class="text-xs font-bold text-[var(--color-text-main)]">Notifications</span>
+                            <button onclick="window.markAllNotificationsRead()" class="text-[10px] text-purple-400 hover:text-purple-300">Mark all read</button>
+                        </div>
+                        <div class="max-h-80 overflow-y-auto" id="notifications-list">
+                            ${(() => {
+                                const userNotifs = (state.notifications || []).filter(n => n.targetUsers.includes(state.team.find(t => t.email === state.currentUser)?.id || '')).sort((a, b) => b.timestamp - a.timestamp);
+                                if (userNotifs.length === 0) return '<div class="p-4 text-center text-xs text-text-muted">No notifications.</div>';
+                                return userNotifs.map(n => `
+                                    <div class="p-3 border-b border-text-main/10 last:border-0 ${!n.isRead ? 'bg-purple-500/10' : ''} cursor-pointer hover:bg-text-main/5 transition-colors" onclick="window.handleNotificationClick('${n.id}')">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <span class="font-bold text-xs text-text-main">${sanitizeHTML(n.title)}</span>
+                                            <span class="text-[9px] text-text-muted">${new Date(n.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                        </div>
+                                        <div class="text-[10px] text-text-muted mb-2">${sanitizeHTML(n.message)}</div>
+                                        ${n.actionData?.type === 'access_request' ? `
+                                        <div class="text-[9px] font-bold text-blue-400 bg-blue-500/10 inline-block px-2 py-0.5 rounded uppercase tracking-wider mt-1">Pending Access Request</div>
+                                        ` : ''}
+                                    </div>
+                                `).join('');
+                            })()}
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
         <div id="app-content" class="flex-grow flex flex-col"></div>
@@ -438,11 +547,67 @@ export function renderLayoutHTML(): string {
         </div>
     </div>
 </div>
+
+<!-- Unified Dialog Overlay (Custom replacement for prompt, confirm, alert) -->
+<div id="global-dialog-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden z-[100] animate-[fadeIn_0.15s_ease-out]">
+    <div id="global-dialog-box" class="bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col p-6 gap-4">
+        <h3 id="global-dialog-title" class="text-base font-bold font-outfit text-[var(--color-text-main)]">Dialog Title</h3>
+        <p id="global-dialog-message" class="text-xs text-[var(--color-text-muted)] leading-relaxed hidden">Dialog Message</p>
+        
+        <!-- Prompt/Input container -->
+        <div id="global-dialog-input-container" class="hidden">
+            <label id="global-dialog-input-label" class="block text-[10px] font-bold text-[var(--color-text-muted)] uppercase mb-1.5">Input Label</label>
+            <input id="global-dialog-input" type="text" class="w-full bg-[var(--color-panel-hover)] border border-[var(--color-glass-border)] p-3 rounded-lg text-[var(--color-text-main)] text-xs focus:outline-none focus:border-violet-500 transition-colors">
+        </div>
+
+        <!-- Form container (multiple fields) -->
+        <div id="global-dialog-form-container" class="hidden flex flex-col gap-3"></div>
+        
+        <div class="flex justify-end items-center gap-2.5 mt-2">
+            <button id="global-dialog-cancel-btn" class="px-4 py-2 bg-[var(--color-panel-hover)] border border-[var(--color-glass-border)] rounded-lg text-xs font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors cursor-pointer">Cancel</button>
+            <button id="global-dialog-confirm-btn" class="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer">Confirm</button>
+        </div>
+    </div>
+</div>
 `;
 }
 
 if (typeof window !== 'undefined') {
     const w = window as any;
+    
+    w.toggleNotificationsDropdown = (e: MouseEvent) => {
+        e.stopPropagation();
+        w.closeAllRailDropdowns();
+        const el = document.getElementById('notifications-dropdown');
+        if (el) el.classList.toggle('hidden');
+    };
+    
+    w.markAllNotificationsRead = () => {
+        import('../state').then(m => {
+            const userId = m.state.team.find(t => t.email === m.state.currentUser)?.id;
+            if (m.state.notifications && userId) {
+                m.state.notifications.forEach(n => {
+                    if (n.targetUsers.includes(userId)) n.isRead = true;
+                });
+                m.notifyStateChange();
+            }
+        });
+    };
+    
+    w.handleNotificationClick = (id: string) => {
+        import('../state').then(m => {
+            const notif = m.state.notifications?.find(n => n.id === id);
+            if (notif) {
+                notif.isRead = true;
+                if (notif.actionData?.type === 'access_request') {
+                    // Navigate to helpdesk
+                    w.navigateTo('helpdesk');
+                }
+                m.notifyStateChange();
+            }
+        });
+    };
+    
     w.showToast = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
         const container = document.getElementById('toast-container');
         if (!container) return;
@@ -466,5 +631,243 @@ if (typeof window !== 'undefined') {
             toast.className += ' animate-[fadeOutRight_0.2s_ease-out_forwards]';
             setTimeout(() => toast.remove(), 250);
         }, 3000);
+    };
+
+    w.showConfirmDialog = (title: string, message: string): Promise<boolean> => {
+        return new Promise((resolve) => {
+            const overlay = document.getElementById('global-dialog-overlay');
+            const titleEl = document.getElementById('global-dialog-title');
+            const messageEl = document.getElementById('global-dialog-message');
+            const inputContainer = document.getElementById('global-dialog-input-container');
+            const formContainer = document.getElementById('global-dialog-form-container');
+            const confirmBtn = document.getElementById('global-dialog-confirm-btn');
+            const cancelBtn = document.getElementById('global-dialog-cancel-btn');
+
+            if (!overlay || !titleEl || !messageEl || !inputContainer || !formContainer || !confirmBtn || !cancelBtn) {
+                resolve(false);
+                return;
+            }
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            messageEl.classList.remove('hidden');
+            inputContainer.classList.add('hidden');
+            formContainer.classList.add('hidden');
+            cancelBtn.classList.remove('hidden');
+            overlay.classList.remove('hidden');
+
+            const onConfirm = (e: Event) => {
+                e.preventDefault();
+                cleanup();
+                resolve(true);
+            };
+            const onCancel = (e: Event) => {
+                e.preventDefault();
+                cleanup();
+                resolve(false);
+            };
+            const cleanup = () => {
+                confirmBtn.removeEventListener('click', onConfirm);
+                cancelBtn.removeEventListener('click', onCancel);
+                overlay.classList.add('hidden');
+            };
+
+            confirmBtn.addEventListener('click', onConfirm);
+            cancelBtn.addEventListener('click', onCancel);
+        });
+    };
+
+    w.showPromptDialog = (title: string, label: string, defaultValue = '', placeholder = ''): Promise<string | null> => {
+        return new Promise((resolve) => {
+            const overlay = document.getElementById('global-dialog-overlay');
+            const titleEl = document.getElementById('global-dialog-title');
+            const messageEl = document.getElementById('global-dialog-message');
+            const inputContainer = document.getElementById('global-dialog-input-container');
+            const inputLabel = document.getElementById('global-dialog-input-label');
+            const input = document.getElementById('global-dialog-input') as HTMLInputElement;
+            const formContainer = document.getElementById('global-dialog-form-container');
+            const confirmBtn = document.getElementById('global-dialog-confirm-btn');
+            const cancelBtn = document.getElementById('global-dialog-cancel-btn');
+
+            if (!overlay || !titleEl || !messageEl || !inputContainer || !inputLabel || !input || !formContainer || !confirmBtn || !cancelBtn) {
+                resolve(null);
+                return;
+            }
+
+            titleEl.textContent = title;
+            messageEl.classList.add('hidden');
+            
+            inputContainer.classList.remove('hidden');
+            inputLabel.textContent = label;
+            input.value = defaultValue;
+            input.placeholder = placeholder;
+            
+            formContainer.classList.add('hidden');
+            cancelBtn.classList.remove('hidden');
+            overlay.classList.remove('hidden');
+            input.focus();
+
+            const onConfirm = (e: Event) => {
+                e.preventDefault();
+                const val = input.value;
+                cleanup();
+                resolve(val);
+            };
+            const onCancel = (e: Event) => {
+                e.preventDefault();
+                cleanup();
+                resolve(null);
+            };
+            const cleanup = () => {
+                confirmBtn.removeEventListener('click', onConfirm);
+                cancelBtn.removeEventListener('click', onCancel);
+                overlay.classList.add('hidden');
+            };
+
+            confirmBtn.addEventListener('click', onConfirm);
+            cancelBtn.addEventListener('click', onCancel);
+        });
+    };
+
+    w.showFormDialog = (title: string, fields: {key: string, label: string, type: string, placeholder?: string, defaultValue?: any, options?: {value: string, label: string}[] }[]): Promise<Record<string, any> | null> => {
+        return new Promise((resolve) => {
+            const overlay = document.getElementById('global-dialog-overlay');
+            const titleEl = document.getElementById('global-dialog-title');
+            const messageEl = document.getElementById('global-dialog-message');
+            const inputContainer = document.getElementById('global-dialog-input-container');
+            const formContainer = document.getElementById('global-dialog-form-container');
+            const confirmBtn = document.getElementById('global-dialog-confirm-btn');
+            const cancelBtn = document.getElementById('global-dialog-cancel-btn');
+
+            if (!overlay || !titleEl || !messageEl || !inputContainer || !formContainer || !confirmBtn || !cancelBtn) {
+                resolve(null);
+                return;
+            }
+
+            titleEl.textContent = title;
+            messageEl.classList.add('hidden');
+            inputContainer.classList.add('hidden');
+            formContainer.classList.remove('hidden');
+            cancelBtn.classList.remove('hidden');
+
+            formContainer.innerHTML = fields.map(f => {
+                if (f.type === 'select') {
+                    return `
+                    <div>
+                        <label class="block text-[10px] font-bold text-[var(--color-text-muted)] uppercase mb-1">${f.label}</label>
+                        <select id="form-dialog-field-${f.key}" class="w-full bg-[var(--color-panel-hover)] border border-[var(--color-glass-border)] p-2.5 rounded-lg text-[var(--color-text-main)] text-xs focus:outline-none focus:border-violet-500 cursor-pointer">
+                            ${f.options?.map(o => `<option value="${o.value}" ${o.value === f.defaultValue ? 'selected' : ''}>${o.label}</option>`).join('')}
+                        </select>
+                    </div>`;
+                }
+                return `
+                <div>
+                    <label class="block text-[10px] font-bold text-[var(--color-text-muted)] uppercase mb-1">${f.label}</label>
+                    <input id="form-dialog-field-${f.key}" type="${f.type}" value="${f.defaultValue || ''}" placeholder="${f.placeholder || ''}" class="w-full bg-[var(--color-panel-hover)] border border-[var(--color-glass-border)] p-2.5 rounded-lg text-[var(--color-text-main)] text-xs focus:outline-none focus:border-violet-500">
+                </div>`;
+            }).join('');
+
+            overlay.classList.remove('hidden');
+
+            const onConfirm = (e: Event) => {
+                e.preventDefault();
+                const results: Record<string, any> = {};
+                fields.forEach(f => {
+                    const el = document.getElementById(`form-dialog-field-${f.key}`) as any;
+                    if (el) {
+                        results[f.key] = el.type === 'checkbox' ? el.checked : el.value;
+                    }
+                });
+                cleanup();
+                resolve(results);
+            };
+            const onCancel = (e: Event) => {
+                e.preventDefault();
+                cleanup();
+                resolve(null);
+            };
+            const cleanup = () => {
+                confirmBtn.removeEventListener('click', onConfirm);
+                cancelBtn.removeEventListener('click', onCancel);
+                overlay.classList.add('hidden');
+            };
+
+            confirmBtn.addEventListener('click', onConfirm);
+            cancelBtn.addEventListener('click', onCancel);
+        });
+    };
+
+    w.initSidebarResizer = (e: MouseEvent) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const sidebar = document.getElementById('main-sidebar');
+        if (!sidebar) return;
+        const startWidth = sidebar.offsetWidth;
+
+        const onMouseMove = (moveEvent: MouseEvent) => {
+            const newWidth = startWidth + (moveEvent.clientX - startX);
+            // enforce min-max visually immediately (state and render will follow on mouseup)
+            if (newWidth >= 200 && newWidth <= 400) {
+                sidebar.style.width = newWidth + 'px';
+            }
+        };
+
+        const onMouseUp = (upEvent: MouseEvent) => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            import('../state').then(m => {
+                const finalWidth = sidebar.offsetWidth;
+                if (finalWidth >= 200 && finalWidth <= 400) {
+                    m.state.sidebarWidth = finalWidth;
+                    m.notifyStateChange();
+                }
+            });
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    };
+
+    w.toggleHierarchyDropdown = (e: MouseEvent) => {
+        e.stopPropagation();
+        const el = document.getElementById('hierarchy-rail-dropdown');
+        const isHidden = el?.classList.contains('hidden');
+        w.closeAllRailDropdowns();
+        if (isHidden && el) el.classList.remove('hidden');
+    };
+
+    w.toggleQuickCalendarDropdown = (e: MouseEvent) => {
+        e.stopPropagation();
+        const el = document.getElementById('quick-calendar-dropdown');
+        const show = el?.classList.contains('hidden');
+        w.closeAllRailDropdowns();
+        if (show) {
+            el?.classList.remove('hidden');
+            // Render schedules dynamically
+            const listEl = document.getElementById('quick-calendar-list');
+            if (listEl) {
+                const schedules = state.publishSchedules || [];
+                if (schedules.length === 0) {
+                    listEl.innerHTML = `<div class="text-[10px] text-zinc-500 py-4 text-center">No campaigns scheduled this month.</div>`;
+                } else {
+                    listEl.innerHTML = schedules.map(s => {
+                        const dateStr = new Date(s.scheduledTime).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                        return `
+                        <div class="bg-[var(--color-panel-hover)] border border-[var(--color-glass-border)] rounded-lg p-2.5 flex flex-col gap-1.5">
+                            <div class="flex justify-between items-center text-[9px] text-[var(--color-text-muted)]">
+                                <span class="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 font-bold uppercase">${s.status}</span>
+                                <span>${dateStr}</span>
+                            </div>
+                            <div class="text-xs font-bold text-[var(--color-text-main)] truncate">${sanitizeHTML(s.title)}</div>
+                            <div class="text-[9px] text-[var(--color-text-muted)] truncate">Channels: ${s.channels.join(', ')}</div>
+                        </div>`;
+                    }).join('');
+                }
+            }
+        }
+    };
+    
+    w.closeQuickCalendarDropdown = () => {
+        document.getElementById('quick-calendar-dropdown')?.classList.add('hidden');
     };
 }

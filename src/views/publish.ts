@@ -28,37 +28,42 @@ export function renderPublishView(pid: string): string {
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-text-muted uppercase mb-2">Publish channels</label>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <label class="flex items-center gap-2 bg-panel-hover border border-text-main/15 p-2.5 rounded-xl text-xs text-text-main cursor-pointer hover:border-text-main transition-all">
-                        <input type="checkbox" name="channels" value="WhatsApp" class="rounded text-text-main focus:ring-text-main">
-                        <span>WhatsApp</span>
-                    </label>
-                    <label class="flex items-center gap-2 bg-panel-hover border border-text-main/15 p-2.5 rounded-xl text-xs text-text-main cursor-pointer hover:border-text-main transition-all">
-                        <input type="checkbox" name="channels" value="Pinterest" class="rounded text-text-main focus:ring-text-main">
-                        <span>Pinterest</span>
-                    </label>
-                    <label class="flex items-center gap-2 bg-panel-hover border border-text-main/15 p-2.5 rounded-xl text-xs text-text-main cursor-pointer hover:border-text-main transition-all">
-                        <input type="checkbox" name="channels" value="YouTube" class="rounded text-text-main focus:ring-text-main">
-                        <span>YouTube</span>
-                    </label>
-                    <label class="flex items-center gap-2 bg-panel-hover border border-text-main/15 p-2.5 rounded-xl text-xs text-text-main cursor-pointer hover:border-text-main transition-all">
-                        <input type="checkbox" name="channels" value="Facebook" class="rounded text-text-main focus:ring-text-main">
-                        <span>Facebook</span>
-                    </label>
-                    <label class="flex items-center gap-2 bg-panel-hover border border-text-main/15 p-2.5 rounded-xl text-xs text-text-main cursor-pointer hover:border-text-main transition-all">
-                        <input type="checkbox" name="channels" value="Instagram" class="rounded text-text-main focus:ring-text-main">
-                        <span>Instagram</span>
-                    </label>
-                    <label class="flex items-center gap-2 bg-panel-hover border border-text-main/15 p-2.5 rounded-xl text-xs text-text-main cursor-pointer hover:border-text-main transition-all">
-                        <input type="checkbox" name="channels" value="Threads" class="rounded text-text-main focus:ring-text-main">
-                        <span>Threads</span>
-                    </label>
-                    <label class="flex items-center gap-2 bg-panel-hover border border-text-main/15 p-2.5 rounded-xl text-xs text-text-main cursor-pointer hover:border-text-main transition-all">
-                        <input type="checkbox" name="channels" value="X (Twitter)" class="rounded text-text-main focus:ring-text-main">
-                        <span>X (Twitter)</span>
-                    </label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-xs font-semibold text-[var(--color-text-muted)] uppercase">Publish Channels</label>
+                    <a onclick="window.navigateTo('connections')" class="text-[10px] text-violet-400 hover:text-violet-300 cursor-pointer transition-colors">+ Add connections →</a>
                 </div>
+                ${(() => {
+                    const connected = state.connections.filter(c => c.connected);
+                    if (connected.length === 0) {
+                        return `
+                        <div class="border border-dashed border-[var(--color-glass-border)] rounded-xl p-5 text-center">
+                            <div class="text-2xl mb-2">🔌</div>
+                            <div class="text-xs font-bold text-[var(--color-text-main)] mb-1">No platforms connected</div>
+                            <div class="text-[10px] text-[var(--color-text-muted)] mb-3">Go to <strong>Connections & API</strong> to activate publishing channels.</div>
+                            <button onclick="window.navigateTo('connections')" class="px-4 py-2 bg-violet-500 hover:bg-violet-600 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer">Connect Platforms</button>
+                        </div>`;
+                    }
+                    // Group connected platforms by category
+                    const groups: Record<string, any[]> = {};
+                    const catLabels: Record<string, string> = { social: '📱 Social Media', video: '🎥 Video', live: '🔴 Live Streaming', podcast: '🎧 Podcasts' };
+                    connected.forEach(c => {
+                        const cat = c.category || 'social';
+                        if (!groups[cat]) groups[cat] = [];
+                        groups[cat].push(c);
+                    });
+                    return Object.entries(groups).map(([cat, platforms]) => `
+                    <div class="mb-3">
+                        <div class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-1.5">${catLabels[cat] || cat}</div>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            ${platforms.map(c => `
+                            <label class="flex items-center gap-2 bg-[var(--color-panel-hover)] border border-[var(--color-glass-border)] hover:border-emerald-500/50 p-2.5 rounded-xl text-xs cursor-pointer transition-all group">
+                                <input type="checkbox" name="channels" value="${sanitizeHTML(c.name)}" class="rounded accent-emerald-500 cursor-pointer shrink-0">
+                                <span class="text-lg leading-none">${c.icon}</span>
+                                <span class="text-[var(--color-text-main)] font-medium truncate">${sanitizeHTML(c.name)}</span>
+                            </label>`).join('')}
+                        </div>
+                    </div>`).join('');
+                })()}
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -92,14 +97,20 @@ export function renderPublishView(pid: string): string {
             const isPub = s.status === 'published';
             const statusColor = isPub ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20';
             return `
-            <div class="border rounded px-1.5 py-0.5 text-[9px] font-semibold leading-tight truncate ${statusColor}" title="${sanitizeHTML(s.title)}">
+            <div draggable="true"
+                 ondragstart="event.stopPropagation(); window.handleCalendarDragStart(event, '${s.id}')"
+                 class="border rounded px-1.5 py-0.5 text-[9px] font-semibold leading-tight truncate ${statusColor} cursor-grab active:cursor-grabbing hover:brightness-110 transition-all" 
+                 title="${sanitizeHTML(s.title)}">
                 ${s.channels[0] || 'Post'}: ${sanitizeHTML(s.title)}
             </div>
             `;
         }).join('');
 
         calendarCellsHTML += `
-        <div onclick="window.calendarCellClick('${pid}', ${day})" class="min-h-[95px] border border-text-main/10 bg-panel-hover/10 hover:bg-panel-hover/30 p-2 rounded-xl transition-all cursor-pointer flex flex-col gap-1.5 relative group">
+        <div onclick="window.calendarCellClick('${pid}', ${day})"
+             ondragover="event.preventDefault(); event.stopPropagation();"
+             ondrop="event.preventDefault(); event.stopPropagation(); window.handleCalendarDrop(event, ${day})"
+             class="min-h-[95px] border border-text-main/10 bg-panel-hover/10 hover:bg-panel-hover/30 p-2 rounded-xl transition-all cursor-pointer flex flex-col gap-1.5 relative group">
             <span class="text-xs font-bold text-text-muted group-hover:text-text-main">${day}</span>
             <div class="flex flex-col gap-1 overflow-y-auto max-h-[65px] pr-0.5">
                 ${daySchedulesHTML}
@@ -188,12 +199,12 @@ if (typeof window !== 'undefined') {
 
     w.calendarCellClick = (pid: string, day: number) => {
         const formattedDay = day.toString().padStart(2, '0');
-        w.setPublishViewMode('form');
-        setTimeout(() => {
-            const datetimeInput = document.getElementById('publish-datetime') as HTMLInputElement;
-            if (datetimeInput) {
-                datetimeInput.value = `2026-06-${formattedDay}T12:00`;
-            }
-        }, 50);
+        const presetDate = `2026-06-${formattedDay}T12:00`;
+        (state as any).presetPublishDate = presetDate;
+        
+        if (window.showToast) window.showToast(`Selected date: June ${day}, 2026. Redirecting to Compose Studio...`, 'info');
+        
+        // Navigate to Compose tab inside Content Studio (Create Hub)
+        w.navigateToHub('create', 'compose', pid);
     };
 }

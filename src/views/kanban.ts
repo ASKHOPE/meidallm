@@ -508,6 +508,22 @@ function renderTaskCard(t: KanbanTask, filter: string, cycles: any[], modules: a
                 ${t.assignee ? `<span class="text-[9px] text-primary font-medium flex items-center gap-0.5">${getIconSVG('team', 'w-2.5 h-2.5 text-current')} ${sanitizeHTML(t.assignee)}</span>` : ''}
                 ${t.dueDate ? `<span class="text-[9px] text-text-muted flex items-center gap-0.5">${getIconSVG('calendar', 'w-2.5 h-2.5 text-current')} ${t.dueDate}</span>` : ''}
             </div>
+            
+            ${(() => {
+                // Generate simulated locks for visual multi-user presentation
+                const hash = t.title.length + t.id.charCodeAt(t.id.length - 1);
+                if (hash % 4 === 0) {
+                    const names = ["Gavin Belson", "Richard Hendricks", "Bablu Katru"];
+                    const editorName = names[hash % names.length];
+                    return `
+                    <div class="mt-2 bg-yellow-500/5 border border-yellow-500/20 text-yellow-500 text-[8px] font-bold px-2 py-1 rounded flex items-center gap-1.5 animate-pulse">
+                        <span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
+                        🔒 ${editorName} is editing...
+                    </div>`;
+                }
+                return '';
+            })()}
+
             <div class="text-[8px] text-text-muted flex justify-between pt-1 opacity-60">
                 <span>Created ${formatTime(t.created)}</span>
             </div>

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember, Cycle, Module, DbField, DbRow, DbTable, Goal, Tenant, Organization, Team, CustomRole, Policy, SalesInvoice, P2PTransaction, InventoryItem, SupportCase, EmployeeRecord, CandidateRecord, ActivityLog, Ticket, ClientFeedback, TimeLog, TaskComment } from "./types";
+import type { KanbanTask, Project, Idea, TaskLog, ResearchDoc, MediaAsset, Draft, Connection, PublishSchedule, Contact, TeamMember, Cycle, Module, DbField, DbRow, DbTable, Goal, Tenant, Organization, Team, CustomRole, Policy, SalesInvoice, P2PTransaction, InventoryItem, SupportCase, EmployeeRecord, CandidateRecord, ActivityLog, Ticket, ClientFeedback, TimeLog, TaskComment, MessageThread } from "./types";
 import { trackEvent } from "./telemetry/collector";
 import { triggerAutomations } from "./automation/engine";
 
@@ -40,6 +40,15 @@ export const TicketSchema = z.object({
     description: z.string(),
     status: z.enum(['open', 'in-progress', 'waiting', 'resolved']),
     priority: z.enum(['low', 'medium', 'high', 'urgent']),
+    category: z.string().optional(),
+    assigneeId: z.string().optional(),
+    events: z.array(z.object({
+        id: z.string(),
+        timestamp: z.number(),
+        actor: z.string(),
+        action: z.string(),
+        details: z.string().optional()
+    })).default([]),
     created: z.number(),
     updated: z.number()
 });
@@ -93,7 +102,20 @@ export const TimeLogSchema = z.object({
     projectName: z.string(),
     durationMs: z.number(),
     timestamp: z.number(),
-    billable: z.boolean()
+    billable: z.boolean(),
+    // Hierarchy & approval
+    userId: z.string().optional(),
+    userName: z.string().optional(),
+    teamId: z.string().optional(),
+    orgId: z.string().optional(),
+    description: z.string().optional(),
+    date: z.string().optional(),
+    startTime: z.string().optional(),
+    endTime: z.string().optional(),
+    status: z.enum(['pending', 'approved', 'rejected']).optional(),
+    approvedBy: z.string().optional(),
+    hourlyRate: z.number().optional(),
+    tags: z.array(z.string()).optional()
 });
 
 export const ActiveTimerSchema = z.object({
@@ -117,7 +139,13 @@ export const ProjectSchema = z.object({
     isStarred: z.boolean().optional(),
     budgetLimit: z.number().optional(),
     spent: z.number().optional(),
-    tenantId: z.string().optional()
+    tenantId: z.string().optional(),
+    
+    // Creator Economy Arrays
+    careerGroups: z.array(z.string()).optional(),
+    contentFormats: z.array(z.string()).optional(),
+    contentCategories: z.array(z.string()).optional(),
+    monetizationMethods: z.array(z.string()).optional()
 });
 
 export const IdeaSchema = z.object({
@@ -174,7 +202,11 @@ export const ConnectionSchema = z.object({
     icon: z.string(),
     connected: z.boolean(),
     apiKey: z.string().optional(),
-    username: z.string().optional()
+    username: z.string().optional(),
+    category: z.string().optional(),
+    description: z.string().optional(),
+    use: z.string().optional(),
+    creatorTypes: z.string().optional()
 });
 
 export const PublishScheduleSchema = z.object({
@@ -214,7 +246,13 @@ export const TeamMemberSchema = z.object({
     role: z.string(),
     systemRole: z.enum(['super_admin', 'tenant_owner', 'tenant_admin', 'org_admin', 'user']).optional(),
     status: z.enum(['active', 'meeting', 'offline', 'vacation']),
-    avatarColor: z.string()
+    avatarColor: z.string(),
+    
+    // Creator Economy Arrays
+    careerGroups: z.array(z.string()).optional(),
+    contentFormats: z.array(z.string()).optional(),
+    contentCategories: z.array(z.string()).optional(),
+    monetizationMethods: z.array(z.string()).optional()
 });
 
 export const TenantSchema = z.object({
@@ -455,13 +493,37 @@ const DEFAULT_DRAFTS: Draft[] = [
 ];
 
 const DEFAULT_CONNECTIONS: Connection[] = [
-    { id: 'conn-x', name: 'X (Twitter)', icon: '🐦', connected: false },
-    { id: 'conn-instagram', name: 'Instagram', icon: '📸', connected: false },
-    { id: 'conn-facebook', name: 'Facebook', icon: '🔵', connected: false },
-    { id: 'conn-youtube', name: 'YouTube', icon: '🎥', connected: false },
-    { id: 'conn-whatsapp', name: 'WhatsApp', icon: '💬', connected: false },
-    { id: 'conn-pinterest', name: 'Pinterest', icon: '📌', connected: false },
-    { id: 'conn-threads', name: 'Threads', icon: '🌀', connected: false }
+    // ── SOCIAL MEDIA ──
+    { id: 'conn-facebook',   name: 'Facebook',          icon: '🔵', connected: false, category: 'social',   use: 'Social Network',         creatorTypes: 'Everyone' },
+    { id: 'conn-instagram',  name: 'Instagram',          icon: '📸', connected: false, category: 'social',   use: 'Photos, Reels, Stories',  creatorTypes: 'Influencers, Brands, Photographers' },
+    { id: 'conn-x',          name: 'X (Twitter)',        icon: '🐦', connected: false, category: 'social',   use: 'News, Short Posts',       creatorTypes: 'Journalists, Tech, Businesses' },
+    { id: 'conn-threads',    name: 'Threads',            icon: '🌀', connected: false, category: 'social',   use: 'Conversations',           creatorTypes: 'Influencers, Brands' },
+    { id: 'conn-linkedin',   name: 'LinkedIn',           icon: '💼', connected: false, category: 'social',   use: 'Professional Content',    creatorTypes: 'Business, B2B, Recruiters' },
+    { id: 'conn-reddit',     name: 'Reddit',             icon: '🤍', connected: false, category: 'social',   use: 'Communities',             creatorTypes: 'Community Builders, Brands' },
+    { id: 'conn-discord',    name: 'Discord',            icon: '🎮', connected: false, category: 'social',   use: 'Communities',             creatorTypes: 'Gaming, Education, Creators' },
+    { id: 'conn-telegram',   name: 'Telegram',           icon: '✈️', connected: false, category: 'social',   use: 'Communities & Channels',  creatorTypes: 'Businesses, News, Education' },
+    { id: 'conn-whatsapp',   name: 'WhatsApp Channels',  icon: '💬', connected: false, category: 'social',   use: 'Broadcast',               creatorTypes: 'Businesses, Churches, Organizations' },
+    // ── VIDEO PLATFORMS ──
+    { id: 'conn-youtube',    name: 'YouTube',            icon: '🎥', connected: false, category: 'video',    use: 'Long-form Video',         creatorTypes: 'YouTubers, Educators, Reviewers' },
+    { id: 'conn-ytshorts',   name: 'YouTube Shorts',     icon: '⚡', connected: false, category: 'video',    use: 'Short-form Video',        creatorTypes: 'Short-form Creators' },
+    { id: 'conn-tiktok',     name: 'TikTok',             icon: '🎵', connected: false, category: 'video',    use: 'Short-form Video',        creatorTypes: 'TikTokers, Brands, UGC Creators' },
+    { id: 'conn-vimeo',      name: 'Vimeo',              icon: '🎞️', connected: false, category: 'video',    use: 'Professional Hosting',    creatorTypes: 'Filmmakers, Agencies, Professionals' },
+    { id: 'conn-dailymotion',name: 'Dailymotion',        icon: '📹', connected: false, category: 'video',    use: 'Video Sharing',           creatorTypes: 'General Creators, Media Publishers' },
+    { id: 'conn-rumble',     name: 'Rumble',             icon: '🔴', connected: false, category: 'video',    use: 'Alternative Video',       creatorTypes: 'Independent Creators, News' },
+    // ── LIVE STREAMING ──
+    { id: 'conn-twitch',     name: 'Twitch',             icon: '💜', connected: false, category: 'live',     use: 'Gaming & Live Shows',     creatorTypes: 'Streamers, Gamers, Creators' },
+    { id: 'conn-ytlive',     name: 'YouTube Live',       icon: '📡', connected: false, category: 'live',     use: 'Live Broadcasting',       creatorTypes: 'YouTubers, Businesses, Events' },
+    { id: 'conn-fblive',     name: 'Facebook Live',      icon: '🔴', connected: false, category: 'live',     use: 'Live Events',             creatorTypes: 'Businesses, Content Creators, Events' },
+    { id: 'conn-iglive',     name: 'Instagram Live',     icon: '🌟', connected: false, category: 'live',     use: 'Creator Live Sessions',   creatorTypes: 'Influencers, Brands' },
+    { id: 'conn-tiktoblive', name: 'TikTok LIVE',        icon: '🎙️', connected: false, category: 'live',     use: 'Creator Streaming',       creatorTypes: 'TikTokers, Entertainers' },
+    { id: 'conn-lilinlive',  name: 'LinkedIn Live',      icon: '📺', connected: false, category: 'live',     use: 'Business Events',         creatorTypes: 'B2B, Thought Leaders, Businesses' },
+    // ── PODCASTS ──
+    { id: 'conn-spotify',    name: 'Spotify',            icon: '🎧', connected: false, category: 'podcast',  use: 'Podcasts & Music',        creatorTypes: 'Podcasters, Musicians' },
+    { id: 'conn-apple',      name: 'Apple Podcasts',     icon: '🍎', connected: false, category: 'podcast',  use: 'Podcasts',                creatorTypes: 'Podcasters' },
+    { id: 'conn-ytpodcast',  name: 'YouTube Podcasts',   icon: '🎙️', connected: false, category: 'podcast',  use: 'Video Podcasts',          creatorTypes: 'Video Podcasters' },
+    { id: 'conn-amazon',     name: 'Amazon Music',       icon: '🟠', connected: false, category: 'podcast',  use: 'Podcasts',                creatorTypes: 'Podcasters' },
+    { id: 'conn-audible',    name: 'Audible',            icon: '📚', connected: false, category: 'podcast',  use: 'Podcasts & Audiobooks',   creatorTypes: 'Authors, Podcasters' },
+    { id: 'conn-rss',        name: 'RSS Feed',           icon: '📡', connected: false, category: 'podcast',  use: 'Universal Distribution',  creatorTypes: 'All Podcasters' },
 ];
 
 const DEFAULT_CONTACTS: Contact[] = [
@@ -495,7 +557,7 @@ const DEFAULT_ORGS: Organization[] = [
 ];
 
 const DEFAULT_TEAMS: Team[] = [
-    { id: 'team-eng', orgId: 'org-meidallm-core', name: 'Engineering', memberIds: ['tm1', 'tm3'], projectIds: ['p1'], isArchived: false },
+    { id: 'team-eng', orgId: 'org-meidallm-core', name: 'Engineering', memberIds: ['tm1', 'tm3'], projectIds: ['p-welcome', 'p1', 'p2'], isArchived: false },
     { id: 'team-marketing', orgId: 'org-meidallm-core', name: 'Marketing & Comms', memberIds: ['tm2', 'tm4'], projectIds: ['p2', 'p3'], isArchived: false },
     { id: 'team-design', orgId: 'org-meidallm-core', name: 'Design & UI/UX', memberIds: [], projectIds: [], isArchived: false },
     { id: 't-3', orgId: 'org-global-marketing', name: 'Campaign Strategy', memberIds: ['tm1', 'tm2'], projectIds: ['p-welcome', 'p3', 'p4', 'p5'] },
@@ -650,7 +712,9 @@ const DEFAULT_POLICIES: Policy[] = [
 
 export const state = {
     currentUser: null as string | null,
+    isSystemMenuOpen: false,
     sidebarCollapsed: false,
+    sidebarWidth: 260,
     activeTenantId: null as string | null,
     activeOrgId: null as string | null,
     activeTeamId: null as string | null,
@@ -699,6 +763,9 @@ export const state = {
     activityLogs: [] as ActivityLog[],
     tickets: [] as Ticket[],
     clientFeedback: [] as ClientFeedback[],
+    messageThreads: [] as MessageThread[],
+    isSupportAssistMode: false,
+    assistTargetUserId: null as string | null,
     
     cycles: [] as Cycle[],
     modules: [] as Module[],
@@ -894,7 +961,21 @@ function applyDbState(parsed: any) {
     }
     if (parsed.connections) {
         const val = z.array(ConnectionSchema).safeParse(parsed.connections);
-        if (val.success) state.connections = val.data;
+        if (val.success) {
+            // Merge saved connections with DEFAULT_CONNECTIONS:
+            // - Preserve connected/username/apiKey from saved data
+            // - Add any new platforms from DEFAULT_CONNECTIONS that weren't saved
+            const savedMap = new Map(val.data.map(c => [c.id, c]));
+            const merged = DEFAULT_CONNECTIONS.map(def => {
+                const saved = savedMap.get(def.id);
+                if (saved) {
+                    // Overlay saved connection status onto the fresh default (picks up new fields like category/use)
+                    return { ...def, connected: saved.connected, username: saved.username, apiKey: saved.apiKey };
+                }
+                return def; // new platform, use default
+            });
+            state.connections = merged;
+        }
     }
     if (parsed.publishSchedules) {
         const val = z.array(PublishScheduleSchema).safeParse(parsed.publishSchedules);
@@ -989,6 +1070,9 @@ function applyDbState(parsed: any) {
     if (parsed.sidebarCollapsed !== undefined && parsed.sidebarCollapsed !== null) {
         state.sidebarCollapsed = parsed.sidebarCollapsed === true || parsed.sidebarCollapsed === 'true';
     }
+    if (parsed.sidebarWidth !== undefined) {
+        state.sidebarWidth = parseInt(parsed.sidebarWidth) || 260;
+    }
 }
 
 // Ensures hardcoded DEFAULT_TEAM members always have their canonical systemRole,
@@ -1052,7 +1136,8 @@ function loadLocalState() {
             kanbanViewMode: localStorage.getItem('meidallm_kanban_viewmode'),
             activeTableId: localStorage.getItem('meidallm_active_tableid'),
             databaseViewMode: localStorage.getItem('meidallm_database_viewmode'),
-            sidebarCollapsed: localStorage.getItem('meidallm_sidebar_collapsed')
+            sidebarCollapsed: localStorage.getItem('meidallm_sidebar_collapsed') === 'true',
+            sidebarWidth: parseInt(localStorage.getItem('meidallm_sidebar_width') || '260')
         };
         applyDbState(local);
     } catch (e) {
@@ -1219,6 +1304,7 @@ export function saveState() {
         if (state.activeTableId) localStorage.setItem('meidallm_active_tableid', state.activeTableId);
         localStorage.setItem('meidallm_database_viewmode', state.databaseViewMode);
         localStorage.setItem('meidallm_sidebar_collapsed', state.sidebarCollapsed.toString());
+        localStorage.setItem('meidallm_sidebar_width', state.sidebarWidth.toString());
 
         // Async save to Postgres database
         if (state.currentUser && typeof window !== 'undefined') {
@@ -1447,6 +1533,12 @@ export function deleteContact(cid: string) {
 }
 
 export function addTeam(name: string) {
+    if (!hasPermission('manage:teams')) {
+        if (typeof window !== 'undefined' && (window as any).alert) {
+            (window as any).alert("Permission Denied: Requires Org Admin role or higher to manage teams.");
+        }
+        return;
+    }
     const newTeam: Team = {
         id: 't-' + Math.random().toString(36).substr(2, 9),
         orgId: state.activeOrgId || 'personal',
@@ -1462,6 +1554,12 @@ export function addTeam(name: string) {
 }
 
 export function toggleTeamMember(teamId: string, memberId: string) {
+    if (!hasPermission('manage:teams')) {
+        if (typeof window !== 'undefined' && (window as any).alert) {
+            (window as any).alert("Permission Denied: Requires Org Admin role or higher to manage teams.");
+        }
+        return;
+    }
     const team = state.teams.find(t => t.id === teamId);
     const member = state.team.find(m => m.id === memberId);
     if (team && member) {
@@ -1477,15 +1575,21 @@ export function toggleTeamMember(teamId: string, memberId: string) {
 }
 
 export function toggleTeamProjectAccess(teamId: string, projectId: string) {
+    if (!hasPermission('manage:teams')) {
+        if (typeof window !== 'undefined' && (window as any).alert) {
+            (window as any).alert("Permission Denied: Requires Org Admin role or higher to manage teams.");
+        }
+        return;
+    }
     const team = state.teams.find(t => t.id === teamId);
-    const proj = state.projects.find(p => p.id === projectId);
-    if (team && proj) {
+    const project = state.projects.find(p => p.id === projectId);
+    if (team && project) {
         if (team.projectIds.includes(projectId)) {
             team.projectIds = team.projectIds.filter(id => id !== projectId);
-            logActivity(projectId, teamId, 'Access Revoked', `Revoked workspace access of team ${team.name} for ${proj.name}.`);
+            logActivity(projectId, teamId, 'Workspace Access Revoked', `Revoked workspace access for team ${team.name}.`);
         } else {
             team.projectIds.push(projectId);
-            logActivity(projectId, teamId, 'Access Granted', `Granted workspace access of team ${team.name} for ${proj.name}.`);
+            logActivity(projectId, teamId, 'Workspace Access Granted', `Granted workspace access for team ${team.name}.`);
         }
         notifyStateChange();
     }
@@ -1534,6 +1638,16 @@ export function addProject(name: string, description: string) {
         isBinned: false
     };
     state.projects.push(newProj);
+    
+    // Add to active team so it shows up in the team workspaces rail
+    let activeTeam = state.teams.find(t => t.id === state.activeTeamId);
+    if (!activeTeam && state.teams.length > 0) {
+        activeTeam = state.teams[0];
+    }
+    if (activeTeam && !activeTeam.projectIds.includes(newProj.id)) {
+        activeTeam.projectIds.push(newProj.id);
+    }
+    
     logChange(newProj.id, '', newProj.name, 'none', 'created');
     notifyStateChange();
     return newProj.id;
@@ -1595,6 +1709,17 @@ export function deleteProject(pid: string) {
 export function toggleProjectStar(pid: string) {
     const p = state.projects.find(x => x.id === pid);
     if (p) {
+        if (!p.isStarred) {
+            const activeTeam = state.teams.find(t => t.id === state.activeTeamId) || state.teams[0];
+            const validProjectIds = activeTeam ? activeTeam.projectIds : [];
+            const teamStarredCount = state.projects.filter(proj => !proj.isArchived && !proj.isBinned && validProjectIds.includes(proj.id) && proj.isStarred).length;
+            if (teamStarredCount >= 3) {
+                if (typeof window !== 'undefined' && (window as any).alert) {
+                    (window as any).alert("You can only pin up to 3 workspaces to the side rail at a time.");
+                }
+                return;
+            }
+        }
         p.isStarred = !p.isStarred;
         notifyStateChange();
     }
@@ -2467,6 +2592,13 @@ export function hasPermission(action: string): boolean {
     const user = state.team.find(t => t.email === state.currentUser) || state.team[0];
     if (!user) return false;
     
+    // Support Assist Read-Only Override
+    if (state.isSupportAssistMode) {
+        if (action.startsWith('edit:') || action.startsWith('create:') || action.startsWith('delete:') || action.startsWith('manage:')) {
+            return false;
+        }
+    }
+    
     // Super admins can do anything
     if (user.systemRole === 'super_admin') return true;
     
@@ -2481,6 +2613,16 @@ export function hasPermission(action: string): boolean {
         return true; // Admins have broad access within tenant
     }
 
+    if (user.systemRole === 'org_admin') {
+        const orgActions = ['manage:teams', 'manage:workspaces', 'view:workspaces', 'create:task', 'edit:task'];
+        if (orgActions.includes(action)) return true;
+    }
+
+    if (state.activeRole === 'manager') {
+        const managerActions = ['manage:workspaces', 'view:workspaces', 'create:task', 'edit:task'];
+        if (managerActions.includes(action)) return true;
+    }
+
     // Custom roles logic
     if (user.customRoleIds && user.customRoleIds.length > 0) {
         for (const rid of user.customRoleIds) {
@@ -2492,6 +2634,24 @@ export function hasPermission(action: string): boolean {
     }
     
     // Fallback checks for basic users based on their activeRole context
+    // Support Hierarchy permissions
+    if (user.systemRole === 'support_admin') {
+        const adminActions = ['manage:tickets', 'view:tickets:all', 'assign:tickets', 'view:kpi', 'manage:support_team'];
+        if (adminActions.includes(action) || action.startsWith('manage:tickets')) return true;
+    }
+    if (user.systemRole === 'support_manager') {
+        const mgrActions = ['manage:tickets', 'view:tickets:all', 'assign:tickets', 'view:kpi'];
+        if (mgrActions.includes(action)) return true;
+    }
+    if (user.systemRole === 'support_l2') {
+        const l2Actions = ['update:tickets', 'view:tickets:all', 'assign:tickets'];
+        if (l2Actions.includes(action)) return true;
+    }
+    if (user.systemRole === 'support_l1') {
+        const l1Actions = ['update:tickets:assigned', 'view:tickets:assigned', 'create:ticket'];
+        if (l1Actions.includes(action)) return true;
+    }
+
     if (state.activeRole === 'accountant' && action.startsWith('manage:billing')) return true;
     if (state.activeRole === 'sales' && action.startsWith('manage:crm')) return true;
     if (state.activeRole === 'support' && action.startsWith('manage:tickets')) return true;
@@ -2559,3 +2719,163 @@ export function discardTimer() {
     notifyStateChange();
 }
 
+export function addOrganization(name: string) {
+    if (!state.activeTenantId) return;
+    const orgId = 'org-' + Math.random().toString(36).substr(2, 9);
+    state.organizations.push({
+        id: orgId,
+        tenantId: state.activeTenantId,
+        name: name.trim()
+    });
+    notifyStateChange();
+}
+
+export function updateOrganization(orgId: string, name: string) {
+    const org = state.organizations.find(o => o.id === orgId);
+    if (org) {
+        org.name = name.trim();
+        notifyStateChange();
+    }
+}
+
+export function deleteOrganization(orgId: string) {
+    state.organizations = state.organizations.filter(o => o.id !== orgId);
+    if (state.activeOrgId === orgId) {
+        state.activeOrgId = state.organizations.find(o => o.tenantId === state.activeTenantId)?.id || null;
+    }
+    notifyStateChange();
+}
+
+// --- Help Desk Ticket Management ---
+
+export function createTicket(title: string, description: string, priority: Ticket['priority'], category: string, options?: { department?: string, issueType?: string, affectedAsset?: string, assigneeId?: string, attachments?: string, requestedFeatures?: string }) {
+    if (!state.currentProject) {
+        if (typeof window !== 'undefined' && (window as any).alert) (window as any).alert("Select a workspace first to create a ticket.");
+        return;
+    }
+    const ticketId = 'tk-' + Math.random().toString(36).substr(2, 9);
+    const newTicket: Ticket = {
+        id: ticketId,
+        projectId: state.currentProject,
+        clientId: state.team.find(t => t.email === state.currentUser)?.id || 'client-0',
+        title,
+        description,
+        status: 'open',
+        priority,
+        category,
+        department: options?.department,
+        issueType: options?.issueType,
+        affectedAsset: options?.affectedAsset,
+        assigneeId: options?.assigneeId,
+        attachments: options?.attachments,
+        requestedFeatures: options?.requestedFeatures,
+        events: [{
+            id: 'ev-' + Math.random().toString(36).substr(2, 9),
+            timestamp: Date.now(),
+            actor: state.currentUser || 'System',
+            action: 'created',
+            details: 'Ticket opened'
+        }],
+        created: Date.now(),
+        updated: Date.now()
+    };
+    state.tickets.unshift(newTicket);
+    notifyStateChange();
+}
+
+export function assignTicket(ticketId: string, assigneeId: string) {
+    const t = state.tickets.find(x => x.id === ticketId);
+    if (t) {
+        t.assigneeId = assigneeId;
+        t.updated = Date.now();
+        t.events.unshift({
+            id: 'ev-' + Math.random().toString(36).substr(2, 9),
+            timestamp: Date.now(),
+            actor: state.currentUser || 'System',
+            action: 'assigned',
+            details: `Assigned to ${assigneeId}`
+        });
+        notifyStateChange();
+    }
+}
+
+export function updateTicketStatus(ticketId: string, status: Ticket['status']) {
+    const t = state.tickets.find(x => x.id === ticketId);
+    if (t) {
+        t.status = status;
+        t.updated = Date.now();
+        t.events.unshift({
+            id: 'ev-' + Math.random().toString(36).substr(2, 9),
+            timestamp: Date.now(),
+            actor: state.currentUser || 'System',
+            action: 'status_changed',
+            details: `Status changed to ${status}`
+        });
+        notifyStateChange();
+    }
+}
+
+export function addTicketEvent(ticketId: string, action: string, details?: string) {
+    const t = state.tickets.find(x => x.id === ticketId);
+    if (t) {
+        t.updated = Date.now();
+        t.events.unshift({
+            id: 'ev-' + Math.random().toString(36).substr(2, 9),
+            timestamp: Date.now(),
+            actor: state.currentUser || 'System',
+            action,
+            details
+        });
+        notifyStateChange();
+    }
+}
+
+// --- Internal Messaging ---
+export function sendMessage(threadId: string, content: string, participants: string[]) {
+    if (!state.currentUser) return;
+    const sender = state.team.find(t => t.email === state.currentUser)?.id;
+    if (!sender) return;
+
+    let thread = state.messageThreads.find(t => t.id === threadId);
+    if (!thread) {
+        thread = {
+            id: threadId,
+            participants: [...new Set([sender, ...participants])],
+            messages: [],
+            updated: Date.now()
+        };
+        state.messageThreads.unshift(thread);
+    }
+    
+    thread.messages.push({
+        id: 'msg-' + Math.random().toString(36).substr(2, 9),
+        senderId: sender,
+        content,
+        timestamp: Date.now()
+    });
+    thread.updated = Date.now();
+    
+    // Move thread to top
+    state.messageThreads = [thread, ...state.messageThreads.filter(t => t.id !== thread.id)];
+    notifyStateChange();
+}
+
+// --- Support Assist Mode ---
+export function triggerSupportAssist(userId: string) {
+    if (!state.team.find(t => t.id === userId)) return;
+    state.isSupportAssistMode = true;
+    state.assistTargetUserId = userId;
+    
+    // Switch active user session context to this user (for data scoping)
+    // We keep currentUser as the original support agent but maybe we shouldn't change currentUser
+    // Actually, to make "Read-Only" apply properly and filter data for the client, 
+    // it's easier to just temporarily set activeTenantId to their tenant if they have one.
+    // Or we can just let `isSupportAssistMode` be true.
+    notifyStateChange();
+}
+
+export function exitSupportAssist() {
+    state.isSupportAssistMode = false;
+    state.assistTargetUserId = null;
+    notifyStateChange();
+}

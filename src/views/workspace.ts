@@ -28,6 +28,19 @@ export function renderWorkspaceView(pid: string): string {
                         <div class="flex justify-between text-sm"><span class="text-text-muted">Total Tasks</span><span class="text-white font-medium">${projectTasks.length}</span></div>
                         <div class="flex justify-between text-sm"><span class="text-text-muted">Ideas Count</span><span class="text-white font-medium">${projectIdeas.length}</span></div>
                     </div>
+                    
+                    <!-- Collaboration presence facepile -->
+                    <div class="mt-5 border-t border-[var(--color-glass-border)] pt-4 flex justify-between items-center">
+                        <div class="flex -space-x-2">
+                            <div class="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-[9px] font-bold text-white border border-[var(--color-glass-bg)]" title="Hosanna (You)">HO</div>
+                            <div class="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-[9px] font-bold text-white border border-[var(--color-glass-bg)]" title="Richard Hendricks">RH</div>
+                            <div class="w-6 h-6 rounded-full bg-rose-500 flex items-center justify-center text-[9px] font-bold text-white border border-[var(--color-glass-bg)]" title="Gavin Belson">GB</div>
+                        </div>
+                        <span class="text-[9px] text-[var(--color-text-muted)] font-medium flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            3 active now
+                        </span>
+                    </div>
                 </div>
                 <button onclick="window.navigateTo('workspaces')" class="w-full mt-6 px-4 py-2 bg-panel-hover border border-glass-border rounded-lg text-sm hover:bg-glass-border transition-colors cursor-pointer">Back to Workspaces</button>
             </div>

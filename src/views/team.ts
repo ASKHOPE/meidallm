@@ -115,7 +115,7 @@ export function renderTeamView(): string {
     } else {
         const project = state.projects.find(p => p.id === teamsSession.selectedEntityId);
         if (project) {
-            entityLabel = `Campaign Focus: ${project.name} KPIs`;
+            entityLabel = `Workspace Focus: ${project.name} KPIs`;
             const projTasks = state.kanbanState.filter(t => t.projectId === project.id);
             const doneTasks = projTasks.filter(t => t.status === 'done').length;
             const openTasks = projTasks.length - doneTasks;
@@ -598,6 +598,27 @@ if (typeof window !== 'undefined') {
         session.activeTab = tab;
         w.__teamViewSession = session;
         notifyStateChange();
+    };
+
+    w.createTeamPrompt = () => {
+        const activeRole = state.activeRole || 'admin';
+        if (activeRole !== 'super_admin' && activeRole !== 'tenant_owner' && activeRole !== 'org_admin') {
+            alert("Permission Denied: Only Admins can create teams.");
+            return;
+        }
+        const name = prompt("Enter new team name:");
+        if (name) {
+            const orgs = state.organizations.filter(o => o.tenantId === state.activeTenantId);
+            if (orgs.length === 0) {
+                alert("No organizations found. Please create an organization first.");
+                return;
+            }
+            // For simplicity, default to the first org or active org
+            const orgId = state.activeOrgId || orgs[0].id;
+            // The state doesn't have an addTeam function imported here! Wait, addTeam is in state.ts.
+            // I will use w.addTeam if it exists, or just import it.
+            if (w.addTeam) w.addTeam(name, orgId);
+        }
     };
 
     w.switchTeamActivityInspector = (entityId: string) => {

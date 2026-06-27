@@ -48,6 +48,117 @@ export function renderAdminTenantsView(): string {
     `;
 }
 
+export function renderAdminOrgsView(): string {
+    const orgs = state.organizations.filter(o => o.tenantId === state.activeTenantId || state.activeRole === 'super_admin');
+    return `
+    <div class="fade-in flex flex-col gap-6 max-w-5xl mx-auto">
+        <div class="flex justify-between items-center border-b border-text-main/10 pb-4">
+            <div>
+                <h2 class="text-xl font-bold font-outfit text-text-main flex items-center gap-2">
+                    ${getIconSVG('folder', 'w-6 h-6 text-emerald-500')} Organization Management
+                </h2>
+                <p class="text-xs text-text-muted mt-1">Provision and manage organizations within your tenant.</p>
+            </div>
+            <button class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2" onclick="const name = prompt('Enter Organization Name:'); if(name) { window.addOrganization(name); }">
+                ${getIconSVG('plus', 'w-4 h-4')} Provision Organization
+            </button>
+        </div>
+
+        <div class="bg-background border border-text-main/15 rounded-xl overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-text-main/5 text-[10px] uppercase tracking-wider text-text-muted">
+                        <th class="p-4 font-bold border-b border-text-main/10">Org ID</th>
+                        <th class="p-4 font-bold border-b border-text-main/10">Name</th>
+                        <th class="p-4 font-bold border-b border-text-main/10">Tenant ID</th>
+                        <th class="p-4 font-bold border-b border-text-main/10 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="text-xs divide-y divide-text-main/10">
+                    ${orgs.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-text-muted italic">No organizations found.</td></tr>` : ''}
+                    ${orgs.map(o => `
+                    <tr class="hover:bg-text-main/5 transition-colors">
+                        <td class="p-4 font-mono text-text-muted">${sanitizeHTML(o.id)}</td>
+                        <td class="p-4 font-bold text-text-main">${sanitizeHTML(o.name)}</td>
+                        <td class="p-4 font-mono text-text-muted text-[10px]">${sanitizeHTML(o.tenantId)}</td>
+                        <td class="p-4 flex justify-end gap-2">
+                            <button class="px-3 py-1.5 rounded-lg border border-text-main/15 hover:bg-text-main/10 transition-colors font-bold text-[11px]" onclick="const n = prompt('Edit name:', '${sanitizeHTML(o.name)}'); if(n) { window.updateOrganization('${o.id}', n); }">Edit</button>
+                            <button class="px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 transition-colors font-bold text-[11px]" onclick="if(confirm('Delete organization?')) { window.deleteOrganization('${o.id}'); }">Delete</button>
+                        </td>
+                    </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    `;
+}
+
+export function renderCorporateOverview(): string {
+    return `
+    <div class="fade-in flex flex-col gap-6 max-w-5xl mx-auto">
+        <div class="flex justify-between items-center border-b border-text-main/10 pb-4">
+            <div>
+                <h2 class="text-xl font-bold font-outfit text-text-main flex items-center gap-2">
+                    ${getIconSVG('connections', 'w-6 h-6 text-sky-500')} Corporate Overview
+                </h2>
+                <p class="text-xs text-text-muted mt-1">A visual map of the entire workspace hierarchy based on your access level.</p>
+            </div>
+        </div>
+
+        <div class="bg-background border border-text-main/15 rounded-xl p-6">
+            <div class="flex flex-col gap-4">
+                ${state.tenants.length === 0 ? '<div class="text-xs text-text-muted italic">No data available.</div>' : ''}
+                ${state.tenants.map(tenant => {
+                    const orgs = state.organizations.filter(o => o.tenantId === tenant.id);
+                    return `
+                    <div class="border border-text-main/10 rounded-lg p-4 bg-text-main/5">
+                        <div class="font-bold text-lg text-emerald-500 flex items-center gap-2 mb-3">
+                            ${getIconSVG('admin-tenants', 'w-5 h-5')} Tenant: ${sanitizeHTML(tenant.name)}
+                        </div>
+                        <div class="pl-6 flex flex-col gap-3 border-l-2 border-text-main/10 ml-2">
+                            ${orgs.length === 0 ? '<div class="text-xs text-text-muted italic">No organizations.</div>' : ''}
+                            ${orgs.map(org => {
+                                const teams = state.teams.filter(t => t.orgId === org.id);
+                                return `
+                                <div class="border border-text-main/10 rounded-lg p-3 bg-background">
+                                    <div class="font-bold text-md text-amber-500 flex items-center gap-2 mb-2">
+                                        ${getIconSVG('folder', 'w-4 h-4')} Organization: ${sanitizeHTML(org.name)}
+                                    </div>
+                                    <div class="pl-6 flex flex-col gap-2 border-l-2 border-text-main/10 ml-2">
+                                        ${teams.length === 0 ? '<div class="text-xs text-text-muted italic">No teams.</div>' : ''}
+                                        ${teams.map(team => {
+                                            const projects = state.projects.filter(p => team.projectIds.includes(p.id) && !p.isArchived && !p.isBinned);
+                                            return `
+                                            <div class="border border-text-main/10 rounded-lg p-2 bg-text-main/5">
+                                                <div class="font-bold text-sm text-purple-500 flex items-center gap-2 mb-1">
+                                                    ${getIconSVG('team', 'w-3.5 h-3.5')} Team: ${sanitizeHTML(team.name)}
+                                                </div>
+                                                <div class="pl-6 flex flex-wrap gap-2 mt-2">
+                                                    ${projects.length === 0 ? '<div class="text-[10px] text-text-muted italic">No workspaces.</div>' : ''}
+                                                    ${projects.map(p => `
+                                                    <span class="px-2 py-1 bg-background border border-text-main/15 rounded text-[10px] font-semibold text-text-main flex items-center gap-1.5">
+                                                        ${getIconSVG('project-workspace', 'w-3 h-3 text-text-muted')} ${sanitizeHTML(p.name)}
+                                                    </span>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    </div>
+    `;
+}
+
 export function renderAdminRBACView(): string {
     return `
     <div class="fade-in flex flex-col gap-8 max-w-6xl mx-auto">

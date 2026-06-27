@@ -183,9 +183,9 @@ export function renderProjectsView(): string {
                     </button>
                 </div>
 
-                <!-- Create campaign button -->
+                <!-- Create workspace button -->
                 <button onclick="window.createProjectPrompt()" class="bg-text-main text-background hover:bg-text-main/90 font-bold px-4 py-2.5 rounded-lg text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm">
-                    ${getIconSVG('plus', 'w-3.5 h-3.5')} New Campaign
+                    ${getIconSVG('plus', 'w-3.5 h-3.5')} New Workspace
                 </button>
             </div>
         </div>
@@ -202,15 +202,15 @@ export function renderProjectsView(): string {
 
             if (filter === 'active') {
                 title = "Welcome to Meidallm";
-                desc = "No active campaign workspaces found. Click '+ New Campaign' above to initialize your first folder.";
+                desc = "No active workspaces found. Click '+ New Workspace' above to initialize your first folder.";
                 icon = getIconSVG('folder', 'w-8 h-8 text-text-muted');
             } else if (filter === 'archived') {
                 title = "Archive is Empty";
-                desc = "Move completed campaign folders to the archive to keep your active workspace panel clean.";
+                desc = "Move completed workspaces to the archive to keep your active workspace panel clean.";
                 icon = getIconSVG('archive', 'w-8 h-8 text-text-muted');
             } else if (filter === 'bin') {
                 title = "Trash Bin is Empty";
-                desc = "Deleted campaign folders will rest in this trash bin before permanent removal.";
+                desc = "Deleted workspaces will rest in this trash bin before permanent removal.";
                 icon = getIconSVG('trash', 'w-8 h-8 text-text-muted');
             }
 

@@ -93,6 +93,12 @@ export interface Project {
     budgetLimit?: number;
     spent?: number;
     tenantId?: string;
+    
+    // Creator Economy Arrays
+    careerGroups?: string[];
+    contentFormats?: string[];
+    contentCategories?: string[];
+    monetizationMethods?: string[];
 }
 
 export interface Idea {
@@ -150,6 +156,10 @@ export interface Connection {
     connected: boolean;
     apiKey?: string;
     username?: string;
+    category?: string;    // 'social' | 'video' | 'live' | 'podcast'
+    description?: string;
+    use?: string;         // e.g. 'Photos, Reels, Stories'
+    creatorTypes?: string;
 }
 
 export interface PublishSchedule {
@@ -183,7 +193,7 @@ export interface Contact {
     monetizationModel?: string;
 }
 
-export type SystemRole = 'super_admin' | 'tenant_owner' | 'tenant_admin' | 'org_admin' | 'user' | 'external_client';
+export type SystemRole = 'super_admin' | 'tenant_owner' | 'tenant_admin' | 'org_admin' | 'support_admin' | 'support_manager' | 'support_l2' | 'support_l1' | 'user' | 'external_client';
 
 export interface TeamMember {
     id: string;
@@ -193,6 +203,12 @@ export interface TeamMember {
     systemRole?: SystemRole;
     status: 'active' | 'meeting' | 'offline' | 'vacation';
     avatarColor: string;
+    
+    // Creator Economy Arrays
+    careerGroups?: string[];
+    contentFormats?: string[];
+    contentCategories?: string[];
+    monetizationMethods?: string[];
     customRoleIds?: string[]; // Array of role IDs for RBAC
 }
 
@@ -214,6 +230,14 @@ export interface Policy {
     enforced: boolean;
 }
 
+export interface TicketEvent {
+    id: string;
+    timestamp: number;
+    actor: string; // The ID or name of the user who performed the action
+    action: string; // E.g., 'created', 'assigned', 'status_changed', 'commented'
+    details?: string;
+}
+
 export interface Ticket {
     id: string;
     projectId: string;
@@ -222,7 +246,29 @@ export interface Ticket {
     description: string;
     status: 'open' | 'in-progress' | 'waiting' | 'resolved';
     priority: 'low' | 'medium' | 'high' | 'urgent';
+    category?: string;
+    department?: string;
+    issueType?: string;
+    affectedAsset?: string;
+    attachments?: string;
+    requestedFeatures?: string; // For Access Requests
+    assigneeId?: string; // The ID of the team member assigned
+    events: TicketEvent[];
     created: number;
+    updated: number;
+}
+
+export interface Message {
+    id: string;
+    senderId: string;
+    content: string;
+    timestamp: number;
+}
+
+export interface MessageThread {
+    id: string;
+    participants: string[];
+    messages: Message[];
     updated: number;
 }
 
@@ -398,6 +444,19 @@ export interface TimeLog {
     durationMs: number;
     timestamp: number;
     billable: boolean;
+    // Enhanced hierarchy & approval fields
+    userId?: string;
+    userName?: string;
+    teamId?: string;
+    orgId?: string;
+    description?: string;
+    date?: string;              // ISO date string YYYY-MM-DD
+    startTime?: string;         // HH:MM
+    endTime?: string;           // HH:MM
+    status?: 'pending' | 'approved' | 'rejected';
+    approvedBy?: string;
+    hourlyRate?: number;        // For billing calculation
+    tags?: string[];
 }
 
 
