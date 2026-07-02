@@ -2881,3 +2881,17 @@ export function exitSupportAssist() {
     state.assistTargetUserId = null;
     notifyStateChange();
 }
+
+export function wipeMasterData() {
+    allProjects = [];
+    allTasks = [];
+    allIdeas = [];
+    allResearch = [];
+    allMedia = [];
+    allDrafts = [];
+    allGoals = [];
+    allContacts = [];
+    allTimeLogs = [];
+    allCustomRoles = [];
+    allPolicies = [];
+}

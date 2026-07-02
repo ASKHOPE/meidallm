@@ -2104,6 +2104,7 @@ async function init() {
         }
     }, 4000);
 
+    // (Removed) Collab Presence Toast interval
     const collabMsgs = [
         "Richard Hendricks edited the 'Compose' outline.",
         "Gavin Belson acquired the social captions lock.",
@@ -2112,11 +2113,13 @@ async function init() {
         "Gavin Belson updated campaign goals progress."
     ];
     let msgIdx = 0;
+    /*
     setInterval(() => {
         if (window.showToast && Math.random() > 0.3) {
             window.showToast(`👥 Collab Presence: ${collabMsgs[msgIdx++ % collabMsgs.length]}`, 'info');
         }
     }, 15000);
+    */
     
     // Sidebar nav delegation click listener
     document.addEventListener('click', (e) => {
@@ -2343,7 +2346,7 @@ const COMMANDS = [
     { name: "Switch Theme to Night Mode", category: "Settings", action: () => { w.setTheme('night'); w.toggleCommandMenu(false); } },
     { name: "Switch Theme to Day Mode", category: "Settings", action: () => { w.setTheme('day'); w.toggleCommandMenu(false); } },
     { name: "Switch Theme to Auto (System) Mode", category: "Settings", action: () => { w.setTheme('auto'); w.toggleCommandMenu(false); } },
-    { name: "Developer: Reset & Seed Mock Data", category: "Actions", action: () => { w.toggleCommandMenu(false); if (confirm("This will wipe all existing workspace projects/tasks/ideas and replace them with mock data examples. Proceed?")) { (window as any).resetAndSeedData(); } } }
+    { name: "Developer: Reset & Seed Mock Data", category: "Actions", action: () => { if (confirm("This will wipe all existing workspace projects/tasks/ideas and replace them with mock data examples. Proceed?")) { (window as any).resetAndSeedData(); } w.toggleCommandMenu(false); } }
 ];
 
 w.toggleCommandMenu = (show: boolean) => {

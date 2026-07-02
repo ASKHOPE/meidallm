@@ -1,8 +1,11 @@
-import { state, saveState, notifyStateChange } from "./state";
+import { state, saveState, notifyStateChange, wipeMasterData } from "./state";
 import type { Tenant, Organization, Team, TeamMember, Project, KanbanTask, Draft, Idea, TaskLog } from "./types";
 
 export function resetAndSeedData() {
     console.log("Resetting and seeding mock data...");
+    
+    // Wipe all background stored lists
+    wipeMasterData();
 
     // Keep the current user
     const currentUserEmail = state.currentUser || "developer@example.com";

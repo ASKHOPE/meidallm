@@ -52,3 +52,28 @@ See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode de
 {"message":"[200] POST /api/state 1199ms","label":null,"level":"info"}
 {"message":"[200] POST /api/state 985ms","label":null,"level":"info"}
 {"message":"[200] POST /api/state 425ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 755ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 911ms","label":null,"level":"info"}
+{"message":"[200] / 379ms","label":null,"level":"info"}
+{"message":"[200] /api/state 705ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 926ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 490ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 79ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 78ms","label":null,"level":"info"}
+{"message":"[404] /api/state 468ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 484ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 120ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 87ms","label":null,"level":"info"}
+{"message":"[200] /api/state 162ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 81ms","label":null,"level":"info"}
+{"message":"[200] / 387ms","label":null,"level":"info"}
+{"message":"[200] /api/state 127ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 411ms","label":null,"level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"[200] / 414ms","label":null,"level":"info"}
+{"message":"[200] / 43ms","label":null,"level":"info"}
+{"message":"[200] /api/state 130ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 324ms","label":null,"level":"info"}
+{"message":"src/state.ts","label":"watch","level":"info"}
+{"message":"src/seed.ts","label":"watch","level":"info"}
+{"message":"src/main.ts","label":"watch","level":"info"}
