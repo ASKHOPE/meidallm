@@ -77,3 +77,14 @@ See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode de
 {"message":"src/state.ts","label":"watch","level":"info"}
 {"message":"src/seed.ts","label":"watch","level":"info"}
 {"message":"src/main.ts","label":"watch","level":"info"}
+{"message":"[200] / 562ms","label":null,"level":"info"}
+{"message":"[200] / 47ms","label":null,"level":"info"}
+{"message":"[200] /api/state 113ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 320ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 112ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 96ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 79ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 74ms","label":null,"level":"info"}
+{"message":"[200] / 680ms","label":null,"level":"info"}
+{"message":"[200] /api/state 127ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 310ms","label":null,"level":"info"}
