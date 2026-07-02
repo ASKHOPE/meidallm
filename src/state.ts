@@ -2585,11 +2585,6 @@ export function resolveSupportCase(caseId: string) {
     }
 }
 
-export function resetAppState() {
-    localStorage.clear();
-    location.reload();
-}
-
 export function hasPermission(action: string): boolean {
     const user = state.team.find(t => t.email === state.currentUser) || state.team[0];
     if (!user) return false;

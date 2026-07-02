@@ -158,10 +158,7 @@ export function renderSettingsView(): string {
                 </div>
             </div>
 
-            <div class="pt-4 border-t border-text-main/10 flex justify-between gap-4">
-                <button onclick="window.resetAppState()" class="px-5 py-3 bg-rose-950/20 border border-rose-900/30 hover:bg-rose-950/40 text-rose-400 font-medium text-xs rounded-xl cursor-pointer transition-colors">
-                    Reset Application Database
-                </button>
+            <div class="pt-4 border-t border-text-main/10 flex justify-end gap-4">
                 <button onclick="window.saveSettingsAction()" class="px-6 py-3 bg-text-main text-background font-bold text-xs rounded-xl cursor-pointer transition-all">
                     Save Configuration
                 </button>

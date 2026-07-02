@@ -31,7 +31,6 @@ import {
     updateTask,
     archiveTask,
     binTask,
-    resetAppState,
     toggleProjectStar,
     addTeam,
     toggleTeamMember,
@@ -74,7 +73,6 @@ import { parseDraftContent } from "./views/drafts";
 import { views } from "./router";
 import { sanitizeHTML } from "./utils";
 import { getIconSVG } from "./views/icons";
-import "./seed";
 import type { KanbanTask, ResearchDoc, MediaAsset, Draft, TimeLog } from "./types";
 
 // Custom override for alert to use premium toast notifications
@@ -944,12 +942,6 @@ w.submitContactForm = (pid: string) => {
 
     addContact(pid, name, email, company, 'lead', value, tag, creatorType, platforms, demographics, monetization);
     w.hideAddContactModal();
-};
-
-w.resetAppState = () => {
-    if (confirm("This will clear all custom campaigns, tasks, and notes, restoring setup defaults. Continue?")) {
-        resetAppState();
-    }
 };
 
 // Theme switcher handler
@@ -2075,7 +2067,7 @@ let initialized = false;
 async function init() {
     if (initialized) return;
     initialized = true;
-    loadState();
+    await loadState();
     initTelemetry();
     
     try {
@@ -2345,8 +2337,7 @@ const COMMANDS = [
     { name: "Create New Sprint Cycle", category: "Actions", action: () => { w.toggleCommandMenu(false); w.showAddCycleModal(); } },
     { name: "Switch Theme to Night Mode", category: "Settings", action: () => { w.setTheme('night'); w.toggleCommandMenu(false); } },
     { name: "Switch Theme to Day Mode", category: "Settings", action: () => { w.setTheme('day'); w.toggleCommandMenu(false); } },
-    { name: "Switch Theme to Auto (System) Mode", category: "Settings", action: () => { w.setTheme('auto'); w.toggleCommandMenu(false); } },
-    { name: "Developer: Reset & Seed Mock Data", category: "Actions", action: () => { if (confirm("This will wipe all existing workspace projects/tasks/ideas and replace them with mock data examples. Proceed?")) { (window as any).resetAndSeedData(); } w.toggleCommandMenu(false); } }
+    { name: "Switch Theme to Auto (System) Mode", category: "Settings", action: () => { w.setTheme('auto'); w.toggleCommandMenu(false); } }
 ];
 
 w.toggleCommandMenu = (show: boolean) => {
