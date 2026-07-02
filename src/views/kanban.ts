@@ -224,7 +224,7 @@ export function renderKanbanView(pid: string): string {
     </div>
     
     <!-- Add Task Modal -->
-    <div id="add-task-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden z-50 animate-[fadeIn_0.2s_ease-out]">
+    <div id="add-task-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden animate-[fadeIn_0.2s_ease-out]" style="z-index: 9999;">
         <div class="bg-glass-bg border border-glass-border p-6 rounded-2xl w-full max-w-md flex flex-col gap-4">
             <h3 class="text-xl font-semibold text-text-main">Add Pipeline Task</h3>
             <div>
@@ -259,7 +259,7 @@ export function renderKanbanView(pid: string): string {
     </div>
 
     <!-- Edit Task Details Modal -->
-    <div id="edit-task-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden z-50 animate-[fadeIn_0.2s_ease-out]">
+    <div id="edit-task-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden animate-[fadeIn_0.2s_ease-out]" style="z-index: 9999;">
         <div class="bg-glass-bg border border-glass-border p-6 rounded-2xl w-full max-w-4xl flex flex-col gap-4 overflow-y-auto max-h-[90vh] font-outfit text-text-main shadow-2xl">
             <!-- Modal Header -->
             <div class="flex justify-between items-center border-b border-glass-border/30 pb-3">
@@ -279,6 +279,11 @@ export function renderKanbanView(pid: string): string {
                     <div>
                         <label class="block text-[10px] font-bold text-text-muted uppercase mb-1">Title</label>
                         <input id="edit-modal-task-title" type="text" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm font-semibold focus:outline-none focus:border-text-main">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[10px] font-bold text-text-muted uppercase mb-1">Tag</label>
+                        <input id="edit-modal-task-tag" type="text" class="w-full bg-panel-hover border border-glass-border p-3 rounded-xl text-text-main text-sm focus:outline-none focus:border-text-main" placeholder="e.g. Marketing, DevOps, Design">
                     </div>
                     
                     <div>
@@ -353,7 +358,10 @@ export function renderKanbanView(pid: string): string {
                         </div>
                         <div class="col-span-2">
                             <label class="block text-[10px] font-bold text-text-muted uppercase mb-1">Assignee</label>
-                            <input id="edit-modal-task-assignee" type="text" class="w-full bg-panel-hover border border-glass-border p-2 rounded-lg text-text-main focus:outline-none" placeholder="Assign member">
+                            <select id="edit-modal-task-assignee" class="w-full bg-panel-hover border border-glass-border p-2 rounded-lg text-text-main focus:outline-none cursor-pointer">
+                                <option value="">Unassigned</option>
+                                ${state.team.map(m => `<option value="${m.name}">${m.name}</option>`).join('')}
+                            </select>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-text-muted uppercase mb-1">Start Date</label>
@@ -726,7 +734,7 @@ if (typeof window !== 'undefined') {
         const titleEl = document.getElementById('edit-modal-task-title') as HTMLInputElement;
         const tagEl = document.getElementById('edit-modal-task-tag') as HTMLInputElement;
         const compEl = document.getElementById('edit-modal-task-complexity') as HTMLSelectElement;
-        const assEl = document.getElementById('edit-modal-task-assignee') as HTMLInputElement;
+        const assEl = document.getElementById('edit-modal-task-assignee') as HTMLSelectElement;
         const dateEl = document.getElementById('edit-modal-task-duedate') as HTMLInputElement;
         const descEl = document.getElementById('edit-modal-task-description') as HTMLTextAreaElement;
         const prioEl = document.getElementById('edit-modal-task-priority') as HTMLSelectElement;
@@ -804,22 +812,48 @@ if (typeof window !== 'undefined') {
                 };
             }
 
-            // 1. Comments list
+            // 1. Comments list & Activity logs
             let localComments = [...(t.comments || [])];
             const renderLocalComments = () => {
                 if (commentsContainer) {
-                    if (localComments.length === 0) {
-                        commentsContainer.innerHTML = `<div class="text-xs text-text-muted italic py-1 pl-1">No comments yet. Start the conversation!</div>`;
+                    const taskLogs = state.taskLogs.filter(l => l.taskId === t.id);
+                    const activity = [
+                        ...localComments.map(c => ({ type: 'comment', ...c })),
+                        ...taskLogs.map(l => ({ type: 'log', ...l }))
+                    ].sort((a, b) => a.timestamp - b.timestamp);
+
+                    if (activity.length === 0) {
+                        commentsContainer.innerHTML = `<div class="text-xs text-text-muted italic py-1 pl-1">No comments or activity yet. Start the conversation!</div>`;
                     } else {
-                        commentsContainer.innerHTML = localComments.map(c => `
-                            <div class="bg-panel-hover/50 p-2 rounded-lg border border-glass-border/30 text-xs text-left">
-                                <div class="flex justify-between text-[10px] text-text-muted mb-1 font-bold">
-                                    <span>${sanitizeHTML(c.author)}</span>
-                                    <span>${new Date(c.timestamp).toLocaleString()}</span>
+                        commentsContainer.innerHTML = activity.map(item => {
+                            if (item.type === 'comment') {
+                                return `
+                                <div class="bg-panel-hover/50 p-2 rounded-lg border border-glass-border/30 text-xs text-left">
+                                    <div class="flex justify-between text-[10px] text-text-muted mb-1 font-bold">
+                                        <span>${sanitizeHTML(item.author)}</span>
+                                        <span>${new Date(item.timestamp).toLocaleString()}</span>
+                                    </div>
+                                    <div class="text-text-main">${sanitizeHTML(item.text)}</div>
                                 </div>
-                                <div class="text-text-main">${sanitizeHTML(c.text)}</div>
-                            </div>
-                        `).join('');
+                                `;
+                            } else {
+                                let logMsg = "";
+                                if (item.toStatus === 'created') logMsg = "Task created";
+                                else if (item.toStatus === 'edited') logMsg = "Task details edited";
+                                else if (item.toStatus === 'archived') logMsg = "Task archived";
+                                else if (item.toStatus === 'binned') logMsg = "Task moved to Trash Bin";
+                                else if (item.toStatus === 'permanently_deleted') logMsg = "Task permanently deleted";
+                                else if (item.fromStatus === 'binned' && item.toStatus === 'active') logMsg = "Task restored from Bin";
+                                else if (item.fromStatus === 'archived' && item.toStatus === 'active') logMsg = "Task unarchived";
+                                else logMsg = `Moved from ${item.fromStatus} to ${item.toStatus}`;
+                                
+                                return `
+                                <div class="text-[10px] text-text-muted text-center italic py-2 border-b border-glass-border/20 last:border-b-0">
+                                    ${logMsg} • ${new Date(item.timestamp).toLocaleString()}
+                                </div>
+                                `;
+                            }
+                        }).join('');
                     }
                     commentsContainer.scrollTop = commentsContainer.scrollHeight;
                 }
@@ -1185,7 +1219,9 @@ if (typeof window !== 'undefined') {
                             projectName: currentProjectName,
                             durationMs: currentTimerVal,
                             timestamp: Date.now(),
-                            billable: true
+                            billable: true,
+                            userId: state.currentUser,
+                            userName: state.currentUser || "anonymous"
                         });
                         currentTimerVal = 0;
                         updateTimeUI();
@@ -1219,6 +1255,8 @@ if (typeof window !== 'undefined') {
             }
 
             // Show modal
+            const app = document.getElementById('app');
+            if (app) app.appendChild(modal);
             modal.classList.remove('hidden');
 
             const saveHandler = () => {
@@ -1279,6 +1317,8 @@ if (typeof window !== 'undefined') {
 
     w.closeEditTaskModal = () => {
         const modal = document.getElementById('edit-task-modal');
-        if (modal) modal.classList.add('hidden');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
     };
 }

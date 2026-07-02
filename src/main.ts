@@ -74,6 +74,7 @@ import { parseDraftContent } from "./views/drafts";
 import { views } from "./router";
 import { sanitizeHTML } from "./utils";
 import { getIconSVG } from "./views/icons";
+import "./seed";
 import type { KanbanTask, ResearchDoc, MediaAsset, Draft, TimeLog } from "./types";
 
 // Custom override for alert to use premium toast notifications
@@ -245,7 +246,8 @@ w.navigateTo = (viewKey: string, pid?: string) => {
 w.navigateToHub = (hubKey: string, tabKey: string, pid?: string) => {
     w.navigateTo(hubKey, pid);
     setTimeout(() => {
-        w.switchHubTab(hubKey, tabKey);
+        const hubId = hubKey.endsWith('-hub') ? hubKey.replace('-hub', '') : hubKey;
+        w.switchHubTab(hubId, tabKey);
     }, 100);
 };
 
@@ -440,7 +442,11 @@ w.handleDropTask = (e: DragEvent, status: KanbanTask['status']) => {
 
 w.showAddTaskModal = () => {
     const modal = document.getElementById('add-task-modal');
-    if (modal) modal.classList.remove('hidden');
+    const app = document.getElementById('app');
+    if (modal && app) {
+        app.appendChild(modal);
+        modal.classList.remove('hidden');
+    }
 };
 
 w.hideAddTaskModal = () => {
@@ -476,8 +482,8 @@ w.addStickyNote = (pid: string) => {
     addStickyNote(pid);
 };
 
-w.updateStickyNote = (ideaId: string, content: string) => {
-    updateStickyNote(ideaId, content);
+w.updateStickyNote = (ideaId: string, content: string, silent = false) => {
+    updateStickyNote(ideaId, content, silent);
 };
 
 w.deleteStickyNote = (ideaId: string) => {
@@ -2318,25 +2324,26 @@ function detectPastedLanguage(text: string): string | null {
 
 // Command Menu (CMD+K / Ctrl+K) Logic & Actions
 const COMMANDS = [
-    { name: "Go to Workspaces", category: "Navigation", action: () => w.navigateTo('workspaces') },
-    { name: "Go to Task Kanban Board", category: "Navigation", action: () => w.navigateTo('kanban-board') },
-    { name: "Go to Cycles & Sprints", category: "Navigation", action: () => w.navigateTo('project-cycles') },
-    { name: "Go to Collaborative Databases", category: "Navigation", action: () => w.navigateTo('database-hub') },
-    { name: "Go to Idea Canvas", category: "Navigation", action: () => w.navigateTo('idea-canvas') },
-    { name: "Go to Research & RAG Engine", category: "Navigation", action: () => w.navigateTo('research') },
-    { name: "Go to Media Assets Studio", category: "Navigation", action: () => w.navigateTo('media') },
-    { name: "Go to Drafts & Compose", category: "Navigation", action: () => w.navigateTo('drafts') },
-    { name: "Go to Campaign Analytics", category: "Navigation", action: () => w.navigateTo('analytics') },
-    { name: "Go to CRM Hub", category: "Navigation", action: () => w.navigateTo('crm') },
-    { name: "Go to Team Office", category: "Navigation", action: () => w.navigateTo('team') },
-    { name: "Go to Settings", category: "Navigation", action: () => w.navigateTo('settings') },
+    { name: "Go to Workspaces", category: "Navigation", action: () => { w.toggleCommandMenu(false); w.navigateTo('workspaces'); } },
+    { name: "Go to Task Kanban Board", category: "Navigation", action: () => { w.toggleCommandMenu(false); w.navigateToHub('projects-hub', 'kanban-board'); } },
+    { name: "Go to Cycles & Sprints", category: "Navigation", action: () => { w.toggleCommandMenu(false); w.navigateToHub('projects-hub', 'project-cycles'); } },
+    { name: "Go to Collaborative Databases", category: "Navigation", action: () => { w.toggleCommandMenu(false); w.navigateToHub('database-hub', 'database-hub'); } },
+    { name: "Go to Idea Canvas", category: "Navigation", action: () => { w.toggleCommandMenu(false); w.navigateToHub('discover-hub', 'idea-canvas'); } },
+    { name: "Go to Research & RAG Engine", category: "Navigation", action: () => { w.toggleCommandMenu(false); w.navigateToHub('discover-hub', 'research'); } },
+    { name: "Go to Media Assets Studio", category: "Navigation", action: () => { w.toggleCommandMenu(false); w.navigateToHub('create-hub', 'media'); } },
+    { name: "Go to Drafts & Compose", category: "Navigation", action: () => { w.toggleCommandMenu(false); w.navigateToHub('create-hub', 'drafts'); } },
+    { name: "Go to Campaign Analytics", category: "Navigation", action: () => { w.toggleCommandMenu(false); w.navigateToHub('insights-hub', 'analytics'); } },
+    { name: "Go to CRM Hub", category: "Navigation", action: () => { w.toggleCommandMenu(false); w.navigateTo('crm'); } },
+    { name: "Go to Team Office", category: "Navigation", action: () => { w.toggleCommandMenu(false); w.navigateTo('team'); } },
+    { name: "Go to Settings", category: "Navigation", action: () => { w.toggleCommandMenu(false); w.navigateTo('settings'); } },
     { name: "Create New Pipeline Task", category: "Actions", action: () => { w.toggleCommandMenu(false); w.showAddTaskModal(); } },
     { name: "Create New Project/Campaign", category: "Actions", action: () => { w.toggleCommandMenu(false); w.createProjectPrompt(); } },
     { name: "Create Collaborative Database Table", category: "Actions", action: () => { w.toggleCommandMenu(false); w.showCreateTableModal(); } },
     { name: "Create New Sprint Cycle", category: "Actions", action: () => { w.toggleCommandMenu(false); w.showAddCycleModal(); } },
     { name: "Switch Theme to Night Mode", category: "Settings", action: () => { w.setTheme('night'); w.toggleCommandMenu(false); } },
     { name: "Switch Theme to Day Mode", category: "Settings", action: () => { w.setTheme('day'); w.toggleCommandMenu(false); } },
-    { name: "Switch Theme to Auto (System) Mode", category: "Settings", action: () => { w.setTheme('auto'); w.toggleCommandMenu(false); } }
+    { name: "Switch Theme to Auto (System) Mode", category: "Settings", action: () => { w.setTheme('auto'); w.toggleCommandMenu(false); } },
+    { name: "Developer: Reset & Seed Mock Data", category: "Actions", action: () => { w.toggleCommandMenu(false); if (confirm("This will wipe all existing workspace projects/tasks/ideas and replace them with mock data examples. Proceed?")) { (window as any).resetAndSeedData(); } } }
 ];
 
 w.toggleCommandMenu = (show: boolean) => {

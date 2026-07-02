@@ -1894,11 +1894,13 @@ export function addStickyNote(pid: string) {
     notifyStateChange();
 }
 
-export function updateStickyNote(ideaId: string, content: string) {
+export function updateStickyNote(ideaId: string, content: string, silent = false) {
     const idea = state.ideasState.find(i => i.id === ideaId);
     if (idea) {
         idea.content = content;
-        notifyStateChange();
+        if (!silent) {
+            notifyStateChange();
+        }
     }
 }
 

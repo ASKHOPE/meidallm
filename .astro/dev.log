@@ -1,5 +1,54 @@
 {"message":"connected.","label":"vite","level":"info"}
-{"message":"Generated 2ms","label":"types","level":"info"}
+{"message":"Generated 0ms","label":"types","level":"info"}
 {"message":"connected.","label":"vite","level":"info"}
-{"message":" astro  v7.0.2 ready in 2432 ms\n┃ Local    http://localhost:4321/\n┃ Network  use --host to expose","label":"SKIP_FORMAT","level":"info"}
+{"message":"Re-optimizing dependencies because vite config has changed","label":"vite","level":"info"}
+{"message":" astro  v7.0.2 ready in 564 ms\n┃ Local    http://localhost:4321/\n┃ Network  use --host to expose","label":"SKIP_FORMAT","level":"info"}
 {"message":"watching for file changes...","label":null,"level":"info"}
+(node:10655) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"message":"[302] / 37ms","label":null,"level":"info"}
+{"message":"[200] /login 18ms","label":null,"level":"info"}
+{"message":"[200] /login 1ms","label":null,"level":"info"}
+{"message":"✨ new dependencies optimized: @better-auth/infra/client, better-auth/client","label":"vite","level":"info"}
+{"message":"[302] / 2ms","label":null,"level":"info"}
+{"message":"[200] /login 2ms","label":null,"level":"info"}
+{"message":"[200] POST /api/auth/sign-in/email 775ms","label":null,"level":"info"}
+{"message":"[200] / 439ms","label":null,"level":"info"}
+{"message":"✨ new dependencies optimized: zod","label":"vite","level":"info"}
+{"message":"✨ optimized dependencies changed. reloading","label":"vite","level":"info"}
+{"message":"[302] /login 79ms","label":null,"level":"info"}
+{"message":"[200] / 86ms","label":null,"level":"info"}
+{"message":"[200] / 36ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 36ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 41ms","label":null,"level":"info"}
+{"message":"[200] /api/state 130ms","label":null,"level":"info"}
+{"message":"[200] /api/state 85ms","label":null,"level":"info"}
+{"message":"[404] /src/App.tsx 1ms","label":null,"level":"info"}
+{"message":"[200] / 440ms","label":null,"level":"info"}
+{"message":"[200] / 424ms","label":null,"level":"info"}
+{"message":"[200] /api/state 385ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 600ms","label":null,"level":"info"}
+{"message":"[404] /api/seed 0ms","label":null,"level":"info"}
+{"message":"[404] /api/reset 1ms","label":null,"level":"info"}
+{"message":"[200] / 466ms","label":null,"level":"info"}
+{"message":"[200] /api/state 428ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 635ms","label":null,"level":"info"}
+{"message":"[404] /workspace/src/components/CommandMenu.tsx 0ms","label":null,"level":"info"}
+{"message":"[200] / 440ms","label":null,"level":"info"}
+{"message":"[200] /api/state 467ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 664ms","label":null,"level":"info"}
+{"message":"[200] / 342ms","label":null,"level":"info"}
+{"message":"[200] /api/state 373ms","label":null,"level":"info"}
+{"message":"[200] /api/auth/get-session 626ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 1045ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 699ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 1199ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 985ms","label":null,"level":"info"}
+{"message":"[200] POST /api/state 425ms","label":null,"level":"info"}

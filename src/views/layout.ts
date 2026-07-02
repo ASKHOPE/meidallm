@@ -241,24 +241,30 @@ export function renderLayoutHTML(): string {
                 <div id="hierarchy-rail-dropdown" class="hidden absolute left-full top-0 ml-3 w-64 bg-[var(--color-glass-bg)] border border-[var(--color-glass-border)] rounded-lg shadow-xl p-2 z-[60] flex flex-col gap-3">
                     
                     ${(systemRole === 'super_admin' || systemRole === 'tenant_owner' || systemRole === 'tenant_admin') ? `
-                    <div>
-                        <div class="px-2 pb-1 text-[9px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider flex justify-between items-center">
+                    <div class="flex flex-col gap-1.5">
+                        <div class="px-2 text-[9px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider flex justify-between items-center">
                             <span>Tenant</span>
                             <button onclick="window.navigateTo('admin-tenants'); window.closeAllRailDropdowns();" class="text-amber-500 hover:text-amber-400 capitalize px-1 bg-amber-500/10 rounded">Manage</button>
                         </div>
                         <div class="flex flex-col gap-0.5 max-h-32 overflow-y-auto">
                             ${state.tenants.map(t => `<button onclick="window.switchTenant('${t.id}')" class="w-full text-left px-2 py-1.5 text-xs rounded transition-colors text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] font-medium ${t.id === state.activeTenantId ? 'bg-[var(--color-panel-hover)] font-bold border-l-2 border-amber-500' : ''} truncate">${sanitizeHTML(t.name)}</button>`).join('')}
                         </div>
+                        <div class="px-2 pb-1 flex flex-wrap gap-1">
+                            ${['admin', 'manager', 'accountant', 'sales', 'support'].map(r => `<button onclick="window.switchRole('${r}')" class="text-[8px] px-1 py-0.5 rounded border ${r === role ? 'bg-amber-500/20 border-amber-500 text-amber-500 font-bold' : 'border-[var(--color-glass-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'} cursor-pointer" title="Switch to ${r.toUpperCase()}">${r.toUpperCase()}</button>`).join('')}
+                        </div>
                     </div>
                     ` : ''}
 
-                    <div>
-                        <div class="px-2 pb-1 text-[9px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider flex justify-between items-center">
+                    <div class="flex flex-col gap-1.5">
+                        <div class="px-2 text-[9px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider flex justify-between items-center">
                             <span>Organization</span>
                             <button onclick="window.navigateTo('admin-orgs'); window.closeAllRailDropdowns();" class="text-amber-500 hover:text-amber-400 capitalize px-1 bg-amber-500/10 rounded">Manage</button>
                         </div>
                         <div class="flex flex-col gap-0.5 max-h-32 overflow-y-auto">
                             ${state.organizations.filter(o => o.tenantId === state.activeTenantId).map(o => `<button onclick="window.switchOrganization('${o.id}')" class="w-full text-left px-2 py-1.5 text-xs rounded transition-colors text-[var(--color-text-main)] hover:bg-[var(--color-panel-hover)] font-medium ${o.id === state.activeOrgId ? 'bg-[var(--color-panel-hover)] font-bold border-l-2 border-amber-500' : ''} truncate">${sanitizeHTML(o.name)}</button>`).join('') || '<div class="px-2 py-1 text-xs text-[var(--color-text-muted)] italic">No Organizations</div>'}
+                        </div>
+                        <div class="px-2 pb-1 flex flex-wrap gap-1">
+                            ${['admin', 'manager', 'accountant', 'sales', 'support'].map(r => `<button onclick="window.switchRole('${r}')" class="text-[8px] px-1 py-0.5 rounded border ${r === role ? 'bg-amber-500/20 border-amber-500 text-amber-500 font-bold' : 'border-[var(--color-glass-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'} cursor-pointer" title="Switch to ${r.toUpperCase()}">${r.toUpperCase()}</button>`).join('')}
                         </div>
                     </div>
 
@@ -416,7 +422,7 @@ export function renderLayoutHTML(): string {
     <!-- Main Navigation Sidebar -->
     <aside id="main-sidebar" class="bg-[var(--color-glass-bg)] flex flex-col transition-all duration-300 ease-in-out relative overflow-visible ${sidebarCollapsedClass}" style="width: ${state.sidebarCollapsed ? '64' : state.sidebarWidth}px; min-width: ${state.sidebarCollapsed ? '64' : '200'}px; max-width: 400px;">
         <!-- Floating Seam Toggle Pill -->
-        <button onclick="window.toggleSidebarCollapse(event)" class="absolute top-1/2 -translate-y-1/2 -right-3 w-[14px] h-10 rounded-full border flex items-center justify-center cursor-pointer shadow-md z-50 transition-all duration-200
+        <button onclick="window.toggleSidebarCollapse(event)" class="absolute top-1/2 -translate-y-1/2 -right-3 w-[14px] h-10 rounded-full border flex items-center justify-center cursor-pointer shadow-md z-40 transition-all duration-200
             ${state.sidebarCollapsed
                 ? 'bg-[var(--color-text-main)] border-[var(--color-text-main)] text-[var(--color-glass-bg)] hover:scale-110 shadow-[0_0_0_3px_var(--color-glass-border)]'
                 : 'bg-background border-[var(--color-glass-border)] hover:border-[var(--color-text-main)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:scale-110'}">

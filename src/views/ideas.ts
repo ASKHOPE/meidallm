@@ -38,10 +38,10 @@ export function renderIdeasView(pid: string): string {
                             </div>
                             <!-- Rich Text Toolbar -->
                             <div class="flex items-center gap-1 ml-auto">
-                                <button onclick="document.execCommand('bold', false); window.updateStickyNote('${idea.id}', document.getElementById('idea-editor-${idea.id}').innerHTML)" class="p-1 text-text-muted hover:text-text-main text-[10px] font-bold cursor-pointer" title="Bold">B</button>
-                                <button onclick="document.execCommand('italic', false); window.updateStickyNote('${idea.id}', document.getElementById('idea-editor-${idea.id}').innerHTML)" class="p-1 text-text-muted hover:text-text-main text-[10px] italic cursor-pointer" title="Italic">I</button>
-                                <button onclick="document.execCommand('underline', false); window.updateStickyNote('${idea.id}', document.getElementById('idea-editor-${idea.id}').innerHTML)" class="p-1 text-text-muted hover:text-text-main text-[10px] underline cursor-pointer" title="Underline">U</button>
-                                <select onchange="document.execCommand('fontName', false, this.value); window.updateStickyNote('${idea.id}', document.getElementById('idea-editor-${idea.id}').innerHTML)" class="bg-transparent text-text-muted hover:text-text-main text-[9px] border-0 focus:ring-0 p-0.5 cursor-pointer max-w-[65px]" title="Font">
+                                <button onclick="document.execCommand('bold', false); window.updateStickyNote('${idea.id}', document.getElementById('idea-editor-${idea.id}').innerHTML, true)" class="p-1 text-text-muted hover:text-text-main text-[10px] font-bold cursor-pointer" title="Bold">B</button>
+                                <button onclick="document.execCommand('italic', false); window.updateStickyNote('${idea.id}', document.getElementById('idea-editor-${idea.id}').innerHTML, true)" class="p-1 text-text-muted hover:text-text-main text-[10px] italic cursor-pointer" title="Italic">I</button>
+                                <button onclick="document.execCommand('underline', false); window.updateStickyNote('${idea.id}', document.getElementById('idea-editor-${idea.id}').innerHTML, true)" class="p-1 text-text-muted hover:text-text-main text-[10px] underline cursor-pointer" title="Underline">U</button>
+                                <select onchange="document.execCommand('fontName', false, this.value); window.updateStickyNote('${idea.id}', document.getElementById('idea-editor-${idea.id}').innerHTML, true)" class="bg-transparent text-text-muted hover:text-text-main text-[9px] border-0 focus:ring-0 p-0.5 cursor-pointer max-w-[65px]" title="Font">
                                     <option value="Inter" selected>Inter</option>
                                     <option value="Outfit">Outfit</option>
                                     <option value="Georgia">Georgia</option>
@@ -59,7 +59,7 @@ export function renderIdeasView(pid: string): string {
                         </div>
                         <div id="idea-editor-${idea.id}"
                              contenteditable="true" 
-                             oninput="window.updateStickyNote('${idea.id}', this.innerHTML)" 
+                             oninput="window.updateStickyNote('${idea.id}', this.innerHTML, true)" 
                              class="w-full bg-transparent text-text-main text-xs resize-none focus:outline-none border-b border-transparent focus:border-text-main/10 pb-2 min-h-[100px] max-h-[180px] overflow-y-auto font-inter text-left" 
                              placeholder="Write your brilliant idea here...">${idea.content || ''}</div>
                     </div>
