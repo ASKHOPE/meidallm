@@ -12,7 +12,7 @@ async function seedDatabase() {
     console.log("Starting backend database seeding...");
 
     try {
-        const currentUserEmail = "developer@example.com";
+        const currentUserEmail = "bablu.katru@gmail.com";
         const orgId1 = "org-1";
         const orgId2 = "org-2";
 
