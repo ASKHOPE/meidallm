@@ -50,12 +50,12 @@ async function seedDatabase() {
         const state2 = createEmptyState();
 
         // 2 Tenants
-        state1.tenants.push({ id: "t-1", name: "AeroSpace Corp" }, { id: "t-2", name: "Oceanic Labs" });
-        state2.tenants.push({ id: "t-1", name: "AeroSpace Corp" }, { id: "t-2", name: "Oceanic Labs" });
+        state1.tenants.push({ id: "t-1", name: "Acme Corp" }, { id: "t-2", name: "Globex Corporation" });
+        state2.tenants.push({ id: "t-1", name: "Acme Corp" }, { id: "t-2", name: "Globex Corporation" });
 
         // 2 Orgs
-        state1.organizations.push({ id: "org-1", tenantId: "t-1", name: "AeroSpace Engineering" }, { id: "org-2", tenantId: "t-2", name: "Oceanic Research" });
-        state2.organizations.push({ id: "org-1", tenantId: "t-1", name: "AeroSpace Engineering" }, { id: "org-2", tenantId: "t-2", name: "Oceanic Research" });
+        state1.organizations.push({ id: "org-1", tenantId: "t-1", name: "Acme Engineering" }, { id: "org-2", tenantId: "t-2", name: "Globex Research" });
+        state2.organizations.push({ id: "org-1", tenantId: "t-1", name: "Acme Engineering" }, { id: "org-2", tenantId: "t-2", name: "Globex Research" });
 
         // 8 Users total (4 per team)
         const users = [
@@ -75,8 +75,8 @@ async function seedDatabase() {
 
         // 2 Teams
         const teams = [
-            { id: "team-1", orgId: "org-1", name: "Flight Systems", memberIds: [currentUserEmail, "alice@example.com", "bob@example.com", "charlie@example.com"], projectIds: ["p-1"] },
-            { id: "team-2", orgId: "org-2", name: "Deep Sea Dynamics", memberIds: ["diana@example.com", "evan@example.com", "fiona@example.com", "george@example.com"], projectIds: ["p-2"] }
+            { id: "team-1", orgId: "org-1", name: "Software Team", memberIds: [currentUserEmail, "alice@example.com", "bob@example.com", "charlie@example.com"], projectIds: ["p-1"] },
+            { id: "team-2", orgId: "org-2", name: "Hardware Team", memberIds: ["diana@example.com", "evan@example.com", "fiona@example.com", "george@example.com"], projectIds: ["p-2"] }
         ];
         // @ts-ignore
         state1.teams.push(...teams);
@@ -84,42 +84,42 @@ async function seedDatabase() {
         state2.teams.push(...teams);
 
         // 2 Projects
-        const project1 = { id: "p-1", tenantId: "t-1", name: "Orion Rocket Engine", description: "Developing the next generation Orion liquid-fuel rocket propulsion systems.", isStarred: true, created: Date.now() - 86400000 * 5, updated: Date.now() };
-        const project2 = { id: "p-2", tenantId: "t-2", name: "Mariana Explorer", description: "Autonomous underwater vehicle design for Mariana trench exploration.", isStarred: false, created: Date.now() - 86400000 * 3, updated: Date.now() };
+        const project1 = { id: "p-1", tenantId: "t-1", name: "Alpha Project", description: "Developing the next generation web platform.", isStarred: true, status: "active", lastActive: Date.now(), created: Date.now() - 86400000 * 5, updated: Date.now() };
+        const project2 = { id: "p-2", tenantId: "t-2", name: "Beta Project", description: "Internal tooling and database infrastructure.", isStarred: false, status: "active", lastActive: Date.now() - 3600000, created: Date.now() - 86400000 * 3, updated: Date.now() };
         // @ts-ignore
         state1.projects.push(project1, project2);
         // @ts-ignore
         state2.projects.push(project1, project2);
 
         // Kanban Tasks
-        const task1 = { id: "tsk-1", projectId: "p-1", title: "Optimize nozzle expansion ratio", tag: "Engineering", status: "progress", assignee: "Alice Vance", priority: "high", points: 5, created: Date.now() - 3600000 * 5, updated: Date.now() - 3600000 * 2, subtasks: [ { id: "st-1", projectId: "p-1", title: "Run high-altitude vacuum simulation", tag: "Simulation", status: "done", created: Date.now(), updated: Date.now() }, { id: "st-2", projectId: "p-1", title: "Calculate thermodynamic limits", tag: "Math", status: "progress", created: Date.now(), updated: Date.now() } ], comments: [ { id: "c-1", author: "alice@example.com", text: "Simulation shows 98.4% nozzle efficiency with current bell geometry.", timestamp: Date.now() - 3600000 * 3 } ] };
-        const task2 = { id: "tsk-2", projectId: "p-2", title: "Sonar sensor pressure test", tag: "Testing", status: "backlog", assignee: "Bob Vance", priority: "medium", points: 3, created: Date.now() - 3600000 * 8, updated: Date.now() - 3600000 * 4 };
+        const task1 = { id: "tsk-1", projectId: "p-1", title: "Optimize database queries", tag: "Engineering", status: "progress", assignee: "Alice Vance", priority: "high", points: 5, created: Date.now() - 3600000 * 5, updated: Date.now() - 3600000 * 2, subtasks: [ { id: "st-1", projectId: "p-1", title: "Run index analysis", tag: "DBA", status: "done", created: Date.now(), updated: Date.now() }, { id: "st-2", projectId: "p-1", title: "Calculate query plans", tag: "Math", status: "progress", created: Date.now(), updated: Date.now() } ], comments: [ { id: "c-1", author: "alice@example.com", text: "Index scan shows 98.4% improvement.", timestamp: Date.now() - 3600000 * 3 } ] };
+        const task2 = { id: "tsk-2", projectId: "p-2", title: "Test API endpoints", tag: "Testing", status: "backlog", assignee: "Bob Vance", priority: "medium", points: 3, created: Date.now() - 3600000 * 8, updated: Date.now() - 3600000 * 4 };
         // @ts-ignore
         state1.kanbanState.push(task1, task2);
         // @ts-ignore
         state2.kanbanState.push(task1, task2);
 
         // Drafts
-        const draft1 = { id: "dr-1", projectId: "p-1", title: "Orion Rocket Engine Specs Overview", content: JSON.stringify({ blocks: [ { type: "header", text: "Orion Launch Mechanics" }, { type: "paragraph", text: "Today we outline the thermal constraints of the primary combustion chamber..." } ] }), format: "blog", cmsStatus: "draft", created: Date.now() - 3600000 * 12, updated: Date.now() - 3600000 * 6 };
-        const draft2 = { id: "dr-2", projectId: "p-2", title: "Deep Sea Expedition Logistics", content: JSON.stringify({ blocks: [ { type: "header", text: "Expedition Logistics" }, { type: "paragraph", text: "Vessel positioning and deployment window schedules for the Mariana Trench..." } ] }), format: "email", cmsStatus: "draft", created: Date.now() - 3600000 * 24, updated: Date.now() - 3600000 * 18 };
-        const review1 = { id: "dr-3", projectId: "p-1", title: "Propulsion Safety Report", content: JSON.stringify({ blocks: [ { type: "header", text: "Propulsion Fuel Line Safety" }, { type: "paragraph", text: "Detailed failure-mode simulation of liquid helium backup feed lines..." } ] }), format: "blog", cmsStatus: "review", created: Date.now() - 3600000 * 48, updated: Date.now() - 3600000 * 20 };
-        const review2 = { id: "dr-4", projectId: "p-2", title: "Pressure Hull Finite Element Analysis", content: JSON.stringify({ blocks: [ { type: "header", text: "Pressure Hull stress points under 11,000 meters" }, { type: "paragraph", text: "Titanium casing shows safety factor of 1.45 at max depth..." } ] }), format: "blog", cmsStatus: "review", created: Date.now() - 3600000 * 72, updated: Date.now() - 3600000 * 30 };
+        const draft1 = { id: "dr-1", projectId: "p-1", title: "Alpha Project Specs Overview", content: JSON.stringify({ blocks: [ { type: "header", text: "Alpha Platform Mechanics" }, { type: "paragraph", text: "Today we outline the architecture of the new platform..." } ] }), format: "blog", cmsStatus: "draft", created: Date.now() - 3600000 * 12, updated: Date.now() - 3600000 * 6 };
+        const draft2 = { id: "dr-2", projectId: "p-2", title: "Beta Project Logistics", content: JSON.stringify({ blocks: [ { type: "header", text: "Deployment Logistics" }, { type: "paragraph", text: "Server positioning and deployment window schedules..." } ] }), format: "email", cmsStatus: "draft", created: Date.now() - 3600000 * 24, updated: Date.now() - 3600000 * 18 };
+        const review1 = { id: "dr-3", projectId: "p-1", title: "Security Audit Report", content: JSON.stringify({ blocks: [ { type: "header", text: "OAuth Authentication Security" }, { type: "paragraph", text: "Detailed failure-mode simulation of token expiration..." } ] }), format: "blog", cmsStatus: "review", created: Date.now() - 3600000 * 48, updated: Date.now() - 3600000 * 20 };
+        const review2 = { id: "dr-4", projectId: "p-2", title: "Load Testing Analysis", content: JSON.stringify({ blocks: [ { type: "header", text: "Server stress points under 11,000 requests" }, { type: "paragraph", text: "Kubernetes cluster shows safety factor of 1.45 at max load..." } ] }), format: "blog", cmsStatus: "review", created: Date.now() - 3600000 * 72, updated: Date.now() - 3600000 * 30 };
         // @ts-ignore
         state1.drafts.push(draft1, draft2, review1, review2);
         // @ts-ignore
         state2.drafts.push(draft1, draft2, review1, review2);
 
         // Ideas
-        const idea1 = { id: "id-1", projectId: "p-1", content: "Use carbon-fiber composites for outer engine fairing.", x: 150, y: 120, color: "bg-yellow-500/20" };
-        const idea2 = { id: "id-2", projectId: "p-2", content: "Integrate dual-frequency active sonar for mapping.", x: 350, y: 180, color: "bg-blue-500/20" };
+        const idea1 = { id: "id-1", projectId: "p-1", content: "Use Redis caching for faster responses.", x: 150, y: 120, color: "bg-yellow-500/20" };
+        const idea2 = { id: "id-2", projectId: "p-2", content: "Integrate new authentication service.", x: 350, y: 180, color: "bg-blue-500/20" };
         // @ts-ignore
         state1.ideasState.push(idea1, idea2);
         // @ts-ignore
         state2.ideasState.push(idea1, idea2);
 
         // Logs
-        const log1 = { id: "log-1", projectId: "p-1", taskId: "tsk-1", taskTitle: "Optimize nozzle expansion ratio", fromStatus: "backlog", toStatus: "progress", timestamp: Date.now() - 3600000 * 2 };
-        const log2 = { id: "log-2", projectId: "p-2", taskId: "tsk-2", taskTitle: "Sonar sensor pressure test", fromStatus: "created", toStatus: "backlog", timestamp: Date.now() - 3600000 * 4 };
+        const log1 = { id: "log-1", projectId: "p-1", taskId: "tsk-1", taskTitle: "Optimize database queries", fromStatus: "backlog", toStatus: "progress", timestamp: Date.now() - 3600000 * 2 };
+        const log2 = { id: "log-2", projectId: "p-2", taskId: "tsk-2", taskTitle: "Test API endpoints", fromStatus: "created", toStatus: "backlog", timestamp: Date.now() - 3600000 * 4 };
         // @ts-ignore
         state1.taskLogs.push(log1, log2);
         // @ts-ignore

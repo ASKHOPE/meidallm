@@ -152,7 +152,9 @@ export const IdeaSchema = z.object({
     id: z.string(),
     projectId: z.string(),
     content: z.string(),
-    color: z.string()
+    color: z.string(),
+    x: z.number().optional(),
+    y: z.number().optional()
 });
 
 export const TaskLogSchema = z.object({
@@ -834,7 +836,12 @@ let allCustomRoles: CustomRole[] = [];
 let allPolicies: Policy[] = [];
 
 export function applyTenantFiltering() {
-    const activeTenant = state.activeTenantId || 't-meidallm';
+    let activeTenant = state.activeTenantId;
+    if (!activeTenant) {
+        const org = state.organizations.find(o => o.id === state.activeOrgId);
+        activeTenant = org ? org.tenantId : (state.tenants[0]?.id || 't-meidallm');
+        state.activeTenantId = activeTenant;
+    }
     
     // Filter projects
     state.projects = allProjects.filter(p => {
@@ -1233,6 +1240,12 @@ export async function loadState() {
                     applyDbState(data.orgState);
                     ensureDefaultTeamRoles(); // re-enforce hardcoded roles after DB load
                     applyTenantFiltering();
+                    
+                    if (!state.activeTeamId && state.teams.length > 0) {
+                        const userTeam = state.teams.find(t => t.memberIds.includes(state.currentUser!)) || state.teams[0];
+                        state.activeTeamId = userTeam.id;
+                    }
+                    
                     notifyStateChange(true); // skip save on initial pull
                 }
             }
